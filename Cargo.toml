@@ -1,0 +1,2 @@
+[workspace]
+members = ["crates/meta_common", "crates/meta_tracing",  "crates/meta_address"]

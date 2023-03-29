@@ -1,0 +1,21 @@
+[package]
+name = "meta_tracing"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tracing = "0.1.29"
+tracing-subscriber = { version = "0.3.15", features = [
+    "default",
+    "json",
+    "env-filter",
+] }
+tracing-appender = "0.2"
+tracing-flame = "0.2"
+tracing-opentelemetry = "0.17"
+opentelemetry = { version = "0.17", features = ["serialize"] }
+async-trait = "0.1"
+thiserror = "1.0"
+serde_json = "1.0.85"
