@@ -1,0 +1,438 @@
+{
+  "abi": [
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "wethAmountToFirstMarket",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "ethAmountToCoinbase",
+              "type": "uint256"
+            },
+            {
+              "internalType": "address[]",
+              "name": "targets",
+              "type": "address[]"
+            },
+            {
+              "internalType": "bytes[]",
+              "name": "payloads",
+              "type": "bytes[]"
+            }
+          ],
+          "internalType": "struct IFlashBotsRouter.UniswapWethParams",
+          "name": "params",
+          "type": "tuple"
+        },
+        {
+          "internalType": "bool",
+          "name": "returnProfit",
+          "type": "bool"
+        }
+      ],
+      "name": "uniswapWeth",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    }
+  ],
+  "bytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "uniswapWeth((uint256,uint256,address[],bytes[]),bool)": "3662d221"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.17+commit.8df45f5f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"wethAmountToFirstMarket\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"ethAmountToCoinbase\",\"type\":\"uint256\"},{\"internalType\":\"address[]\",\"name\":\"targets\",\"type\":\"address[]\"},{\"internalType\":\"bytes[]\",\"name\":\"payloads\",\"type\":\"bytes[]\"}],\"internalType\":\"struct IFlashBotsRouter.UniswapWethParams\",\"name\":\"params\",\"type\":\"tuple\"},{\"internalType\":\"bool\",\"name\":\"returnProfit\",\"type\":\"bool\"}],\"name\":\"uniswapWeth\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/interfaces/FlashBotsInterface.sol\":\"IFlashBotsRouter\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/\",\":forge-std/=lib/forge-std/src/\",\":openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/\",\":solmate/=lib/solmate/src/\"]},\"sources\":{\"contracts/interfaces/FlashBotsInterface.sol\":{\"keccak256\":\"0x737325f2dd4d86ef5b9ae27bcfae1e8d3421d2ff054441cb739abb7643f97bd6\",\"license\":\"agpl-3.0\",\"urls\":[\"bzz-raw://7ccb7c6a416031dfce7acfec77b8280929a1c7c6f38f4471d41653a20dd91bdb\",\"dweb:/ipfs/QmPaggm8QGsDuJgGopXKxBZy1ttA2BsVkV7y2L997M1gyx\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": {
+      "version": "0.8.17+commit.8df45f5f"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "struct IFlashBotsRouter.UniswapWethParams",
+              "name": "params",
+              "type": "tuple",
+              "components": [
+                {
+                  "internalType": "uint256",
+                  "name": "wethAmountToFirstMarket",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "uint256",
+                  "name": "ethAmountToCoinbase",
+                  "type": "uint256"
+                },
+                {
+                  "internalType": "address[]",
+                  "name": "targets",
+                  "type": "address[]"
+                },
+                {
+                  "internalType": "bytes[]",
+                  "name": "payloads",
+                  "type": "bytes[]"
+                }
+              ]
+            },
+            {
+              "internalType": "bool",
+              "name": "returnProfit",
+              "type": "bool"
+            }
+          ],
+          "stateMutability": "payable",
+          "type": "function",
+          "name": "uniswapWeth"
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {},
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {},
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": [
+        ":ds-test/=lib/forge-std/lib/ds-test/src/",
+        ":erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/",
+        ":forge-std/=lib/forge-std/src/",
+        ":openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/",
+        ":solmate/=lib/solmate/src/"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "compilationTarget": {
+        "contracts/interfaces/FlashBotsInterface.sol": "IFlashBotsRouter"
+      },
+      "libraries": {}
+    },
+    "sources": {
+      "contracts/interfaces/FlashBotsInterface.sol": {
+        "keccak256": "0x737325f2dd4d86ef5b9ae27bcfae1e8d3421d2ff054441cb739abb7643f97bd6",
+        "urls": [
+          "bzz-raw://7ccb7c6a416031dfce7acfec77b8280929a1c7c6f38f4471d41653a20dd91bdb",
+          "dweb:/ipfs/QmPaggm8QGsDuJgGopXKxBZy1ttA2BsVkV7y2L997M1gyx"
+        ],
+        "license": "agpl-3.0"
+      }
+    },
+    "version": 1
+  },
+  "ast": {
+    "absolutePath": "contracts/interfaces/FlashBotsInterface.sol",
+    "id": 1401,
+    "exportedSymbols": {
+      "IFlashBotsRouter": [
+        1400
+      ]
+    },
+    "nodeType": "SourceUnit",
+    "src": "37:321:4",
+    "nodes": [
+      {
+        "id": 1379,
+        "nodeType": "PragmaDirective",
+        "src": "37:24:4",
+        "nodes": [],
+        "literals": [
+          "solidity",
+          "^",
+          "0.8",
+          ".17"
+        ]
+      },
+      {
+        "id": 1380,
+        "nodeType": "PragmaDirective",
+        "src": "62:19:4",
+        "nodes": [],
+        "literals": [
+          "abicoder",
+          "v2"
+        ]
+      },
+      {
+        "id": 1400,
+        "nodeType": "ContractDefinition",
+        "src": "83:274:4",
+        "nodes": [
+          {
+            "id": 1391,
+            "nodeType": "StructDefinition",
+            "src": "114:145:4",
+            "nodes": [],
+            "canonicalName": "IFlashBotsRouter.UniswapWethParams",
+            "members": [
+              {
+                "constant": false,
+                "id": 1382,
+                "mutability": "mutable",
+                "name": "wethAmountToFirstMarket",
+                "nameLocation": "153:23:4",
+                "nodeType": "VariableDeclaration",
+                "scope": 1391,
+                "src": "145:31:4",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                },
+                "typeName": {
+                  "id": 1381,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "145:7:4",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 1384,
+                "mutability": "mutable",
+                "name": "ethAmountToCoinbase",
+                "nameLocation": "190:19:4",
+                "nodeType": "VariableDeclaration",
+                "scope": 1391,
+                "src": "182:27:4",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                },
+                "typeName": {
+                  "id": 1383,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "182:7:4",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 1387,
+                "mutability": "mutable",
+                "name": "targets",
+                "nameLocation": "225:7:4",
+                "nodeType": "VariableDeclaration",
+                "scope": 1391,
+                "src": "215:17:4",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
+                  "typeString": "address[]"
+                },
+                "typeName": {
+                  "baseType": {
+                    "id": 1385,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "215:7:4",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "id": 1386,
+                  "nodeType": "ArrayTypeName",
+                  "src": "215:9:4",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_address_$dyn_storage_ptr",
+                    "typeString": "address[]"
+                  }
+                },
+                "visibility": "internal"
+              },
+              {
+                "constant": false,
+                "id": 1390,
+                "mutability": "mutable",
+                "name": "payloads",
+                "nameLocation": "246:8:4",
+                "nodeType": "VariableDeclaration",
+                "scope": 1391,
+                "src": "238:16:4",
+                "stateVariable": false,
+                "storageLocation": "default",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_array$_t_bytes_storage_$dyn_storage_ptr",
+                  "typeString": "bytes[]"
+                },
+                "typeName": {
+                  "baseType": {
+                    "id": 1388,
+                    "name": "bytes",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "238:5:4",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes_storage_ptr",
+                      "typeString": "bytes"
+                    }
+                  },
+                  "id": 1389,
+                  "nodeType": "ArrayTypeName",
+                  "src": "238:7:4",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_array$_t_bytes_storage_$dyn_storage_ptr",
+                    "typeString": "bytes[]"
+                  }
+                },
+                "visibility": "internal"
+              }
+            ],
+            "name": "UniswapWethParams",
+            "nameLocation": "121:17:4",
+            "scope": 1400,
+            "visibility": "public"
+          },
+          {
+            "id": 1399,
+            "nodeType": "FunctionDefinition",
+            "src": "263:92:4",
+            "nodes": [],
+            "functionSelector": "3662d221",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "uniswapWeth",
+            "nameLocation": "272:11:4",
+            "parameters": {
+              "id": 1397,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 1394,
+                  "mutability": "mutable",
+                  "name": "params",
+                  "nameLocation": "311:6:4",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1399,
+                  "src": "284:33:4",
+                  "stateVariable": false,
+                  "storageLocation": "calldata",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_struct$_UniswapWethParams_$1391_calldata_ptr",
+                    "typeString": "struct IFlashBotsRouter.UniswapWethParams"
+                  },
+                  "typeName": {
+                    "id": 1393,
+                    "nodeType": "UserDefinedTypeName",
+                    "pathNode": {
+                      "id": 1392,
+                      "name": "UniswapWethParams",
+                      "nameLocations": [
+                        "284:17:4"
+                      ],
+                      "nodeType": "IdentifierPath",
+                      "referencedDeclaration": 1391,
+                      "src": "284:17:4"
+                    },
+                    "referencedDeclaration": 1391,
+                    "src": "284:17:4",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_UniswapWethParams_$1391_storage_ptr",
+                      "typeString": "struct IFlashBotsRouter.UniswapWethParams"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 1396,
+                  "mutability": "mutable",
+                  "name": "returnProfit",
+                  "nameLocation": "324:12:4",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 1399,
+                  "src": "319:17:4",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bool",
+                    "typeString": "bool"
+                  },
+                  "typeName": {
+                    "id": 1395,
+                    "name": "bool",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "319:4:4",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bool",
+                      "typeString": "bool"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "283:54:4"
+            },
+            "returnParameters": {
+              "id": 1398,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "354:0:4"
+            },
+            "scope": 1400,
+            "stateMutability": "payable",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "IFlashBotsRouter",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "fullyImplemented": false,
+        "linearizedBaseContracts": [
+          1400
+        ],
+        "name": "IFlashBotsRouter",
+        "nameLocation": "93:16:4",
+        "scope": 1401,
+        "usedErrors": []
+      }
+    ],
+    "license": "agpl-3.0"
+  },
+  "id": 4
+}

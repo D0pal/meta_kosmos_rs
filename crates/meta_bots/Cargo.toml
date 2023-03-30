@@ -1,0 +1,31 @@
+[package]
+name = "meta_bots"
+version = "0.1.0"
+edition = "2021"
+default-run = "mercury"
+
+[[bin]]
+name = "mercury"
+test = true
+bench = true
+
+[dependencies]
+# workspace
+meta_tracing= {path="../meta_tracing"}
+meta_common= {path="../meta_common"}
+meta_util= {path="../meta_util"}
+meta_address= {path="../meta_address"}
+meta_contracts={path="../meta_contracts"}
+tokio = { version = "1", features = ["full"] }
+ethers = { git = "https://github.com/gakonst/ethers-rs", features = ["ws", 'ipc', "legacy", "rustls"] }
+async-trait = "0.1.57"
+config = "0.13.2"
+serde ={version = "1.0.145", features = ["derive"]}
+futures = "0.3.21"
+exitcode = "1.1.2"
+# CLI
+gumdrop = "0.8.0"
+# Error Handling
+eyre = "0.6.8"
+anyhow = "1.0.32"
+tracing = "0.1.29"

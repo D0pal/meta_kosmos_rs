@@ -1,45 +1,53 @@
 {
+    "WETH": {
+		"addresses": {
+			"BSC": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+			"BSC_TEST": "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd",
+            "ZK_SYNC_ERA": "0x5AEa5775959fBC2557Cc8789bC1bf90A239D9a91"
+		}
+	},
+    "WBNB": {
+		"addresses": {
+			"BSC": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+			"BSC_TEST": "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd"
+		}
+	},
+    "USDC": {
+		"addresses": {
+			"ETH": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+            "ZK_SYNC_ERA": "0x3355df6D4c9C3035724Fd0e3914dE96A5a83aaf4"
+		}
+	},
 	"DAI": {
 		"addresses": {
-			"mainnet": "0x6b175474e89094c44da98b954eedeac495271d0f",
-			"goerli": "0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844"
-		}
-	},
-	"USDC": {
-		"addresses": {
-			"mainnet": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
-		}
-	},
-	"WBNB": {
-		"addresses": {
-			"binance_smart_chain": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
-			"binance_smart_chain_testnet": "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd"
+			"ETH": "0x6b175474e89094c44da98b954eedeac495271d0f",
+			"ETH_GOERLI": "0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844"
 		}
 	},
 	"BUSD": {
 		"addresses": {
-			"binance_smart_chain": "0x55d398326f99059ff775485246999027b3197955",
-			"binance_smart_chain_testnet": "aB1a4d4f1D656d2450692D237fdD6C7f9146e814"
+			"BSC": "0x55d398326f99059ff775485246999027b3197955",
+			"BSC_TEST": "aB1a4d4f1D656d2450692D237fdD6C7f9146e814"
 		}
 	},
 	"SFP": {
 		"addresses": {
-			"binance_smart_chain": "0xD41FDb03Ba84762dD66a0af1a6C8540FF1ba5dfb"
+			"BSC": "0xD41FDb03Ba84762dD66a0af1a6C8540FF1ba5dfb"
 		}
 	},
 	"C98": {
 		"addresses": {
-			"binance_smart_chain": "0xaEC945e04baF28b135Fa7c640f624f8D90F1C3a6"
+			"BSC": "0xaEC945e04baF28b135Fa7c640f624f8D90F1C3a6"
 		}
 	},
 	"CAKE": {
 		"addresses": {
-			"binance_smart_chain": "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82"
+			"BSC": "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82"
 		}
 	},
 	"TWT": {
 		"addresses": {
-			"binance_smart_chain": "0x4B0F1812e5Df2A09796481Ff14017e6005508003"
+			"BSC": "0x4B0F1812e5Df2A09796481Ff14017e6005508003"
 		}
 	}
 }

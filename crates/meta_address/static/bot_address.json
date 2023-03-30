@@ -1,0 +1,8 @@
+{
+    "FLASHBOTS_ROUTER": {
+		"addresses": {
+			"BSC": "0x57C193B9e28DeB5e4ce9b0480a5Bd79725326606",
+            "ZK_SYNC_ERA": "0x53d19Fd4A403dCE6C8e4a1D0F3d0D12245813275"
+		}
+	}
+}

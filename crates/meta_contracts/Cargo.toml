@@ -1,0 +1,22 @@
+[package]
+name = "meta_contracts"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# workspace
+meta_common= {path="../meta_common"}
+meta_util= {path="../meta_util"}
+
+ethers = { git = "https://github.com/gakonst/ethers-rs", features = ["ws", 'ipc', "legacy", "rustls"] }
+futures = "0.3.21"
+tracing = "0.1.29"
+# Data
+
+[dev-dependencies]
+mockall="0.11.3"
+
+[build-dependencies]
+ethers = {git = "https://github.com/gakonst/ethers-rs", features = ["abigen"]}

@@ -1,4 +1,4 @@
-use strum::{AsRefStr, EnumCount, EnumIter, EnumString, EnumVariantNames};
+use strum::{AsRefStr, EnumCount, EnumIter, EnumString, EnumVariantNames, Display};
 use serde::{Deserialize};
 #[derive(
     Clone,
@@ -16,11 +16,15 @@ use serde::{Deserialize};
     EnumCount,        // Chain::COUNT
     // TryFromPrimitive, // TryFrom<u64>
     Deserialize,
+    Display,
 )]
 // #[serde(rename_all = "snake_case")]
 pub enum Network {
-    // #[default]
-    // None,
+    #[strum(ascii_case_insensitive, serialize = "ETH")]
+    ETH,
+
+    #[strum(ascii_case_insensitive, serialize = "ETH_GOERLI")]
+    ETH_GOERLI,
 
     #[strum(ascii_case_insensitive, serialize = "BSC")]
     BSC,

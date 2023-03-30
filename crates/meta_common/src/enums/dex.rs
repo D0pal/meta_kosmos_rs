@@ -1,3 +1,5 @@
+use serde::{Deserialize};
+
 #[derive(Default, Clone, Debug, PartialEq, strum_macros::Display, strum_macros::EnumString)]
 pub enum Dex {
     #[default]
@@ -20,6 +22,24 @@ pub enum Dex {
 }
 
 impl Into<String> for Dex {
+    fn into(self) -> String {
+        return self.to_string();
+    }
+}
+
+#[derive(
+    Clone, Debug, Eq, PartialEq, Hash, strum_macros::Display, Deserialize, strum_macros::EnumString,
+)]
+// #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Deserialize, EnumVariantNames)]
+pub enum ContractType {
+    #[strum(ascii_case_insensitive, serialize = "UNI_V2_FACTORY")]
+    UNI_V2_FACTORY,
+
+    #[strum(ascii_case_insensitive, serialize = "UNI_V2_ROUTER")]
+    UNI_V2_ROUTER,
+}
+
+impl Into<String> for ContractType {
     fn into(self) -> String {
         return self.to_string();
     }

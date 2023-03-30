@@ -1,0 +1,419 @@
+{
+  "_format": "ethers-rs-sol-cache-3",
+  "paths": {
+    "artifacts": "out",
+    "build_infos": "out/build-info",
+    "sources": "contracts",
+    "tests": "test",
+    "scripts": "script",
+    "libraries": [
+      "lib"
+    ]
+  },
+  "files": {
+    "contracts/FlashBotsRouter.sol": {
+      "lastModificationDate": 1680153126149,
+      "contentHash": "ff5f98e77f61456013007ad72e92e44a",
+      "sourceName": "contracts/FlashBotsRouter.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs",
+            "appendCBOR": true
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ]
+            }
+          },
+          "evmVersion": "london",
+          "libraries": {}
+        }
+      },
+      "imports": [
+        "contracts/interfaces/FlashBotsInterface.sol",
+        "lib/openzeppelin-contracts/contracts/utils/Strings.sol",
+        "lib/openzeppelin-contracts/contracts/utils/math/Math.sol",
+        "lib/openzeppelin-contracts/contracts/utils/math/SignedMath.sol"
+      ],
+      "versionRequirement": "^0.8.17",
+      "artifacts": {
+        "FlashBotsRouter": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "FlashBotsRouter.sol/FlashBotsRouter.json"
+        },
+        "IERC20": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "FlashBotsRouter.sol/IERC20.json"
+        },
+        "IWETH": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "FlashBotsRouter.sol/IWETH.json"
+        }
+      }
+    },
+    "contracts/FlashBotsUniswapQuery.sol": {
+      "lastModificationDate": 1680153126149,
+      "contentHash": "d634de9b56fba9968e4317ea97d0bef7",
+      "sourceName": "contracts/FlashBotsUniswapQuery.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs",
+            "appendCBOR": true
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ]
+            }
+          },
+          "evmVersion": "london",
+          "libraries": {}
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.17",
+      "artifacts": {
+        "FlashBotsUniswapQuery": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "FlashBotsUniswapQuery.sol/FlashBotsUniswapQuery.json"
+        },
+        "IUniswapV2Pair": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "FlashBotsUniswapQuery.sol/IUniswapV2Pair.json"
+        },
+        "UniswapV2Factory": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "FlashBotsUniswapQuery.sol/UniswapV2Factory.json"
+        }
+      }
+    },
+    "contracts/Migration.sol": {
+      "lastModificationDate": 1680153111690,
+      "contentHash": "b3b010e4a66f8f9480f628e3d072a908",
+      "sourceName": "contracts/Migration.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs",
+            "appendCBOR": true
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ]
+            }
+          },
+          "evmVersion": "london",
+          "libraries": {}
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.17",
+      "artifacts": {
+        "Migration": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Migration.sol/Migration.json"
+        }
+      }
+    },
+    "contracts/interfaces/AaveV2Interfaces.sol": {
+      "lastModificationDate": 1680153126149,
+      "contentHash": "93cd77ad7dcbfa010dfc2227a4e86110",
+      "sourceName": "contracts/interfaces/AaveV2Interfaces.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs",
+            "appendCBOR": true
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ]
+            }
+          },
+          "evmVersion": "london",
+          "libraries": {}
+        }
+      },
+      "imports": [
+        "contracts/interfaces/AaveV2Interfaces.sol",
+        "contracts/library/Libraries.sol"
+      ],
+      "versionRequirement": "^0.8.17",
+      "artifacts": {
+        "IERC20": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "AaveV2Interfaces.sol/IERC20.json"
+        },
+        "IFlashLoanReceiver": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "AaveV2Interfaces.sol/IFlashLoanReceiver.json"
+        },
+        "ILendingPool": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "AaveV2Interfaces.sol/ILendingPool.json"
+        },
+        "ILendingPoolAddressesProvider": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "AaveV2Interfaces.sol/ILendingPoolAddressesProvider.json"
+        }
+      }
+    },
+    "contracts/interfaces/FlashBotsInterface.sol": {
+      "lastModificationDate": 1680153126149,
+      "contentHash": "6ed3fa9d67acc03d29bbd51a7cd51a99",
+      "sourceName": "contracts/interfaces/FlashBotsInterface.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs",
+            "appendCBOR": true
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ]
+            }
+          },
+          "evmVersion": "london",
+          "libraries": {}
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.17",
+      "artifacts": {
+        "IFlashBotsRouter": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "FlashBotsInterface.sol/IFlashBotsRouter.json"
+        }
+      }
+    },
+    "contracts/library/Libraries.sol": {
+      "lastModificationDate": 1680153126149,
+      "contentHash": "d54af3f22e85b059ab650b2c94dba043",
+      "sourceName": "contracts/library/Libraries.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs",
+            "appendCBOR": true
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ]
+            }
+          },
+          "evmVersion": "london",
+          "libraries": {}
+        }
+      },
+      "imports": [
+        "contracts/interfaces/AaveV2Interfaces.sol",
+        "contracts/library/Libraries.sol"
+      ],
+      "versionRequirement": "^0.8.17",
+      "artifacts": {
+        "Address": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Libraries.sol/Address.json"
+        },
+        "DataTypes": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Libraries.sol/DataTypes.json"
+        },
+        "SafeERC20": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Libraries.sol/SafeERC20.json"
+        },
+        "SafeMath": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Libraries.sol/SafeMath.json"
+        }
+      }
+    },
+    "lib/openzeppelin-contracts/contracts/utils/Strings.sol": {
+      "lastModificationDate": 1680154121910,
+      "contentHash": "2f6e4b113762028699e08ee1b6093f0c",
+      "sourceName": "lib/openzeppelin-contracts/contracts/utils/Strings.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs",
+            "appendCBOR": true
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ]
+            }
+          },
+          "evmVersion": "london",
+          "libraries": {}
+        }
+      },
+      "imports": [
+        "lib/openzeppelin-contracts/contracts/utils/math/Math.sol",
+        "lib/openzeppelin-contracts/contracts/utils/math/SignedMath.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Strings": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Strings.sol/Strings.json"
+        }
+      }
+    },
+    "lib/openzeppelin-contracts/contracts/utils/math/Math.sol": {
+      "lastModificationDate": 1680154121911,
+      "contentHash": "f710d5d7f7d168a6a3b5698bcb093dcf",
+      "sourceName": "lib/openzeppelin-contracts/contracts/utils/math/Math.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs",
+            "appendCBOR": true
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ]
+            }
+          },
+          "evmVersion": "london",
+          "libraries": {}
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Math": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "Math.sol/Math.json"
+        }
+      }
+    },
+    "lib/openzeppelin-contracts/contracts/utils/math/SignedMath.sol": {
+      "lastModificationDate": 1680154121911,
+      "contentHash": "9488ebd4daacfee8ad04811600d7d061",
+      "sourceName": "lib/openzeppelin-contracts/contracts/utils/math/SignedMath.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs",
+            "appendCBOR": true
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ]
+            }
+          },
+          "evmVersion": "london",
+          "libraries": {}
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "SignedMath": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "SignedMath.sol/SignedMath.json"
+        }
+      }
+    }
+  }
+}
