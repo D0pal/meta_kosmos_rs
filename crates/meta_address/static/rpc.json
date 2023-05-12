@@ -1,0 +1,12 @@
+{
+    "ZK_SYNC_ERA": {
+        "httpUrls": [
+            "https://zksync2-mainnet.zksync.io"
+        ],
+        "wsUrls": [
+            "wss://mainnet.era.zksync.io/ws"
+        ],
+        "chainId": 324,
+        "explorer": "https://explorer.zksync.io/"
+    }
+}

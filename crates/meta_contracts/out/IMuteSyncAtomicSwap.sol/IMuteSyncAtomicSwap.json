@@ -1,0 +1,282 @@
+{
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "wethAmountToFirstMarket",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint8",
+          "name": "firstMarket",
+          "type": "uint8"
+        },
+        {
+          "internalType": "address",
+          "name": "mutePoolAddress",
+          "type": "address"
+        }
+      ],
+      "name": "atomicSwapWeth",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    }
+  ],
+  "bytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "deployedBytecode": {
+    "object": "0x",
+    "sourceMap": "",
+    "linkReferences": {}
+  },
+  "methodIdentifiers": {
+    "atomicSwapWeth(uint256,uint8,address)": "377bbbb5"
+  },
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.17+commit.8df45f5f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"wethAmountToFirstMarket\",\"type\":\"uint256\"},{\"internalType\":\"uint8\",\"name\":\"firstMarket\",\"type\":\"uint8\"},{\"internalType\":\"address\",\"name\":\"mutePoolAddress\",\"type\":\"address\"}],\"name\":\"atomicSwapWeth\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/interfaces/IMuteSyncAtomicSwap.sol\":\"IMuteSyncAtomicSwap\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/\",\":forge-std/=lib/forge-std/src/\",\":openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/\",\":solmate/=lib/solmate/src/\"]},\"sources\":{\"contracts/interfaces/IMuteSyncAtomicSwap.sol\":{\"keccak256\":\"0xbc3b89dbca38788c2850ce3367410dbdb5b01a1a15befeddaffe08d11a43542b\",\"license\":\"agpl-3.0\",\"urls\":[\"bzz-raw://7e41b441c8331c7539f71cf56689ba6f5b583d8e6278267277207d6803489e16\",\"dweb:/ipfs/QmRdiBJ6Gi4CBVxDMk6LWu1MuknKRE7R89LWLNMqeQ5XVe\"]}},\"version\":1}",
+  "metadata": {
+    "compiler": {
+      "version": "0.8.17+commit.8df45f5f"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "wethAmountToFirstMarket",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint8",
+              "name": "firstMarket",
+              "type": "uint8"
+            },
+            {
+              "internalType": "address",
+              "name": "mutePoolAddress",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "payable",
+          "type": "function",
+          "name": "atomicSwapWeth"
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {},
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {},
+        "version": 1
+      }
+    },
+    "settings": {
+      "remappings": [
+        ":ds-test/=lib/forge-std/lib/ds-test/src/",
+        ":erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/",
+        ":forge-std/=lib/forge-std/src/",
+        ":openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/",
+        ":solmate/=lib/solmate/src/"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "compilationTarget": {
+        "contracts/interfaces/IMuteSyncAtomicSwap.sol": "IMuteSyncAtomicSwap"
+      },
+      "libraries": {}
+    },
+    "sources": {
+      "contracts/interfaces/IMuteSyncAtomicSwap.sol": {
+        "keccak256": "0xbc3b89dbca38788c2850ce3367410dbdb5b01a1a15befeddaffe08d11a43542b",
+        "urls": [
+          "bzz-raw://7e41b441c8331c7539f71cf56689ba6f5b583d8e6278267277207d6803489e16",
+          "dweb:/ipfs/QmRdiBJ6Gi4CBVxDMk6LWu1MuknKRE7R89LWLNMqeQ5XVe"
+        ],
+        "license": "agpl-3.0"
+      }
+    },
+    "version": 1
+  },
+  "ast": {
+    "absolutePath": "contracts/interfaces/IMuteSyncAtomicSwap.sol",
+    "id": 863,
+    "exportedSymbols": {
+      "IMuteSyncAtomicSwap": [
+        862
+      ]
+    },
+    "nodeType": "SourceUnit",
+    "src": "37:233:3",
+    "nodes": [
+      {
+        "id": 851,
+        "nodeType": "PragmaDirective",
+        "src": "37:24:3",
+        "nodes": [],
+        "literals": [
+          "solidity",
+          "^",
+          "0.8",
+          ".17"
+        ]
+      },
+      {
+        "id": 852,
+        "nodeType": "PragmaDirective",
+        "src": "62:19:3",
+        "nodes": [],
+        "literals": [
+          "abicoder",
+          "v2"
+        ]
+      },
+      {
+        "id": 862,
+        "nodeType": "ContractDefinition",
+        "src": "83:186:3",
+        "nodes": [
+          {
+            "id": 861,
+            "nodeType": "FunctionDefinition",
+            "src": "119:148:3",
+            "nodes": [],
+            "functionSelector": "377bbbb5",
+            "implemented": false,
+            "kind": "function",
+            "modifiers": [],
+            "name": "atomicSwapWeth",
+            "nameLocation": "128:14:3",
+            "parameters": {
+              "id": 859,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 854,
+                  "mutability": "mutable",
+                  "name": "wethAmountToFirstMarket",
+                  "nameLocation": "160:23:3",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 861,
+                  "src": "152:31:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 853,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "152:7:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 856,
+                  "mutability": "mutable",
+                  "name": "firstMarket",
+                  "nameLocation": "199:11:3",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 861,
+                  "src": "193:17:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint8",
+                    "typeString": "uint8"
+                  },
+                  "typeName": {
+                    "id": 855,
+                    "name": "uint8",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "193:5:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint8",
+                      "typeString": "uint8"
+                    }
+                  },
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 858,
+                  "mutability": "mutable",
+                  "name": "mutePoolAddress",
+                  "nameLocation": "228:15:3",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 861,
+                  "src": "220:23:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_address",
+                    "typeString": "address"
+                  },
+                  "typeName": {
+                    "id": 857,
+                    "name": "address",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "220:7:3",
+                    "stateMutability": "nonpayable",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_address",
+                      "typeString": "address"
+                    }
+                  },
+                  "visibility": "internal"
+                }
+              ],
+              "src": "142:107:3"
+            },
+            "returnParameters": {
+              "id": 860,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "266:0:3"
+            },
+            "scope": 862,
+            "stateMutability": "payable",
+            "virtual": false,
+            "visibility": "external"
+          }
+        ],
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "IMuteSyncAtomicSwap",
+        "contractDependencies": [],
+        "contractKind": "interface",
+        "fullyImplemented": false,
+        "linearizedBaseContracts": [
+          862
+        ],
+        "name": "IMuteSyncAtomicSwap",
+        "nameLocation": "93:19:3",
+        "scope": 863,
+        "usedErrors": []
+      }
+    ],
+    "license": "agpl-3.0"
+  },
+  "id": 3
+}

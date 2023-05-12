@@ -28,7 +28,7 @@ pub struct ConfigRds {
 #[derive(Debug, Deserialize)]
 pub struct AppConfig {
     pub log: ConfigLog,
-    pub rds: ConfigRds,
+    // pub rds: ConfigRds,
 }
 
 // #[async_trait]

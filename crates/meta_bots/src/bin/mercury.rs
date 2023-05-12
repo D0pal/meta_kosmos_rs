@@ -15,9 +15,9 @@ use std::{
 };
 use tracing::{debug, info, instrument::WithSubscriber, warn, Level};
 
-use meta_address::{get_dex_address, get_token_address};
+use meta_address::{get_dex_address, get_token_address, get_rpc_info, get_bot_address};
 use meta_bots::AppConfig;
-use meta_common::enums::{ContractType, Dex, Network, Token};
+use meta_common::enums::{ContractType, Dex, Network, Token, Bot};
 use meta_contracts::{
     bindings::{
         flash_bots_router::{FlashBotsRouter, UniswapWethParams},
@@ -50,9 +50,6 @@ struct Opts {
     #[options(help = "dex a, such as BISWAP")]
     dex_b: Dex,
 
-    #[options(help = "the Ethereum node endpoint (HTTP or WS)")]
-    url: Option<String>,
-
     #[options(help = "path to your private key", default = "/tmp/pk")]
     private_key_path: PathBuf,
 
@@ -69,10 +66,18 @@ struct Opts {
     one_shot: bool,
 }
 
-async fn run<P: JsonRpcClient + 'static + PubsubClient>(
+async fn run(
     opts: Opts,
-    provider: Provider<P>,
 ) -> anyhow::Result<()> {
+    let rpc_info = get_rpc_info(opts.network).unwrap();
+    info!(
+        "run bot with arguments, chain: {} base_token: {}, quote_token: {},  ws provider url: {:?}",
+        opts.network, opts.base_token, opts.quote_token, rpc_info.wsUrls[0]
+    );
+
+    let provider = Provider::<Ws>::connect(rpc_info.wsUrls[0].clone())
+        .await
+        .expect("ws connect error");
     let provider = provider.interval(Duration::from_millis(opts.interval));
 
     info!("privatekey path {:?}", opts.private_key_path); // {:?} is explained in https://doc.rust-lang.org/std/fmt/index.html
@@ -80,15 +85,14 @@ async fn run<P: JsonRpcClient + 'static + PubsubClient>(
         .unwrap()
         .trim()
         .to_string();
-
     let wallet: LocalWallet = private_key.parse().unwrap();
 
-    let wallet = wallet.with_chain_id(Chain::BinanceSmartChain);
-    let liquidator_address = wallet.address();
+    let wallet = wallet.with_chain_id(rpc_info.chainId);
+    let executor_address = wallet.address();
     let client = SignerMiddleware::new(provider, wallet);
-    let client = NonceManagerMiddleware::new(client, liquidator_address);
+    let client = NonceManagerMiddleware::new(client, executor_address);
     let client = Arc::new(client);
-    info!("profits will be sent to {:?}", liquidator_address);
+    info!("profits will be sent to {:?}", executor_address);
     let quote_amt_in = u128::pow(10, 17);
 
     let quote_addr = get_token_address(opts.quote_token)
@@ -104,8 +108,9 @@ async fn run<P: JsonRpcClient + 'static + PubsubClient>(
     let quote_asset = Erc20Wrapper::new(opts.network, quote_addr, client.clone()).await;
     let base_asset = Erc20Wrapper::new(opts.network, base_addr, client.clone()).await;
 
+    let bot_address = get_bot_address(Bot::ATOMIC_SWAP_ROUTER).unwrap().address(opts.network).unwrap();
     let flashbots_router = FlashBotsRouter::new(
-        address_from_str("0x53d19Fd4A403dCE6C8e4a1D0F3d0D12245813275"),
+        bot_address,
         client.clone(),
     );
 
@@ -253,19 +258,7 @@ async fn main_impl() -> anyhow::Result<()> {
 
     let guard = init_tracing(app_config.log.into());
 
-    info!(
-        "run bot with arguments, chain: {} base_token: {}, quote_token: {},  ws provider url: {:?}",
-        opts.network, opts.base_token, opts.quote_token, opts.url
-    );
-
-    if opts.url == None {
-        panic!("Must provider url");
-    }
-    let provider = Provider::<Ws>::connect(opts.url.clone().unwrap())
-        .await
-        .expect("ws connect error");
-
-    run(opts, provider).await;
+    run(opts).await;
     Ok(())
 }
 

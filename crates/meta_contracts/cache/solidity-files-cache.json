@@ -148,6 +148,57 @@
         }
       }
     },
+    "contracts/MuteSyncAtomicSwap.sol": {
+      "lastModificationDate": 1680316630762,
+      "contentHash": "b88a8b45908a005328533f347a0c2797",
+      "sourceName": "contracts/MuteSyncAtomicSwap.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs",
+            "appendCBOR": true
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ]
+            }
+          },
+          "evmVersion": "london",
+          "libraries": {}
+        }
+      },
+      "imports": [
+        "contracts/interfaces/IMuteSyncAtomicSwap.sol",
+        "lib/openzeppelin-contracts/contracts/utils/Strings.sol",
+        "lib/openzeppelin-contracts/contracts/utils/math/Math.sol",
+        "lib/openzeppelin-contracts/contracts/utils/math/SignedMath.sol"
+      ],
+      "versionRequirement": "^0.8.17",
+      "artifacts": {
+        "IERC20": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "MuteSyncAtomicSwap.sol/IERC20.json"
+        },
+        "IWETH": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "MuteSyncAtomicSwap.sol/IWETH.json"
+        },
+        "MuteSyncAtomicSwap": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "MuteSyncAtomicSwap.sol/MuteSyncAtomicSwap.json"
+        }
+      }
+    },
     "contracts/interfaces/AaveV2Interfaces.sol": {
       "lastModificationDate": 1680153126149,
       "contentHash": "93cd77ad7dcbfa010dfc2227a4e86110",
@@ -201,8 +252,8 @@
       }
     },
     "contracts/interfaces/FlashBotsInterface.sol": {
-      "lastModificationDate": 1680153126149,
-      "contentHash": "6ed3fa9d67acc03d29bbd51a7cd51a99",
+      "lastModificationDate": 1680316101956,
+      "contentHash": "dc054f83349326b1753136df298849a2",
       "sourceName": "contracts/interfaces/FlashBotsInterface.sol",
       "solcConfig": {
         "settings": {
@@ -237,6 +288,46 @@
       "artifacts": {
         "IFlashBotsRouter": {
           "0.8.17+commit.8df45f5f.Darwin.appleclang": "FlashBotsInterface.sol/IFlashBotsRouter.json"
+        }
+      }
+    },
+    "contracts/interfaces/IMuteSyncAtomicSwap.sol": {
+      "lastModificationDate": 1680316177533,
+      "contentHash": "18aec4ab048e677d77062abd70acef8b",
+      "sourceName": "contracts/interfaces/IMuteSyncAtomicSwap.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs",
+            "appendCBOR": true
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ]
+            }
+          },
+          "evmVersion": "london",
+          "libraries": {}
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.17",
+      "artifacts": {
+        "IMuteSyncAtomicSwap": {
+          "0.8.17+commit.8df45f5f.Darwin.appleclang": "IMuteSyncAtomicSwap.sol/IMuteSyncAtomicSwap.json"
         }
       }
     },

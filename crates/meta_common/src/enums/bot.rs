@@ -19,6 +19,6 @@ use serde::{Deserialize};
     Deserialize,
 )]
 pub enum Bot {
-    #[strum(ascii_case_insensitive, serialize = "FLASHBOT_ROUTER")]
-    FLASHBOT_ROUTER,
+    #[strum(ascii_case_insensitive, serialize = "ATOMIC_SWAP_ROUTER")]
+    ATOMIC_SWAP_ROUTER,
 }

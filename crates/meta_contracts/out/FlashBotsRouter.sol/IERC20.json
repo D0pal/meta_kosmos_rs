@@ -244,7 +244,7 @@
     "transfer(address,uint256)": "a9059cbb",
     "transferFrom(address,address,uint256)": "23b872dd"
   },
-  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.17+commit.8df45f5f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"symbol\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/FlashBotsRouter.sol\":\"IERC20\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/\",\":forge-std/=lib/forge-std/src/\",\":openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/\",\":solmate/=lib/solmate/src/\"]},\"sources\":{\"contracts/FlashBotsRouter.sol\":{\"keccak256\":\"0xb96ed278ac30d8c3314c238e705c916c4a5ae171c08213eda64cd159078e21d8\",\"license\":\"UNLICENSED\",\"urls\":[\"bzz-raw://1a9809ac506fe03f07766aace789d7302c66adcf89eac3c03400e5f93a89841c\",\"dweb:/ipfs/QmaYGZmkccXfezxbYtSsQK5QdiauSG7dbdhHa2wLRe9yXy\"]},\"contracts/interfaces/FlashBotsInterface.sol\":{\"keccak256\":\"0x737325f2dd4d86ef5b9ae27bcfae1e8d3421d2ff054441cb739abb7643f97bd6\",\"license\":\"agpl-3.0\",\"urls\":[\"bzz-raw://7ccb7c6a416031dfce7acfec77b8280929a1c7c6f38f4471d41653a20dd91bdb\",\"dweb:/ipfs/QmPaggm8QGsDuJgGopXKxBZy1ttA2BsVkV7y2L997M1gyx\"]},\"lib/openzeppelin-contracts/contracts/utils/Strings.sol\":{\"keccak256\":\"0x2626d8ab3dfdad0fad630c212ad146d59473d0f48b771784c61a7c1dbbea1f3f\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://d7c144532f1e7c76ac95fb6a8f617c1f740d7a73442a907eb60910e99dfa1fbf\",\"dweb:/ipfs/QmZsGyooD6emxB8JCuugRjnRYS2MPZEL586uuV7dgC8Jng\"]},\"lib/openzeppelin-contracts/contracts/utils/math/Math.sol\":{\"keccak256\":\"0xbaf3bd8c64ac943fafde717797ee797c96360586b9448ea25e9872490a6e6858\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://bab65b9b5ea0c68e96e1a73460db616042f639d144a6a75595434cfa2a483ed4\",\"dweb:/ipfs/QmUgwEcWXaEu4VSpymiVq8tZYKgA44HPMWZowpg2L8Kiij\"]},\"lib/openzeppelin-contracts/contracts/utils/math/SignedMath.sol\":{\"keccak256\":\"0xf92515413956f529d95977adc9b0567d583c6203fc31ab1c23824c35187e3ddc\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://c50fcc459e49a9858b6d8ad5f911295cb7c9ab57567845a250bf0153f84a95c7\",\"dweb:/ipfs/QmcEW85JRzvDkQggxiBBLVAasXWdkhEysqypj9EaB6H2g6\"]}},\"version\":1}",
+  "rawMetadata": "{\"compiler\":{\"version\":\"0.8.17+commit.8df45f5f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"symbol\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/FlashBotsRouter.sol\":\"IERC20\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":ds-test/=lib/forge-std/lib/ds-test/src/\",\":erc4626-tests/=lib/openzeppelin-contracts/lib/erc4626-tests/\",\":forge-std/=lib/forge-std/src/\",\":openzeppelin-contracts/=lib/openzeppelin-contracts/contracts/\",\":solmate/=lib/solmate/src/\"]},\"sources\":{\"contracts/FlashBotsRouter.sol\":{\"keccak256\":\"0xb96ed278ac30d8c3314c238e705c916c4a5ae171c08213eda64cd159078e21d8\",\"license\":\"UNLICENSED\",\"urls\":[\"bzz-raw://1a9809ac506fe03f07766aace789d7302c66adcf89eac3c03400e5f93a89841c\",\"dweb:/ipfs/QmaYGZmkccXfezxbYtSsQK5QdiauSG7dbdhHa2wLRe9yXy\"]},\"contracts/interfaces/FlashBotsInterface.sol\":{\"keccak256\":\"0x1db9e889c9ef5fb12568261daf4e1c83ace77e0dddd3d95ac071655e73ce0c2e\",\"license\":\"agpl-3.0\",\"urls\":[\"bzz-raw://95497efc4b30f319bc6d568435471b5599f34c366dc1d798254b814ad0f234fa\",\"dweb:/ipfs/QmdpbraEWtbZQQtTESVBsQbikN83qcxHoktsWo5P59DgnL\"]},\"lib/openzeppelin-contracts/contracts/utils/Strings.sol\":{\"keccak256\":\"0x2626d8ab3dfdad0fad630c212ad146d59473d0f48b771784c61a7c1dbbea1f3f\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://d7c144532f1e7c76ac95fb6a8f617c1f740d7a73442a907eb60910e99dfa1fbf\",\"dweb:/ipfs/QmZsGyooD6emxB8JCuugRjnRYS2MPZEL586uuV7dgC8Jng\"]},\"lib/openzeppelin-contracts/contracts/utils/math/Math.sol\":{\"keccak256\":\"0xbaf3bd8c64ac943fafde717797ee797c96360586b9448ea25e9872490a6e6858\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://bab65b9b5ea0c68e96e1a73460db616042f639d144a6a75595434cfa2a483ed4\",\"dweb:/ipfs/QmUgwEcWXaEu4VSpymiVq8tZYKgA44HPMWZowpg2L8Kiij\"]},\"lib/openzeppelin-contracts/contracts/utils/math/SignedMath.sol\":{\"keccak256\":\"0xf92515413956f529d95977adc9b0567d583c6203fc31ab1c23824c35187e3ddc\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://c50fcc459e49a9858b6d8ad5f911295cb7c9ab57567845a250bf0153f84a95c7\",\"dweb:/ipfs/QmcEW85JRzvDkQggxiBBLVAasXWdkhEysqypj9EaB6H2g6\"]}},\"version\":1}",
   "metadata": {
     "compiler": {
       "version": "0.8.17+commit.8df45f5f"
@@ -516,10 +516,10 @@
         "license": "UNLICENSED"
       },
       "contracts/interfaces/FlashBotsInterface.sol": {
-        "keccak256": "0x737325f2dd4d86ef5b9ae27bcfae1e8d3421d2ff054441cb739abb7643f97bd6",
+        "keccak256": "0x1db9e889c9ef5fb12568261daf4e1c83ace77e0dddd3d95ac071655e73ce0c2e",
         "urls": [
-          "bzz-raw://7ccb7c6a416031dfce7acfec77b8280929a1c7c6f38f4471d41653a20dd91bdb",
-          "dweb:/ipfs/QmPaggm8QGsDuJgGopXKxBZy1ttA2BsVkV7y2L997M1gyx"
+          "bzz-raw://95497efc4b30f319bc6d568435471b5599f34c366dc1d798254b814ad0f234fa",
+          "dweb:/ipfs/QmdpbraEWtbZQQtTESVBsQbikN83qcxHoktsWo5P59DgnL"
         ],
         "license": "agpl-3.0"
       },
@@ -561,19 +561,19 @@
         87
       ],
       "IFlashBotsRouter": [
-        1400
+        849
       ],
       "IWETH": [
         98
       ],
       "Math": [
-        2944
+        1957
       ],
       "SignedMath": [
-        3049
+        2062
       ],
       "Strings": [
-        2078
+        1091
       ]
     },
     "nodeType": "SourceUnit",
@@ -610,7 +610,7 @@
         "file": "openzeppelin-contracts/utils/Strings.sol",
         "nameLocation": "-1:-1:-1",
         "scope": 520,
-        "sourceUnit": 2079,
+        "sourceUnit": 1092,
         "symbolAliases": [],
         "unitAlias": ""
       },
@@ -623,7 +623,7 @@
         "file": "./interfaces/FlashBotsInterface.sol",
         "nameLocation": "-1:-1:-1",
         "scope": 520,
-        "sourceUnit": 1401,
+        "sourceUnit": 850,
         "symbolAliases": [
           {
             "foreign": {
@@ -631,7 +631,7 @@
               "name": "IFlashBotsRouter",
               "nodeType": "Identifier",
               "overloadedDeclarations": [],
-              "referencedDeclaration": 1400,
+              "referencedDeclaration": 849,
               "src": "142:16:0",
               "typeDescriptions": {}
             },
@@ -3651,7 +3651,7 @@
                       "referencedDeclaration": 251,
                       "src": "2548:6:0",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_struct$_UniswapWethParams_$1391_calldata_ptr",
+                        "typeIdentifier": "t_struct$_UniswapWethParams_$840_calldata_ptr",
                         "typeString": "struct IFlashBotsRouter.UniswapWethParams calldata"
                       }
                     },
@@ -3663,7 +3663,7 @@
                     "memberLocation": "2555:23:0",
                     "memberName": "wethAmountToFirstMarket",
                     "nodeType": "MemberAccess",
-                    "referencedDeclaration": 1382,
+                    "referencedDeclaration": 831,
                     "src": "2548:30:0",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
@@ -3716,7 +3716,7 @@
                       "referencedDeclaration": 251,
                       "src": "2614:6:0",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_struct$_UniswapWethParams_$1391_calldata_ptr",
+                        "typeIdentifier": "t_struct$_UniswapWethParams_$840_calldata_ptr",
                         "typeString": "struct IFlashBotsRouter.UniswapWethParams calldata"
                       }
                     },
@@ -3728,7 +3728,7 @@
                     "memberLocation": "2621:19:0",
                     "memberName": "ethAmountToCoinbase",
                     "nodeType": "MemberAccess",
-                    "referencedDeclaration": 1384,
+                    "referencedDeclaration": 833,
                     "src": "2614:26:0",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
@@ -3790,7 +3790,7 @@
                       "referencedDeclaration": 251,
                       "src": "2673:6:0",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_struct$_UniswapWethParams_$1391_calldata_ptr",
+                        "typeIdentifier": "t_struct$_UniswapWethParams_$840_calldata_ptr",
                         "typeString": "struct IFlashBotsRouter.UniswapWethParams calldata"
                       }
                     },
@@ -3802,7 +3802,7 @@
                     "memberLocation": "2680:7:0",
                     "memberName": "targets",
                     "nodeType": "MemberAccess",
-                    "referencedDeclaration": 1387,
+                    "referencedDeclaration": 836,
                     "src": "2673:14:0",
                     "typeDescriptions": {
                       "typeIdentifier": "t_array$_t_address_$dyn_calldata_ptr",
@@ -3864,7 +3864,7 @@
                       "referencedDeclaration": 251,
                       "src": "2719:6:0",
                       "typeDescriptions": {
-                        "typeIdentifier": "t_struct$_UniswapWethParams_$1391_calldata_ptr",
+                        "typeIdentifier": "t_struct$_UniswapWethParams_$840_calldata_ptr",
                         "typeString": "struct IFlashBotsRouter.UniswapWethParams calldata"
                       }
                     },
@@ -3876,7 +3876,7 @@
                     "memberLocation": "2726:8:0",
                     "memberName": "payloads",
                     "nodeType": "MemberAccess",
-                    "referencedDeclaration": 1390,
+                    "referencedDeclaration": 839,
                     "src": "2719:15:0",
                     "typeDescriptions": {
                       "typeIdentifier": "t_array$_t_bytes_calldata_ptr_$dyn_calldata_ptr",
@@ -4729,10 +4729,10 @@
                                           "name": "Strings",
                                           "nodeType": "Identifier",
                                           "overloadedDeclarations": [],
-                                          "referencedDeclaration": 2078,
+                                          "referencedDeclaration": 1091,
                                           "src": "3241:7:0",
                                           "typeDescriptions": {
-                                            "typeIdentifier": "t_type$_t_contract$_Strings_$2078_$",
+                                            "typeIdentifier": "t_type$_t_contract$_Strings_$1091_$",
                                             "typeString": "type(library Strings)"
                                           }
                                         },
@@ -4744,7 +4744,7 @@
                                         "memberLocation": "3249:11:0",
                                         "memberName": "toHexString",
                                         "nodeType": "MemberAccess",
-                                        "referencedDeclaration": 2032,
+                                        "referencedDeclaration": 1045,
                                         "src": "3241:19:0",
                                         "typeDescriptions": {
                                           "typeIdentifier": "t_function_internal_pure$_t_uint256_$_t_uint256_$returns$_t_string_memory_ptr_$",
@@ -5405,10 +5405,10 @@
                                     "name": "Strings",
                                     "nodeType": "Identifier",
                                     "overloadedDeclarations": [],
-                                    "referencedDeclaration": 2078,
+                                    "referencedDeclaration": 1091,
                                     "src": "3546:7:0",
                                     "typeDescriptions": {
-                                      "typeIdentifier": "t_type$_t_contract$_Strings_$2078_$",
+                                      "typeIdentifier": "t_type$_t_contract$_Strings_$1091_$",
                                       "typeString": "type(library Strings)"
                                     }
                                   },
@@ -5420,7 +5420,7 @@
                                   "memberLocation": "3554:8:0",
                                   "memberName": "toString",
                                   "nodeType": "MemberAccess",
-                                  "referencedDeclaration": 1908,
+                                  "referencedDeclaration": 921,
                                   "src": "3546:16:0",
                                   "typeDescriptions": {
                                     "typeIdentifier": "t_function_internal_pure$_t_uint256_$returns$_t_string_memory_ptr_$",
@@ -5486,10 +5486,10 @@
                                     "name": "Strings",
                                     "nodeType": "Identifier",
                                     "overloadedDeclarations": [],
-                                    "referencedDeclaration": 2078,
+                                    "referencedDeclaration": 1091,
                                     "src": "3600:7:0",
                                     "typeDescriptions": {
-                                      "typeIdentifier": "t_type$_t_contract$_Strings_$2078_$",
+                                      "typeIdentifier": "t_type$_t_contract$_Strings_$1091_$",
                                       "typeString": "type(library Strings)"
                                     }
                                   },
@@ -5501,7 +5501,7 @@
                                   "memberLocation": "3608:8:0",
                                   "memberName": "toString",
                                   "nodeType": "MemberAccess",
-                                  "referencedDeclaration": 1908,
+                                  "referencedDeclaration": 921,
                                   "src": "3600:16:0",
                                   "typeDescriptions": {
                                     "typeIdentifier": "t_function_internal_pure$_t_uint256_$returns$_t_string_memory_ptr_$",
@@ -6459,7 +6459,7 @@
               ]
             },
             "baseFunctions": [
-              1399
+              848
             ],
             "documentation": {
               "id": 248,
@@ -6512,7 +6512,7 @@
                   "stateVariable": false,
                   "storageLocation": "calldata",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_UniswapWethParams_$1391_calldata_ptr",
+                    "typeIdentifier": "t_struct$_UniswapWethParams_$840_calldata_ptr",
                     "typeString": "struct IFlashBotsRouter.UniswapWethParams"
                   },
                   "typeName": {
@@ -6525,13 +6525,13 @@
                         "2415:17:0"
                       ],
                       "nodeType": "IdentifierPath",
-                      "referencedDeclaration": 1391,
+                      "referencedDeclaration": 840,
                       "src": "2415:17:0"
                     },
-                    "referencedDeclaration": 1391,
+                    "referencedDeclaration": 840,
                     "src": "2415:17:0",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_UniswapWethParams_$1391_storage_ptr",
+                      "typeIdentifier": "t_struct$_UniswapWethParams_$840_storage_ptr",
                       "typeString": "struct IFlashBotsRouter.UniswapWethParams"
                     }
                   },
@@ -7163,7 +7163,7 @@
                 "1267:16:0"
               ],
               "nodeType": "IdentifierPath",
-              "referencedDeclaration": 1400,
+              "referencedDeclaration": 849,
               "src": "1267:16:0"
             },
             "id": 100,
@@ -7177,7 +7177,7 @@
         "fullyImplemented": true,
         "linearizedBaseContracts": [
           519,
-          1400
+          849
         ],
         "name": "FlashBotsRouter",
         "nameLocation": "1248:15:0",
