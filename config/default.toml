@@ -1,6 +1,6 @@
 [log]
 file_name_prefix = "meta_kosmos"
 dir = "logs"
-level = "debug"
+level = "info"
 console = true
 flame = false

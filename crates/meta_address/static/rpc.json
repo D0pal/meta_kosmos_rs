@@ -8,5 +8,15 @@
         ],
         "chainId": 324,
         "explorer": "https://explorer.zksync.io/"
+    },
+    "BSC": {
+        "httpUrls": [
+            "https://rpc.ankr.com/bsc/fd1df65634ef7b46509966f82e10e29dedf263d73aebec4d7c1cf2529a23bcf6"
+        ],
+        "wsUrls": [
+            "wss://rpc.ankr.com/bsc/ws/fd1df65634ef7b46509966f82e10e29dedf263d73aebec4d7c1cf2529a23bcf6"
+        ],
+        "chainId": 56,
+        "explorer": "https://bscscan.com/"
     }
 }

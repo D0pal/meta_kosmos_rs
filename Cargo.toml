@@ -1,9 +1,11 @@
 [workspace]
 members = [
+     "crates/meta_bots",
     "crates/meta_common",
     "crates/meta_util",
     "crates/meta_tracing",
     "crates/meta_address",
     "crates/meta_contracts",
-    "crates/meta_bots",
+   
+    "crates/meta_mev_service",
 ]

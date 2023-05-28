@@ -61,6 +61,13 @@ impl<M: Middleware> UniswapV2<M> {
         }
     }
 
+    pub fn get_factory_address(&self) -> Address {
+        match &self.factory_contract {
+            UniswapV2FactoryEnum::MUTE_SWITCH(factory) => factory.address(),
+            UniswapV2FactoryEnum::UNISWAP_V2(factory) => factory.address(),
+        }
+    }
+
     /// get uniswap v2 pair contract address given by token0, token1. token0 < token1
     pub async fn get_pair_addr(&self, token0: Address, token1: Address) -> Address {
         match &self.factory_contract {
@@ -79,7 +86,7 @@ impl<M: Middleware> UniswapV2<M> {
         token_a: Address,
         token_b: Address,
     ) -> UniswapV2PairWrapper<M> {
-        debug!("get_pair_contract_wrapper, dex {}, factory_address {} token_a {}, token_b: {} ", self.dex, self.factory_address, address_to_str(&token_a), address_to_str(&token_b));
+        debug!("get_pair_contract_wrapper, dex {}, factory_address {} token_a {}, token_b: {} ", self.dex, self.get_factory_address(), address_to_str(&token_a), address_to_str(&token_b));
         let contract_addr = self
             .get_pair_addr(token_a, token_b)
             .await;
@@ -106,7 +113,7 @@ impl<M: Middleware> UniswapV2<M> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct UniswapV2Reserves {
     pub reserve_0: U128,
     pub reserve_1: U128,
@@ -120,7 +127,7 @@ pub struct Erc20Info {
     pub name: String,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct UniswapV2PairState {
     pub token_0: Erc20Info,
     pub token_1: Erc20Info,
@@ -212,11 +219,11 @@ impl<M: Middleware> UniswapV2PairWrapper<M> {
     }
 
     pub async fn update_state_and_return_price(&mut self, block_num: &BlockId) -> Option<f64> {
-        debug!("start get price for block number {:?}", block_num);
+        debug!("start get price for block number {:?}, state {:?}", block_num, self.state);
         let ret = self
             .pair_contract
             .get_reserves()
-            .block(*block_num)
+            // .block(*block_num)
             .call()
             .await;
 

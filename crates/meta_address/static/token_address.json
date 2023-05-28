@@ -1,7 +1,7 @@
 {
     "WETH": {
 		"addresses": {
-			"BSC": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+			"BSC": "0x2170ed0880ac9a755fd29b2688956bd959f933f8",
 			"BSC_TEST": "0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd",
             "ZK_SYNC_ERA": "0x5AEa5775959fBC2557Cc8789bC1bf90A239D9a91"
 		}
@@ -24,7 +24,7 @@
 			"ETH_GOERLI": "0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844"
 		}
 	},
-	"BUSD": {
+	"USDT": {
 		"addresses": {
 			"BSC": "0x55d398326f99059ff775485246999027b3197955",
 			"BSC_TEST": "aB1a4d4f1D656d2450692D237fdD6C7f9146e814"
@@ -48,6 +48,11 @@
 	"TWT": {
 		"addresses": {
 			"BSC": "0x4B0F1812e5Df2A09796481Ff14017e6005508003"
+		}
+	},
+	"BSW": {
+		"addresses": {
+			"BSC": "0x965F527D9159dCe6288a2219DB51fc6Eef120dD1"
 		}
 	}
 }

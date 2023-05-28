@@ -32,6 +32,9 @@ pub enum Token {
     #[strum(ascii_case_insensitive, serialize = "USDC")]
     USDC,
 
+    #[strum(ascii_case_insensitive, serialize = "USDT")]
+    USDT,
+
     #[strum(ascii_case_insensitive, serialize = "DAI")]
     DAI,
 
@@ -49,6 +52,9 @@ pub enum Token {
 
     #[strum(ascii_case_insensitive, serialize = "C98")]
     C98,
+
+    #[strum(ascii_case_insensitive, serialize = "BSW")]
+    BSW,
 }
 
 impl Into<String> for Token {

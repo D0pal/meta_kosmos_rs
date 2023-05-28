@@ -38,10 +38,10 @@ struct Opts {
     #[options(help = "blockchain network, such as ETH, BSC")]
     network: Network,
 
-    #[options(help = "base token, such as WETH, WBNB")]
+    #[options(help = "base token, such as USDT")]
     base_token: Token,
 
-    #[options(help = "quote token, such as USDC, BUSD")]
+    #[options(help = "quote token, tokenIn, such as WBNB, BUSD")]
     quote_token: Token,
 
     #[options(help = "dex a, such as PANCAKE")]
@@ -153,9 +153,7 @@ async fn run(
             base_addr,  // BUSD
         )
         .await;
-    let market_a_pool_contract_wrapper = Rc::new(RefCell::<
-        UniswapV2PairWrapper<NonceManagerMiddleware<SignerMiddleware<Provider<P>, LocalWallet>>>,
-    >::new(market_a_pool_contract_wrapper));
+    let market_a_pool_contract_wrapper = Rc::new(RefCell::new(market_a_pool_contract_wrapper));
 
     let market_b_pool_contract_wrapper = biswap
         .get_pair_contract_wrapper(
@@ -222,8 +220,9 @@ async fn run(
                         last_block,
                     )
                     .await;
-                    info!("{:?} {:?}", last_block, price_diff);
-                    if price_diff.abs() > 40f64 {
+                    info!("curretn block number {:?}, price diff {:?}", meta.block_number, price_diff);
+                    if price_diff.abs() > 20f64 {
+                        info!("start arbitraging");
                         let params = get_atomic_arb_call_params(
                             market_a_pool_contract_wrapper.clone(),
                             market_b_pool_contract_wrapper.clone(),
