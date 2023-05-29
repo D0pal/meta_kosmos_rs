@@ -1,9 +1,10 @@
 //! sandwidtch mev bot
 //! 
 //! use ethers::prelude::*;
+use ethers::prelude::k256::pkcs8::der::oid::Error;
 use futures::future::join_all;
 use gumdrop::Options;
-use serde::Deserialize;
+use serde::{Deserialize, __private::de};
 use std::{
     borrow::Borrow,
     cell::RefCell,
@@ -38,7 +39,7 @@ struct Opts {
     help: bool,
 
     #[options(help = "blockchain network, such as ETH, BSC")]
-    network: Network,
+    network: Option<Network>,
 
     #[options(help = "comma separated dexs, such as PANCAKE,UNISWAP_V2")]
     dexs: String,
@@ -48,23 +49,52 @@ struct Opts {
 }
 
 async fn run(
-    opts: Opts,
+    config: JupyterConfig,
 ) -> anyhow::Result<()> {
-    // let rpc_info = get_rpc_info(opts.network).unwrap();
+    info!("run jupyter app with config: {:?}", config);
+    let rpc_info = get_rpc_info(config.chain.network.unwrap()).unwrap();
+    // info!(
+    //     "run bot with arguments, chain: {} base_token: {}, quote_token: {},  ws provider url: {:?}",
+    //     opts.network, opts.base_token, opts.quote_token, rpc_info.wsUrls[0]
+    // );
+
+    // let provider = Provider::<Ws>::connect(rpc_info.wsUrls[0].clone())
+    //     .await
+    //     .expect("ws connect error");
+    // let provider = provider.interval(Duration::from_millis(opts.interval));
+
+    // info!("privatekey path {:?}", opts.private_key_path); // {:?} is explained in https://doc.rust-lang.org/std/fmt/index.html
+    // let private_key = std::fs::read_to_string(opts.private_key_path)
+    //     .unwrap()
+    //     .trim()
+    //     .to_string();
+    // let wallet: LocalWallet = private_key.parse().unwrap();
+
+    // let wallet = wallet.with_chain_id(rpc_info.chainId);
+    // let executor_address = wallet.address();
+    // let client = SignerMiddleware::new(provider, wallet);
+    // let client = NonceManagerMiddleware::new(client, executor_address);
+    // let client = Arc::new(client);
+    // info!("profits will be sent to {:?}", executor_address);
    Ok(())
 }
 
 async fn main_impl() -> anyhow::Result<()> {
     let opts = Opts::parse_args_default_or_exit();
     println!("opts: {:?}", opts);
+    if opts.network.is_none() {
+        panic!("must provide network");
+    }
     let dex = dexs_from_str(opts.dexs.clone());
-    println!("{:?}", dex);
-    let app_config = JupyterConfig::try_new().expect("parsing config error");
+    if dex.is_empty() {
+        panic!("must provide dex list");
+    }
+    let mut app_config = JupyterConfig::try_new().expect("parsing config error");
+    app_config.chain.network = opts.network;
+    app_config.chain.dexs = Some(dex);
+    let guard = init_tracing(app_config.log.clone().into());
 
-    println!("{:?}", app_config);
-    let guard = init_tracing(app_config.log.into());
-
-    run(opts).await
+    run(app_config).await
 }
 
 #[tokio::main]

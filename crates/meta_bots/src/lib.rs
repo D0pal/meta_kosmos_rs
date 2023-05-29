@@ -4,6 +4,7 @@ use std::{result::Result, str::FromStr};
 // use actix_web::{App, web};
 use async_trait::async_trait;
 use config::{Config, ConfigError, File};
+use meta_common::enums::{Network, Dex};
 use serde::Deserialize;
 use tracing::Level;
 
@@ -11,13 +12,19 @@ use meta_tracing::TraceConfig;
 
 // use crate::AppState;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct ConfigLog {
     pub file_name_prefix: String,
     pub dir: String,
     pub level: String,
     pub flame: bool,
     pub console: bool,
+}
+
+#[derive(Debug,Clone, Deserialize)]
+pub struct ConfigChain {
+    pub network: Option<Network>,
+    pub dexs: Option<Vec<Dex>>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -48,10 +55,10 @@ impl AppConfig {
     }
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct JupyterConfig {
     pub log: ConfigLog,
-    // pub rds: ConfigRds,
+    pub chain: ConfigChain,
 }
 
 impl JupyterConfig {

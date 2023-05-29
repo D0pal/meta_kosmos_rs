@@ -20,6 +20,7 @@ use serde::{Deserialize};
 )]
 // #[serde(rename_all = "snake_case")]
 pub enum Network {
+
     #[strum(ascii_case_insensitive, serialize = "ETH")]
     ETH,
 

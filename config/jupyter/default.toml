@@ -4,3 +4,5 @@ dir = "logs"
 level = "debug"
 console = true
 flame = false
+
+[chain]

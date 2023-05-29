@@ -1,6 +1,8 @@
-use serde::{Deserialize};
+use serde::Deserialize;
 
-#[derive(Default, Clone, Debug, PartialEq, strum_macros::Display, strum_macros::EnumString)]
+#[derive(
+    Default, Clone, Debug, PartialEq, strum_macros::Display, strum_macros::EnumString, Deserialize,
+)]
 pub enum Dex {
     #[default]
     None,
@@ -56,13 +58,13 @@ mod test_dex {
     use super::Dex;
     #[test]
     fn should_str_into_dex_enum() {
-       let dex: Dex = "MUTE_SWITCH".try_into().unwrap();
-       assert_eq!(dex, Dex::MUTE_SWITCH);
+        let dex: Dex = "MUTE_SWITCH".try_into().unwrap();
+        assert_eq!(dex, Dex::MUTE_SWITCH);
     }
 
     #[test]
     fn should_str_split() {
-       let dex: Vec<&str> = "MUTE_SWITCH,PANCAKE".split(',').collect();
-       println!("{:?}", dex);
+        let dex: Vec<&str> = "MUTE_SWITCH,PANCAKE".split(',').collect();
+        println!("{:?}", dex);
     }
 }
