@@ -48,6 +48,28 @@ impl AppConfig {
     }
 }
 
+#[derive(Debug, Deserialize)]
+pub struct JupyterConfig {
+    pub log: ConfigLog,
+    // pub rds: ConfigRds,
+}
+
+impl JupyterConfig {
+    pub fn load(dir: &str) -> Result<Config, ConfigError> {
+        let env = env::var("ENV").unwrap_or("default".into());
+        Config::builder()
+            // .add_source(File::with_name(&format!("{}/default", dir)))
+            .add_source(File::with_name(&format!("{}/{}", dir, env)).required(false))
+            .add_source(File::with_name(&format!("{}/local", dir)).required(false))
+            .add_source(config::Environment::with_prefix("META_JUPYTER"))
+            .build()
+    }
+    pub fn try_new() -> Result<Self, ConfigError> {
+        let config = Self::load("config/jupyter")?;
+        config.try_deserialize()
+    }
+}
+
 impl From<ConfigLog> for TraceConfig {
     fn from(config_log: ConfigLog) -> Self {
         let level = Level::from_str(&config_log.level)

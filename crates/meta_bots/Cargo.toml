@@ -9,6 +9,11 @@ name = "mercury"
 test = true
 bench = true
 
+[[bin]]
+name = "jupyter"
+test = true
+bench = true
+
 [dependencies]
 # workspace
 meta_tracing= {path="../meta_tracing"}
@@ -16,12 +21,16 @@ meta_common= {path="../meta_common"}
 meta_util= {path="../meta_util"}
 meta_address= {path="../meta_address"}
 meta_contracts={path="../meta_contracts"}
-tokio = { version = "1", features = ["full"] }
+tokio.workspace=true
+tokio-tungstenite.workspace=true
 ethers = { git = "https://github.com/gakonst/ethers-rs", features = ["ws", 'ipc', "legacy", "rustls"] }
 async-trait = "0.1.57"
 config = "0.13.2"
-serde ={version = "1.0.145", features = ["derive"]}
-futures = "0.3.21"
+url = "2.3.1"
+serde.workspace=true
+serde_json.workspace=true
+futures.workspace=true
+futures-util = { version = "0.3.28", default-features = false, features = ["sink", "std"] }
 exitcode = "1.1.2"
 # CLI
 gumdrop = "0.8.0"
@@ -29,3 +38,4 @@ gumdrop = "0.8.0"
 eyre = "0.6.8"
 anyhow = "1.0.32"
 tracing = "0.1.29"
+http = {version = "0.2.9"}

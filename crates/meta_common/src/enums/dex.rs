@@ -27,6 +27,12 @@ impl Into<String> for Dex {
     }
 }
 
+// impl From<&str> for Dex {
+//     fn from(input: &str) -> Dex {
+//         return input.parse().expect("unable to convert string into Dex");
+//     }
+// }
+
 #[derive(
     Clone, Debug, Eq, PartialEq, Hash, strum_macros::Display, Deserialize, strum_macros::EnumString,
 )]
@@ -42,5 +48,21 @@ pub enum ContractType {
 impl Into<String> for ContractType {
     fn into(self) -> String {
         return self.to_string();
+    }
+}
+
+#[cfg(test)]
+mod test_dex {
+    use super::Dex;
+    #[test]
+    fn should_str_into_dex_enum() {
+       let dex: Dex = "MUTE_SWITCH".try_into().unwrap();
+       assert_eq!(dex, Dex::MUTE_SWITCH);
+    }
+
+    #[test]
+    fn should_str_split() {
+       let dex: Vec<&str> = "MUTE_SWITCH,PANCAKE".split(',').collect();
+       println!("{:?}", dex);
     }
 }

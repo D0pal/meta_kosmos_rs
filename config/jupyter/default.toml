@@ -1,0 +1,6 @@
+[log]
+file_name_prefix = "meta_kosmos"
+dir = "logs"
+level = "debug"
+console = true
+flame = false
