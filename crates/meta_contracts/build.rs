@@ -8,10 +8,9 @@ fn main() {
     bindgen("UniswapV2Pair", "./static/abis/uniswap_v2/UniswapV2Pair.json");
     bindgen("UniswapV2Router02", "./static/abis/uniswap_v2/UniswapV2Router02.json");
     bindgen("WETH9", "./static/abis/uniswap_v2/WETH9.json");
-    bindgen("FlashBotsRouter", "./out/FlashBotsRouter.sol/FlashBotsRouter.json");
     bindgen("MuteSwitchFactory", "./static/abis/mute_switch/factory.json");
     bindgen("Migration", "./out/Migration.sol/Migration.json");
-
+    bindgen("FlashBotsRouter", "./out/FlashBotsRouter.sol/FlashBotsRouter.json");
 }
 
 fn bindgen(contract_name: &str, path:&str) {

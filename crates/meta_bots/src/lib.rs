@@ -1,10 +1,8 @@
 use std::env;
-use std::{result::Result, str::FromStr};
-
-// use actix_web::{App, web};
+use std::{result::Result, str::FromStr, path::PathBuf};
 use async_trait::async_trait;
 use config::{Config, ConfigError, File};
-use meta_common::enums::{Network, Dex};
+use meta_common::enums::{Network, DexExchange};
 use serde::Deserialize;
 use tracing::Level;
 
@@ -24,12 +22,23 @@ pub struct ConfigLog {
 #[derive(Debug,Clone, Deserialize)]
 pub struct ConfigChain {
     pub network: Option<Network>,
-    pub dexs: Option<Vec<Dex>>,
+    pub dexs: Option<Vec<DexExchange>>,
+}
+
+#[derive(Debug,Clone, Deserialize)]
+pub struct ConfigProvider {
+    pub ws_interval_milli: Option<u64>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct ConfigRds {
     pub url: String,
+}
+
+
+#[derive(Debug,Clone, Deserialize)]
+pub struct ConfigAccount {
+    pub private_key_path: Option<PathBuf>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -59,6 +68,8 @@ impl AppConfig {
 pub struct JupyterConfig {
     pub log: ConfigLog,
     pub chain: ConfigChain,
+    pub provider: ConfigProvider,
+    pub accounts: ConfigAccount,
 }
 
 impl JupyterConfig {

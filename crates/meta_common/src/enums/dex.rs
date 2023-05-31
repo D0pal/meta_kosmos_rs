@@ -1,9 +1,32 @@
 use serde::Deserialize;
+use strum::{AsRefStr, EnumCount, EnumIter, EnumString, EnumVariantNames, Display};
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PoolVariant {
+    UniswapV2,
+    UniswapV3,
+}
 
 #[derive(
-    Default, Clone, Debug, PartialEq, strum_macros::Display, strum_macros::EnumString, Deserialize,
+    Default,
+    Clone,
+    Copy,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    AsRefStr,         // AsRef<str>, fmt::Display and serde::Serialize
+    EnumVariantNames, // Chain::VARIANTS
+    EnumString,       // FromStr, TryFrom<&str>
+    EnumIter,         // Chain::iter
+    EnumCount,        // Chain::COUNT
+    // TryFromPrimitive, // TryFrom<u64>
+    Deserialize,
+    Display,
 )]
-pub enum Dex {
+pub enum DexExchange {
     #[default]
     None,
 
@@ -23,14 +46,14 @@ pub enum Dex {
     UNISWAP_V2,
 }
 
-impl Into<String> for Dex {
+impl Into<String> for DexExchange {
     fn into(self) -> String {
         return self.to_string();
     }
 }
 
-// impl From<&str> for Dex {
-//     fn from(input: &str) -> Dex {
+// impl From<&str> for DexExchange {
+//     fn from(input: &str) -> DexExchange {
 //         return input.parse().expect("unable to convert string into Dex");
 //     }
 // }
@@ -45,6 +68,9 @@ pub enum ContractType {
 
     #[strum(ascii_case_insensitive, serialize = "UNI_V2_ROUTER")]
     UNI_V2_ROUTER,
+
+    #[strum(ascii_case_insensitive, serialize = "UNI_V3_FACTORY")]
+    UNI_V3_FACTORY,
 }
 
 impl Into<String> for ContractType {
@@ -55,11 +81,11 @@ impl Into<String> for ContractType {
 
 #[cfg(test)]
 mod test_dex {
-    use super::Dex;
+    use super::DexExchange;
     #[test]
     fn should_str_into_dex_enum() {
-        let dex: Dex = "MUTE_SWITCH".try_into().unwrap();
-        assert_eq!(dex, Dex::MUTE_SWITCH);
+        let dex: DexExchange = "MUTE_SWITCH".try_into().unwrap();
+        assert_eq!(dex, DexExchange::MUTE_SWITCH);
     }
 
     #[test]

@@ -6,3 +6,9 @@ console = true
 flame = false
 
 [chain]
+
+[provider]
+ws_interval_milli = 100
+
+[accounts]
+private_key_path = "/tmp/pk/jupyter"

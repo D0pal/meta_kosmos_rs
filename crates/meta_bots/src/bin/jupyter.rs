@@ -1,7 +1,7 @@
 //! sandwidtch mev bot
-//! 
-//! use ethers::prelude::*;
+
 use ethers::prelude::k256::pkcs8::der::oid::Error;
+use ethers::prelude::*;
 use futures::future::join_all;
 use gumdrop::Options;
 use serde::{Deserialize, __private::de};
@@ -18,9 +18,9 @@ use std::{
 };
 use tracing::{debug, info, instrument::WithSubscriber, warn, Level};
 
-use meta_address::{get_dex_address, get_token_address, get_rpc_info, get_bot_address};
+use meta_address::{get_bot_address, get_dex_address, get_rpc_info, get_token_address};
 use meta_bots::JupyterConfig;
-use meta_common::enums::{ContractType, Dex, Network, Token, Bot};
+use meta_common::enums::{Bot, ContractType, DexExchange, Network, Token};
 use meta_contracts::{
     bindings::{
         flash_bots_router::{FlashBotsRouter, UniswapWethParams},
@@ -44,39 +44,33 @@ struct Opts {
     #[options(help = "comma separated dexs, such as PANCAKE,UNISWAP_V2")]
     dexs: String,
 
-    #[options(help = "path to your private key", default = "/tmp/pk")]
+    #[options(help = "path to your private key", default = "/tmp/pk/jupyter")]
     private_key_path: PathBuf,
 }
 
-async fn run(
-    config: JupyterConfig,
-) -> anyhow::Result<()> {
+async fn run(config: JupyterConfig) -> anyhow::Result<()> {
     info!("run jupyter app with config: {:?}", config);
     let rpc_info = get_rpc_info(config.chain.network.unwrap()).unwrap();
-    // info!(
-    //     "run bot with arguments, chain: {} base_token: {}, quote_token: {},  ws provider url: {:?}",
-    //     opts.network, opts.base_token, opts.quote_token, rpc_info.wsUrls[0]
-    // );
+    debug!("rpc info {:?}", rpc_info);
 
-    // let provider = Provider::<Ws>::connect(rpc_info.wsUrls[0].clone())
-    //     .await
-    //     .expect("ws connect error");
-    // let provider = provider.interval(Duration::from_millis(opts.interval));
+    let provider_ws =
+        Provider::<Ws>::connect(rpc_info.wsUrls[0].clone()).await.expect("ws connect error");
+    let provider_ws =
+        provider_ws.interval(Duration::from_millis(config.provider.ws_interval_milli.unwrap()));
 
-    // info!("privatekey path {:?}", opts.private_key_path); // {:?} is explained in https://doc.rust-lang.org/std/fmt/index.html
-    // let private_key = std::fs::read_to_string(opts.private_key_path)
-    //     .unwrap()
-    //     .trim()
-    //     .to_string();
-    // let wallet: LocalWallet = private_key.parse().unwrap();
+    let private_key = std::fs::read_to_string(config.accounts.private_key_path.unwrap())
+        .unwrap()
+        .trim()
+        .to_string();
+    let wallet: LocalWallet = private_key.parse().unwrap();
 
-    // let wallet = wallet.with_chain_id(rpc_info.chainId);
-    // let executor_address = wallet.address();
-    // let client = SignerMiddleware::new(provider, wallet);
-    // let client = NonceManagerMiddleware::new(client, executor_address);
-    // let client = Arc::new(client);
-    // info!("profits will be sent to {:?}", executor_address);
-   Ok(())
+    let wallet = wallet.with_chain_id(rpc_info.chainId);
+    let searcher_address = wallet.address();
+    let client = SignerMiddleware::new(provider_ws, wallet);
+    let client = NonceManagerMiddleware::new(client, searcher_address);
+    let client = Arc::new(client);
+    info!("profits will be sent to {:?}", searcher_address);
+    Ok(())
 }
 
 async fn main_impl() -> anyhow::Result<()> {
@@ -92,6 +86,9 @@ async fn main_impl() -> anyhow::Result<()> {
     let mut app_config = JupyterConfig::try_new().expect("parsing config error");
     app_config.chain.network = opts.network;
     app_config.chain.dexs = Some(dex);
+    if app_config.accounts.private_key_path.is_none() {
+        app_config.accounts.private_key_path = Some(opts.private_key_path);
+    }
     let guard = init_tracing(app_config.log.clone().into());
 
     run(app_config).await

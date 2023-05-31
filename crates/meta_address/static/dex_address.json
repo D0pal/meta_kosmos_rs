@@ -1,39 +1,59 @@
 {
     "PANCAKE": {
         "BSC": {
-            "addresses": {
-                "UNI_V2_FACTORY": "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73",
-                "UNI_V2_ROUTER": "0x10ED43C718714eb63d5aA57B78B54704E256024E"
+            "UNI_V2_FACTORY": {
+                "address": "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73",
+                "created_blk_num": 6809737
+            },
+            "UNI_V2_ROUTER": {
+                "address": "0x10ED43C718714eb63d5aA57B78B54704E256024E",
+                "created_blk_num": 0
             }
         },
         "BSC_TEST": {
-            "addresses": {
-                "UNI_V2_FACTORY": "0x6725F303b657a9451d8BA641348b6761A6CC7a17",
-                "UNI_V2_ROUTER": "0xD99D1c33F9fC3444f8101754aBC46c52416550D1"
+            "UNI_V2_FACTORY": {
+                "address": "0x6725F303b657a9451d8BA641348b6761A6CC7a17",
+                "created_blk_num": 0
+            },
+            "UNI_V2_ROUTER": {
+                "address": "0xD99D1c33F9fC3444f8101754aBC46c52416550D1",
+                "created_blk_num": 0
             }
         }
     },
     "BISWAP": {
         "BSC": {
-            "addresses": {
-                "UNI_V2_FACTORY": "0x858E3312ed3A876947EA49d572A7C42DE08af7EE",
-                "UNI_V2_ROUTER": "0x3a6d8cA21D1CF76F653A67577FA0D27453350dD8"
+            "UNI_V2_FACTORY": {
+                "address": "0x858E3312ed3A876947EA49d572A7C42DE08af7EE",
+                "created_blk_num": 0
+            },
+            "UNI_V2_ROUTER": {
+                "address": "0x3a6d8cA21D1CF76F653A67577FA0D27453350dD8",
+                "created_blk_num": 0
             }
         }
     },
     "MUTE_SWITCH": {
         "ZK_SYNC_ERA": {
-            "addresses": {
-                "UNI_V2_FACTORY": "0x40be1cba6c5b47cdf9da7f963b6f761f4c60627d",
-                "UNI_V2_ROUTER": "0x8B791913eB07C32779a16750e3868aA8495F5964"
+            "UNI_V2_FACTORY": {
+                "address": "0x40be1cba6c5b47cdf9da7f963b6f761f4c60627d",
+                "created_blk_num": 0
+            },
+            "UNI_V2_ROUTER": {
+                "address": "0x8B791913eB07C32779a16750e3868aA8495F5964",
+                "created_blk_num": 0
             }
         }
     },
     "SYNC_SWAP": {
         "ZK_SYNC_ERA": {
-            "addresses": {
-                "UNI_V2_FACTORY": "0xf2DAd89f2788a8CD54625C60b55cD3d2D0ACa7Cb",
-                "UNI_V2_ROUTER": "0x2da10A1e27bF85cEdD8FFb1AbBe97e53391C0295"
+            "UNI_V2_FACTORY": {
+                "address": "0xf2DAd89f2788a8CD54625C60b55cD3d2D0ACa7Cb",
+                "created_blk_num": 0
+            },
+            "UNI_V2_ROUTER": {
+                "address": "0x2da10A1e27bF85cEdD8FFb1AbBe97e53391C0295",
+                "created_blk_num": 0
             }
         }
     }
