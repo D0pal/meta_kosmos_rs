@@ -1991,6 +1991,7 @@ dependencies = [
  "meta_address",
  "meta_common",
  "meta_contracts",
+ "meta_dex",
  "meta_tracing",
  "meta_util",
  "serde",
@@ -2039,6 +2040,7 @@ dependencies = [
  "meta_util",
  "thiserror",
  "tokio",
+ "tracing",
 ]
 
 [[package]]

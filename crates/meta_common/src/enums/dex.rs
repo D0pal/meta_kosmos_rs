@@ -44,6 +44,9 @@ pub enum DexExchange {
 
     #[strum(ascii_case_insensitive, serialize = "UNISWAP_V2")]
     UNISWAP_V2,
+
+    #[strum(ascii_case_insensitive, serialize = "UNISWAP_V3")]
+    UNISWAP_V3,
 }
 
 impl Into<String> for DexExchange {

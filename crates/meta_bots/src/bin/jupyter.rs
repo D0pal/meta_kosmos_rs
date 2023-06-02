@@ -31,6 +31,7 @@ use meta_contracts::{
         UniswapV2PairWrapper,
     },
 };
+use meta_dex::{sync_dex, Dex};
 use meta_tracing::init_tracing;
 use meta_util::{address_from_str, enums::dexs_from_str};
 
@@ -55,6 +56,7 @@ async fn run(config: JupyterConfig) -> anyhow::Result<()> {
 
     let provider_ws =
         Provider::<Ws>::connect(rpc_info.wsUrls[0].clone()).await.expect("ws connect error");
+    // let provider_ws = Provider::<Http>::connect(&rpc_info.httpUrls[0]).await;
     let provider_ws =
         provider_ws.interval(Duration::from_millis(config.provider.ws_interval_milli.unwrap()));
 
@@ -70,6 +72,19 @@ async fn run(config: JupyterConfig) -> anyhow::Result<()> {
     let client = NonceManagerMiddleware::new(client, searcher_address);
     let client = Arc::new(client);
     info!("profits will be sent to {:?}", searcher_address);
+
+    let pancake = Dex::new(client.clone(), Network::BSC, DexExchange::PANCAKE);
+    let current_block = client.get_block_number().await.unwrap();
+    let pools = sync_dex(
+        vec![Arc::new(pancake)],
+        Some(BlockNumber::Number(current_block - 1000)),
+        BlockNumber::Number(current_block),
+    )
+    .await
+    .unwrap();
+
+    debug!("all pools {:?}", pools);
+    info!("total pools num: {:?}", pools.len());
     Ok(())
 }
 
