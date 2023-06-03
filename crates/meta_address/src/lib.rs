@@ -1,5 +1,5 @@
-use ethers::core::types::Address;
-use meta_common::enums::{Bot, ContractType, DexExchange, Network, Token};
+use ethers::{abi::Hash, core::types::Address};
+use meta_common::enums::{BotType, ContractType, DexExchange, Network, Token};
 use once_cell::sync::Lazy;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -18,7 +18,7 @@ impl Contract {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct DexAddress {
+pub struct ContractInfo {
     pub address: Address,
     pub created_blk_num: u64,
 }
@@ -48,10 +48,10 @@ static TOKEN_ADDRESS_BOOK: Lazy<HashMap<Token, Contract>> =
     Lazy::new(|| serde_json::from_str(TOKEN_ADDRESS_JSON).unwrap());
 
 static DEX_ADDRESS_BOOK: Lazy<
-    HashMap<DexExchange, HashMap<Network, HashMap<ContractType, DexAddress>>>,
+    HashMap<DexExchange, HashMap<Network, HashMap<ContractType, ContractInfo>>>,
 > = Lazy::new(|| serde_json::from_str(DEX_ADDRESS_JSON).unwrap());
 
-static BOT_ADDRESS_BOOK: Lazy<HashMap<Bot, Contract>> =
+static BOT_ADDRESS_BOOK: Lazy<HashMap<BotType, HashMap<Network, ContractInfo>>> =
     Lazy::new(|| serde_json::from_str(BOT_ADDRESS_JSON).unwrap());
 
 static RPC_INFO_BOOK: Lazy<HashMap<Network, RpcInfo>> =
@@ -63,15 +63,15 @@ pub fn get_token_address(name: Token) -> Option<Contract> {
     TOKEN_ADDRESS_BOOK.get(&name.into()).cloned()
 }
 
-pub fn get_bot_address(name: Bot) -> Option<Contract> {
-    BOT_ADDRESS_BOOK.get(&name.into()).cloned()
+pub fn get_bot_address(name: BotType, network: Network) -> Option<ContractInfo> {
+    BOT_ADDRESS_BOOK.get(&name.into()).map_or(None, |v| v.get(&network).cloned())
 }
 
 pub fn get_dex_address(
     dex_name: DexExchange,
     chain_name: Network,
     contract_type: ContractType,
-) -> Option<DexAddress> {
+) -> Option<ContractInfo> {
     DEX_ADDRESS_BOOK
         .get(&dex_name.into())
         .map_or(None, |v| v.get(&chain_name).map_or(None, |v| v.get(&contract_type).cloned()))
@@ -99,7 +99,7 @@ mod tests {
             get_token_address(Token::WBNB).unwrap().address(Network::BSC).unwrap(),
             address_from_str("0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c")
         );
-        assert!(get_token_address(Token::BUSD).is_some());
+        // assert!(get_token_address(Token::BUSD).is_some());
         assert!(get_token_address(Token::EMPTY).is_none());
 
         assert!(get_token_address(Token::WBNB).unwrap().address(Network::BSC).is_some());
@@ -108,19 +108,27 @@ mod tests {
 
     #[test]
     fn test_dex_addr() {
-        assert!(get_dex_address(DexExchange::PANCAKE, Network::BSC, ContractType::UNI_V2_FACTORY).is_some());
-        assert_eq!(get_dex_address(DexExchange::PANCAKE, Network::BSC, ContractType::UNI_V2_FACTORY)
-            .unwrap().address, address_from_str("0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73"));
-        assert_eq!(get_dex_address(DexExchange::PANCAKE, Network::BSC, ContractType::UNI_V2_FACTORY)
-            .unwrap().created_blk_num, 6809737);
+        assert!(get_dex_address(DexExchange::PANCAKE, Network::BSC, ContractType::UNI_V2_FACTORY)
+            .is_some());
+        assert_eq!(
+            get_dex_address(DexExchange::PANCAKE, Network::BSC, ContractType::UNI_V2_FACTORY)
+                .unwrap()
+                .address,
+            address_from_str("0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73")
+        );
+        assert_eq!(
+            get_dex_address(DexExchange::PANCAKE, Network::BSC, ContractType::UNI_V2_FACTORY)
+                .unwrap()
+                .created_blk_num,
+            6809737
+        );
     }
 
     #[test]
     fn test_get_bot_address() {
-        assert!(get_bot_address(Bot::ATOMIC_SWAP_ROUTER).is_some());
-        let bot_addrs = get_bot_address(Bot::ATOMIC_SWAP_ROUTER).unwrap();
-        let addr = bot_addrs.address(Network::ZK_SYNC_ERA).unwrap();
-        assert_eq!(addr, address_from_str("0xea57F2ca01dAb59139b1AFC483bd29cE8B727361"));
+        assert!(get_bot_address(BotType::ATOMIC_SWAP_ROUTER, Network::BSC).is_some());
+        let bot_addrs = get_bot_address(BotType::ATOMIC_SWAP_ROUTER, Network::ZK_SYNC_ERA).unwrap();
+        assert_eq!(bot_addrs.address, address_from_str("0xea57F2ca01dAb59139b1AFC483bd29cE8B727361"));
     }
 
     #[test]

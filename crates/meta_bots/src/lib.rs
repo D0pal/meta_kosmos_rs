@@ -1,3 +1,5 @@
+pub mod mev_bots;
+
 use std::env;
 use std::{result::Result, str::FromStr, path::PathBuf};
 use async_trait::async_trait;

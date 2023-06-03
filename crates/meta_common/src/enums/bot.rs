@@ -18,7 +18,10 @@ use serde::{Deserialize};
     // TryFromPrimitive, // TryFrom<u64>
     Deserialize,
 )]
-pub enum Bot {
+pub enum BotType {
     #[strum(ascii_case_insensitive, serialize = "ATOMIC_SWAP_ROUTER")]
     ATOMIC_SWAP_ROUTER,
+
+    #[strum(ascii_case_insensitive, serialize = "SANDWIDTH_HUFF")]
+    SANDWIDTH_HUFF,
 }

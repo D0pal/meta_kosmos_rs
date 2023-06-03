@@ -22,21 +22,26 @@ meta_util= {path="../meta_util"}
 meta_address= {path="../meta_address"}
 meta_contracts={path="../meta_contracts"}
 meta_dex={path="../meta_dex"}
+# async
 tokio.workspace=true
+futures.workspace=true
+futures-util.workspace=true
 tokio-tungstenite.workspace=true
 ethers = { git = "https://github.com/gakonst/ethers-rs", features = ["ws", 'ipc', "legacy", "rustls"] }
 async-trait = "0.1.57"
 config = "0.13.2"
 url = "2.3.1"
+# data
 serde.workspace=true
 serde_json.workspace=true
-futures.workspace=true
-futures-util = { version = "0.3.28", default-features = false, features = ["sink", "std"] }
 exitcode = "1.1.2"
+hashbrown.workspace=true
+dashmap.workspace=true
 # CLI
 gumdrop = "0.8.0"
 # error
 anyhow.workspace=true
+eyre.workspace=true
 # tracing
 tracing.workspace=true
 

@@ -1,8 +1,22 @@
 {
-    "ATOMIC_SWAP_ROUTER": {
-		"addresses": {
-			"BSC": "0x57C193B9e28DeB5e4ce9b0480a5Bd79725326606",
-            "ZK_SYNC_ERA": "0xea57F2ca01dAb59139b1AFC483bd29cE8B727361"
+	"ATOMIC_SWAP_ROUTER": {
+		"BSC": {
+			"address":"0x57C193B9e28DeB5e4ce9b0480a5Bd79725326606",
+			"created_blk_num": 23349504 
+		},
+		"ZK_SYNC_ERA": {
+			"address":"0xea57F2ca01dAb59139b1AFC483bd29cE8B727361",
+			"created_blk_num": 0
+		}
+	},
+	"SANDWIDTH_HUFF": {
+		"BSC": {
+			"address":"0xae04a2c4ecf153e4537948df46fc85c8026cd4f3",
+			"created_blk_num": 28593703 
+		},
+		"ETH_GOERLI": {
+			"address":"0x7B2eBa8D11a3c74b3A9DF9Cf9f05082c7214B2Fb",
+			"created_blk_num": 9072182
 		}
 	}
 }

@@ -20,7 +20,7 @@ use tracing::{debug, info, instrument::WithSubscriber, warn, Level};
 
 use meta_address::{get_bot_address, get_dex_address, get_rpc_info, get_token_address};
 use meta_bots::JupyterConfig;
-use meta_common::enums::{Bot, ContractType, DexExchange, Network, Token};
+use meta_common::enums::{BotType, ContractType, DexExchange, Network, Token};
 use meta_contracts::{
     bindings::{
         flash_bots_router::{FlashBotsRouter, UniswapWethParams},
@@ -73,18 +73,36 @@ async fn run(config: JupyterConfig) -> anyhow::Result<()> {
     let client = Arc::new(client);
     info!("profits will be sent to {:?}", searcher_address);
 
-    let pancake = Dex::new(client.clone(), Network::BSC, DexExchange::PANCAKE);
+    let dexes = config
+        .chain
+        .dexs
+        .unwrap()
+        .into_iter()
+        .map(|d| Arc::new(Dex::new(client.clone(), config.chain.network.unwrap(), d)))
+        .collect::<Vec<_>>();
+
+    // let pancake = Dex::new(client.clone(), Network::BSC, DexExchange::PANCAKE);
     let current_block = client.get_block_number().await.unwrap();
     let pools = sync_dex(
-        vec![Arc::new(pancake)],
+        dexes,
         Some(BlockNumber::Number(current_block - 1000)),
         BlockNumber::Number(current_block),
     )
     .await
     .unwrap();
 
-    debug!("all pools {:?}", pools);
     info!("total pools num: {:?}", pools.len());
+
+    // Execution loop (reconnect bot if it dies)
+    // loop {
+    //     // let client = utils::create_websocket_client().await.unwrap();
+    //     let mut bot = Bot::new(client, all_pools.clone(), dexes.clone())
+    //         .await
+    //         .unwrap();
+
+    //     bot.run().await.unwrap();
+    //     // log::error!("Websocket disconnected");
+    // }
     Ok(())
 }
 
