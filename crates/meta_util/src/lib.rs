@@ -1,11 +1,12 @@
+pub mod enums;
+pub mod eth;
+
 use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use ethers::types::Address;
 use hex;
 
-
-pub mod enums;
 
 pub fn address_to_str(addr: &Address) -> String {
     let str: String = hex::encode(addr);

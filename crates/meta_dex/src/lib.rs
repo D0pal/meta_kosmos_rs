@@ -1,5 +1,11 @@
 pub mod error;
 pub mod pool;
+pub mod sandwidth;
+
+pub mod prelude {
+    pub use super::{error::*, pool::*, sandwidth::*};
+}
+
 
 use std::sync::Arc;
 
@@ -11,9 +17,6 @@ use meta_common::enums::{ContractType, DexExchange, Network, PoolVariant};
 use meta_contracts::bindings::uniswap_v2_factory::UniswapV2Factory;
 use tracing::{debug, debug_span, info, instrument, trace, warn};
 
-pub mod prelude {
-    pub use super::{error::*, pool::*};
-}
 
 use crate::prelude::{PairSyncError, Pool};
 

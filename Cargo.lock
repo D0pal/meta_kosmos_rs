@@ -2069,7 +2069,9 @@ version = "0.1.0"
 dependencies = [
  "ethers",
  "eyre",
+ "hashbrown 0.13.2",
  "indicatif 0.17.4",
+ "lazy_static",
  "meta_address",
  "meta_common",
  "meta_contracts",

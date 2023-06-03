@@ -15,6 +15,9 @@ meta_contracts= {path="../meta_contracts"}
 ethers = { git = "https://github.com/gakonst/ethers-rs", features = ["ws", 'ipc', "legacy", "rustls"] }
 # async
 tokio.workspace=true
+# data
+lazy_static.workspace=true
+hashbrown.workspace=true
 # tracing
 tracing.workspace=true
 # error

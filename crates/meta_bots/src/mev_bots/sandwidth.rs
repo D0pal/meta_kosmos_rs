@@ -10,7 +10,7 @@ use meta_common::{constants::ERC20_TRANSFER_EVENT_SIG, enums::Network};
 use meta_contracts::wrappers::Erc20Wrapper;
 // use crate::prelude::fork_factory::ForkFactory;
 // use crate::prelude::sandwich_types::RawIngredients;
-// use crate::prelude::{make_sandwich, Dex, Pool};
+use meta_dex::prelude::*;
 // use crate::rpc_extensions;
 // use crate::types::BlockOracle;
 // use crate::utils;
@@ -58,13 +58,10 @@ impl BotState {
         .await?;
         let token_dust = Arc::new(RwLock::new(token_dust));
 
-        // let weth_contract =
-        //     utils::contracts::get_erc20_contract(&utils::constants::get_weth_address(), client);
-        // let weth_balance = weth_contract
-        //     .balance_of(utils::dotenv::get_sandwich_contract_address())
-        //     .call()
-        //     .await?;
-        // let weth_balance = Arc::new(RwLock::new(weth_balance));
+        let weth_contract = Erc20Wrapper::new(network, weth_address, client.clone()).await;
+        let weth_balance =
+            weth_contract.token_contract.balance_of(sandwidth_contract_address).call().await?;
+        let weth_balance = Arc::new(RwLock::new(weth_balance));
 
         Ok(BotState {
             network,
@@ -219,18 +216,17 @@ impl BotSandwidth {
         sandwich_inception_block: U64,
         weth_address: Address,
         client: Arc<Provider<Ws>>,
-        // pool_vec: Vec<Pool>,
+        pool_vec: Vec<Pool>,
         // dexes: Vec<Dex>,
     ) -> Result<Self> {
         // create hashmap from our vec of pools (faster access when doing lookups)
-        // let all_pools: DashMap<Address, Pool> = DashMap::new();
-        // for pool in pool_vec {
-        //     all_pools.insert(pool.address, pool);
-        // }
+        let all_pools: DashMap<Address, Pool> = DashMap::new();
+        for pool in pool_vec {
+            all_pools.insert(pool.address, pool);
+        }
 
-        // let all_pools = Arc::new(all_pools);
+        let all_pools = Arc::new(all_pools);
 
-        // let sandwich_inception_block = utils::dotenv::get_sandwich_inception_block();
         let sandwich_state = BotState::new(
             network,
             sandwidth_contract_address,
@@ -241,7 +237,11 @@ impl BotSandwidth {
         .await?;
         let sandwich_state = Arc::new(sandwich_state);
 
-        // let sandwich_maker = Arc::new(SandwichMaker::new().await);
+        // TODO: to continue 
+        // let sandwich_maker = Arc::new(SandwichMaker::new(
+        //     weth_address,
+        //     sandwidth_contract_address,
+        // ).await);
 
         // let latest_block_oracle = BlockOracle::new(&client).await?;
         // let latest_block_oracle = Arc::new(RwLock::new(latest_block_oracle));
