@@ -11,9 +11,11 @@
     },
     "BSC": {
         "httpUrls": [
+            "https://falling-proud-mountain.bsc.quiknode.pro/b53d2c8f76813ff09355ec1b8f2db1f758953010",
             "https://rpc.ankr.com/bsc/fd1df65634ef7b46509966f82e10e29dedf263d73aebec4d7c1cf2529a23bcf6"
         ],
         "wsUrls": [
+            "wss://falling-proud-mountain.bsc.quiknode.pro/b53d2c8f76813ff09355ec1b8f2db1f758953010",
             "wss://rpc.ankr.com/bsc/ws/fd1df65634ef7b46509966f82e10e29dedf263d73aebec4d7c1cf2529a23bcf6"
         ],
         "chainId": 56,

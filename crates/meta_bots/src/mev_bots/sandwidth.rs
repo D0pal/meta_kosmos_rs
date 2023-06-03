@@ -182,6 +182,7 @@ impl BotState {
             let balance: U256 = erc20.token_contract.balance_of(sandwidth_contract_address).await?;
 
             if !balance.is_zero() {
+                debug!("balance of {:?} is {:?}", touched_addr, balance);
                 token_dust.push(touched_addr);
             }
         }

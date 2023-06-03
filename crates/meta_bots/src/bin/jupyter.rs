@@ -19,7 +19,7 @@ use std::{
 use tracing::{debug, info, instrument::WithSubscriber, warn, Level};
 
 use meta_address::{get_bot_address, get_dex_address, get_rpc_info, get_token_address};
-use meta_bots::JupyterConfig;
+use meta_bots::{mev_bots::sandwidth::BotSandwidth, JupyterConfig};
 use meta_common::enums::{BotType, ContractType, DexExchange, Network, Token};
 use meta_contracts::{
     bindings::{
@@ -59,6 +59,7 @@ async fn run(config: JupyterConfig) -> anyhow::Result<()> {
     // let provider_ws = Provider::<Http>::connect(&rpc_info.httpUrls[0]).await;
     let provider_ws =
         provider_ws.interval(Duration::from_millis(config.provider.ws_interval_milli.unwrap()));
+    let provider_ws = Arc::new(provider_ws);
 
     let private_key = std::fs::read_to_string(config.accounts.private_key_path.unwrap())
         .unwrap()
@@ -68,20 +69,20 @@ async fn run(config: JupyterConfig) -> anyhow::Result<()> {
 
     let wallet = wallet.with_chain_id(rpc_info.chainId);
     let searcher_address = wallet.address();
-    let client = SignerMiddleware::new(provider_ws, wallet);
+    let client = SignerMiddleware::new(provider_ws.clone(), wallet);
     let client = NonceManagerMiddleware::new(client, searcher_address);
     let client = Arc::new(client);
     info!("profits will be sent to {:?}", searcher_address);
 
+    let network = config.chain.network.unwrap();
     let dexes = config
         .chain
         .dexs
         .unwrap()
         .into_iter()
-        .map(|d| Arc::new(Dex::new(client.clone(), config.chain.network.unwrap(), d)))
+        .map(|d| Arc::new(Dex::new(client.clone(), network, d)))
         .collect::<Vec<_>>();
 
-    // let pancake = Dex::new(client.clone(), Network::BSC, DexExchange::PANCAKE);
     let current_block = client.get_block_number().await.unwrap();
     let pools = sync_dex(
         dexes,
@@ -92,11 +93,25 @@ async fn run(config: JupyterConfig) -> anyhow::Result<()> {
     .unwrap();
 
     info!("total pools num: {:?}", pools.len());
+    let sandwitdh_contract_info = get_bot_address(BotType::SANDWIDTH_HUFF, network).unwrap();
+
+    let weth_address = match network {
+        Network::BSC => get_token_address(Token::WBNB, Network::BSC),
+        _ => get_token_address(Token::WETH, network),
+    };
 
     // Execution loop (reconnect bot if it dies)
     // loop {
     //     // let client = utils::create_websocket_client().await.unwrap();
-    //     let mut bot = Bot::new(client, all_pools.clone(), dexes.clone())
+    let mut bot = BotSandwidth::new(
+        network,
+        sandwitdh_contract_info.address,
+        sandwitdh_contract_info.created_blk_num.into(),
+        weth_address.unwrap(),
+        provider_ws.clone(),
+    )
+    .await
+    .unwrap();
     //         .await
     //         .unwrap();
 

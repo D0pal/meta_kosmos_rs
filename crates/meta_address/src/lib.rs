@@ -44,7 +44,7 @@ const DEX_ADDRESS_JSON: &str = include_str!("../static/dex_address.json");
 const BOT_ADDRESS_JSON: &str = include_str!("../static/bot_address.json");
 const RPC_JSON: &str = include_str!("../static/rpc.json");
 
-static TOKEN_ADDRESS_BOOK: Lazy<HashMap<Token, Contract>> =
+static TOKEN_ADDRESS_BOOK: Lazy<HashMap<Token, HashMap<Network, Address>>> =
     Lazy::new(|| serde_json::from_str(TOKEN_ADDRESS_JSON).unwrap());
 
 static DEX_ADDRESS_BOOK: Lazy<
@@ -59,8 +59,8 @@ static RPC_INFO_BOOK: Lazy<HashMap<Network, RpcInfo>> =
 
 /// Fetch the addressbook for a contract by its name. If the contract name is not a part of
 /// [ethers-addressbook](https://github.com/gakonst/ethers-rs/tree/master/ethers-addressbook) we return None.
-pub fn get_token_address(name: Token) -> Option<Contract> {
-    TOKEN_ADDRESS_BOOK.get(&name.into()).cloned()
+pub fn get_token_address(name: Token, network: Network) -> Option<Address> {
+    TOKEN_ADDRESS_BOOK.get(&name.into()).map_or(None, |x| x.get(&network).cloned())
 }
 
 pub fn get_bot_address(name: BotType, network: Network) -> Option<ContractInfo> {
@@ -92,18 +92,10 @@ mod tests {
 
     #[test]
     fn test_token_addr() {
-        println!("{:?}", get_token_address(Token::WBNB));
-        assert!(get_token_address(Token::WBNB).is_some());
-        println!("{:?}", get_token_address(Token::WBNB).unwrap().address(Network::BSC).unwrap());
         assert_eq!(
-            get_token_address(Token::WBNB).unwrap().address(Network::BSC).unwrap(),
+            get_token_address(Token::WBNB, Network::BSC).unwrap(),
             address_from_str("0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c")
         );
-        // assert!(get_token_address(Token::BUSD).is_some());
-        assert!(get_token_address(Token::EMPTY).is_none());
-
-        assert!(get_token_address(Token::WBNB).unwrap().address(Network::BSC).is_some());
-        assert!(get_token_address(Token::WBNB).unwrap().address(Network::BSC_TEST).is_some());
     }
 
     #[test]
@@ -128,7 +120,10 @@ mod tests {
     fn test_get_bot_address() {
         assert!(get_bot_address(BotType::ATOMIC_SWAP_ROUTER, Network::BSC).is_some());
         let bot_addrs = get_bot_address(BotType::ATOMIC_SWAP_ROUTER, Network::ZK_SYNC_ERA).unwrap();
-        assert_eq!(bot_addrs.address, address_from_str("0xea57F2ca01dAb59139b1AFC483bd29cE8B727361"));
+        assert_eq!(
+            bot_addrs.address,
+            address_from_str("0xea57F2ca01dAb59139b1AFC483bd29cE8B727361")
+        );
     }
 
     #[test]

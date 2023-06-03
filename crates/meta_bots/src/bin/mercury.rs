@@ -89,23 +89,24 @@ async fn run(opts: Opts) -> anyhow::Result<()> {
     info!("profits will be sent to {:?}", executor_address);
     let quote_amt_in = u128::pow(10, 17);
 
-    let quote_addr = get_token_address(opts.quote_token).unwrap().address(opts.network).unwrap();
-    let base_addr = get_token_address(opts.base_token).unwrap().address(opts.network).unwrap();
+    let quote_addr = get_token_address(opts.quote_token, opts.network).unwrap();
+    let base_addr = get_token_address(opts.base_token, opts.network).unwrap();
     debug!("quote_addr: {}, base_addr: {} ", quote_addr, base_addr);
 
     let quote_asset = Erc20Wrapper::new(opts.network, quote_addr, client.clone()).await;
     let base_asset = Erc20Wrapper::new(opts.network, base_addr, client.clone()).await;
 
-    let bot_address =
-        get_bot_address(BotType::ATOMIC_SWAP_ROUTER, opts.network).unwrap().address;
+    let bot_address = get_bot_address(BotType::ATOMIC_SWAP_ROUTER, opts.network).unwrap().address;
     let flashbots_router = FlashBotsRouter::new(bot_address, client.clone());
 
-    let market_a_factory_addr = get_dex_address(opts.dex_a.clone(), opts.network, ContractType::UNI_V2_FACTORY)
-        .unwrap()
-        .address;
-    let market_a_swap_router_addr = get_dex_address(opts.dex_a.clone(), opts.network, ContractType::UNI_V2_ROUTER)
-        .unwrap()
-        .address;
+    let market_a_factory_addr =
+        get_dex_address(opts.dex_a.clone(), opts.network, ContractType::UNI_V2_FACTORY)
+            .unwrap()
+            .address;
+    let market_a_swap_router_addr =
+        get_dex_address(opts.dex_a.clone(), opts.network, ContractType::UNI_V2_ROUTER)
+            .unwrap()
+            .address;
 
     let market_a = UniswapV2::new(
         opts.network,
