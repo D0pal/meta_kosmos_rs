@@ -12,7 +12,7 @@ meta_util= {path="../meta_util"}
 meta_address= {path="../meta_address"}
 meta_contracts= {path="../meta_contracts"}
 # blockchain
-ethers = { git = "https://github.com/gakonst/ethers-rs", features = ["ws", 'ipc', "legacy", "rustls"] }
+ethers.workspace=true
 # async
 tokio.workspace=true
 # data

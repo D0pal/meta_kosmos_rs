@@ -24,4 +24,7 @@ pub enum BotType {
 
     #[strum(ascii_case_insensitive, serialize = "SANDWIDTH_HUFF")]
     SANDWIDTH_HUFF,
+
+    #[strum(ascii_case_insensitive, serialize = "BRAIN_DANCE_SOL")]
+    BRAIN_DANCE_SOL
 }

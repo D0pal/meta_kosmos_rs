@@ -4,7 +4,7 @@ use super::*;
 use hashbrown::HashMap;
 
 use crate::{prelude::Pool, sandwidth::WETH_ENCODE_DIVISOR};
-use meta_util::eth::{encode_packed, PackedToken, TakeLastXBytes};
+use meta_util::ether::{encode_packed, PackedToken, TakeLastXBytes};
 /// Encoded swap value used by other token
 pub struct EncodedSwapValue {
     four_byte_value: U256,
@@ -182,6 +182,7 @@ pub fn decode_intermediary(
 }
 
 /// returns the encoded value of amount in (actual value passed to contract)
+/// BUG suspected
 pub fn encode_weth(amount_in: U256) -> U256 {
     (amount_in / *WETH_ENCODE_DIVISOR) * (*WETH_ENCODE_DIVISOR)
 }

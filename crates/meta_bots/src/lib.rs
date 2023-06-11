@@ -1,4 +1,5 @@
 pub mod mev_bots;
+pub mod forked_db;
 
 use std::env;
 use std::{result::Result, str::FromStr, path::PathBuf};

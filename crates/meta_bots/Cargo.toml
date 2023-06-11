@@ -16,32 +16,39 @@ bench = true
 
 [dependencies]
 # workspace
-meta_tracing= {path="../meta_tracing"}
-meta_common= {path="../meta_common"}
-meta_util= {path="../meta_util"}
-meta_address= {path="../meta_address"}
-meta_contracts={path="../meta_contracts"}
-meta_dex={path="../meta_dex"}
+meta_tracing = { path = "../meta_tracing" }
+meta_common = { path = "../meta_common" }
+meta_util = { path = "../meta_util" }
+meta_address = { path = "../meta_address" }
+meta_contracts = { path = "../meta_contracts" }
+meta_dex = { path = "../meta_dex" }
+# blockchain
+ethers.workspace = true
+revm.workspace = true
+ethers-flashbots = { git = "https://github.com/onbjerg/ethers-flashbots", rev="db147d1f5b5e1904857cd76b9ce697b12a414fec" }
 # async
-tokio.workspace=true
-futures.workspace=true
-futures-util.workspace=true
-tokio-tungstenite.workspace=true
-ethers = { git = "https://github.com/gakonst/ethers-rs", features = ["ws", 'ipc', "legacy", "rustls"] }
+tokio.workspace = true
+futures.workspace = true
+futures-util.workspace = true
+tokio-tungstenite.workspace = true
 async-trait = "0.1.57"
 config = "0.13.2"
 url = "2.3.1"
+# network
+reqwest.workspace = true
 # data
-serde.workspace=true
-serde_json.workspace=true
+serde.workspace = true
+serde_json.workspace = true
 exitcode = "1.1.2"
-hashbrown.workspace=true
-dashmap.workspace=true
+hashbrown.workspace = true
+dashmap.workspace = true
+lazy_static.workspace = true
 # CLI
 gumdrop = "0.8.0"
 # error
-anyhow.workspace=true
-eyre.workspace=true
+thiserror.workspace = true
+anyhow.workspace = true
+eyre.workspace = true
 # tracing
-tracing.workspace=true
-
+tracing.workspace = true
+colored.workspace = true

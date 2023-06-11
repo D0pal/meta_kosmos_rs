@@ -1,9 +1,10 @@
 pub mod error;
 pub mod pool;
 pub mod sandwidth;
+pub mod oracle;
 
 pub mod prelude {
-    pub use super::{error::*, pool::*, sandwidth::*};
+    pub use super::{error::*, pool::*, sandwidth::*, oracle::*};
 }
 
 
@@ -30,7 +31,7 @@ pub struct Dex<M> {
     pub factory_creation_block: BlockNumber,
 }
 
-impl<M: Middleware + 'static> Dex<M> {
+impl<M: Middleware> Dex<M> {
     /// # Description
     /// Creates a new dex instance
     pub fn new(

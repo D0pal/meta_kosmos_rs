@@ -29,7 +29,8 @@ hashbrown = "0.13.2"
 strum = { version = "0.24", features = ["derive"] }
 strum_macros = "0.24"
 # blockchain
-ethers = { git = "https://github.com/gakonst/ethers-rs", features = ["ws", 'ipc', "legacy", "rustls"] }
+ethers = {version = "2.0.0", features = ["abigen", "ws"]}
+revm = {version = "3.0.0", features = ["ethersdb", "serde", "std"]}
 # web
 http = {version = "0.2.9"}
 # async
@@ -38,11 +39,14 @@ tokio-util = { version = "0.7", features = ["codec"] }
 tokio-tungstenite = { version = "0.17", features = ["native-tls"] }
 futures = "0.3"
 futures-util = { version = "0.3.28", default-features = false, features = ["sink", "std"] }
+# network
+reqwest = { version = "0.11", features = ["json"] }
 # error
 eyre = "0.6.8"
 anyhow = "1.0.32"
 thiserror = "1.0"
 # tracing
 tracing = "0.1.29"
+colored = "2.0.0"
 # misc
 indicatif = "0.17.1"

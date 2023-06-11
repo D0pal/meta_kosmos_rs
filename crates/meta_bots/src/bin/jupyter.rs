@@ -18,7 +18,7 @@ use std::{
 };
 use tracing::{debug, info, instrument::WithSubscriber, warn, Level};
 
-use meta_address::{get_bot_address, get_dex_address, get_rpc_info, get_token_address};
+use meta_address::{get_bot_contract_info, get_dex_address, get_rpc_info, get_token_address};
 use meta_bots::{mev_bots::sandwidth::BotSandwidth, JupyterConfig};
 use meta_common::enums::{BotType, ContractType, DexExchange, Network, Token};
 use meta_contracts::{
@@ -65,13 +65,14 @@ async fn run(config: JupyterConfig) -> anyhow::Result<()> {
         .unwrap()
         .trim()
         .to_string();
-    let wallet: LocalWallet = private_key.parse().unwrap();
+    let wallet_local: Arc<LocalWallet> =
+        Arc::new(private_key.parse::<LocalWallet>().unwrap().with_chain_id(rpc_info.chainId));
+    // let wallet_local = wallet_local;
+    let searcher_address = wallet_local.address();
+    // let wallet = SignerMiddleware::new(provider_ws.clone(), wallet_local.clone());
+    // let wallet = NonceManagerMiddleware::new(wallet, searcher_address);
+    // let wallet = Arc::new(wallet);
 
-    let wallet = wallet.with_chain_id(rpc_info.chainId);
-    let searcher_address = wallet.address();
-    let client = SignerMiddleware::new(provider_ws.clone(), wallet);
-    let client = NonceManagerMiddleware::new(client, searcher_address);
-    let client = Arc::new(client);
     info!("profits will be sent to {:?}", searcher_address);
 
     let network = config.chain.network.unwrap();
@@ -80,12 +81,12 @@ async fn run(config: JupyterConfig) -> anyhow::Result<()> {
         .dexs
         .unwrap()
         .into_iter()
-        .map(|d| Arc::new(Dex::new(client.clone(), network, d)))
+        .map(|d| Arc::new(Dex::new(provider_ws.clone(), network, d)))
         .collect::<Vec<_>>();
 
-    let current_block = client.get_block_number().await.unwrap();
+    let current_block = provider_ws.get_block_number().await.unwrap();
     let pools = sync_dex(
-        dexes,
+        dexes.clone(),
         Some(BlockNumber::Number(current_block - 1000)),
         BlockNumber::Number(current_block),
     )
@@ -93,7 +94,7 @@ async fn run(config: JupyterConfig) -> anyhow::Result<()> {
     .unwrap();
 
     info!("total pools num: {:?}", pools.len());
-    let sandwitdh_contract_info = get_bot_address(BotType::SANDWIDTH_HUFF, network).unwrap();
+    let sandwitdh_contract_info = get_bot_contract_info(BotType::SANDWIDTH_HUFF, network).unwrap();
 
     let weth_address = match network {
         Network::BSC => get_token_address(Token::WBNB, Network::BSC),
@@ -108,7 +109,10 @@ async fn run(config: JupyterConfig) -> anyhow::Result<()> {
         sandwitdh_contract_info.address,
         sandwitdh_contract_info.created_blk_num.into(),
         weth_address.unwrap(),
+        dexes.clone(),
+        pools,
         provider_ws.clone(),
+        wallet_local.clone(),
     )
     .await
     .unwrap();

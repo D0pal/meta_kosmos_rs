@@ -30,10 +30,10 @@ impl SandwichMaker {
         weth_address: Address,
         sandwich_contract_address: Address,
         searcher_wallet: Arc<LocalWallet>,
-        client: Arc<Provider<Ws>>,
+        provider: Arc<Provider<Ws>>,
     ) -> Self {
         let nonce =
-            if let Ok(n) = client.get_transaction_count(searcher_wallet.address(), None).await {
+            if let Ok(n) = provider.get_transaction_count(searcher_wallet.address(), None).await {
                 n
             } else {
                 panic!("Failed to get searcher wallet nonce...");

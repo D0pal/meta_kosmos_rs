@@ -1,5 +1,5 @@
 pub mod enums;
-pub mod eth;
+pub mod ether;
 
 use std::str::FromStr;
 use std::time::{SystemTime, UNIX_EPOCH};

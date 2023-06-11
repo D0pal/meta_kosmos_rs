@@ -15,7 +15,7 @@ use std::{
 };
 use tracing::{debug, info, instrument::WithSubscriber, warn, Level};
 
-use meta_address::{get_bot_address, get_dex_address, get_rpc_info, get_token_address};
+use meta_address::{get_bot_contract_info, get_dex_address, get_rpc_info, get_token_address};
 use meta_bots::AppConfig;
 use meta_common::enums::{BotType, ContractType, DexExchange, Network, Token};
 use meta_contracts::{
@@ -96,7 +96,7 @@ async fn run(opts: Opts) -> anyhow::Result<()> {
     let quote_asset = Erc20Wrapper::new(opts.network, quote_addr, client.clone()).await;
     let base_asset = Erc20Wrapper::new(opts.network, base_addr, client.clone()).await;
 
-    let bot_address = get_bot_address(BotType::ATOMIC_SWAP_ROUTER, opts.network).unwrap().address;
+    let bot_address = get_bot_contract_info(BotType::ATOMIC_SWAP_ROUTER, opts.network).unwrap().address;
     let flashbots_router = FlashBotsRouter::new(bot_address, client.clone());
 
     let market_a_factory_addr =
