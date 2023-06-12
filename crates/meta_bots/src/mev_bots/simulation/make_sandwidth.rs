@@ -658,233 +658,265 @@ async fn evaluate_sandwich_revenue(
     Ok(revenue)
 }
 
+#[cfg(test)]
+mod test {
+    use crate::{
+        forked_db::ForkFactory,
+        mev_bots::{
+            simulation::{get_from_txs, to_cache_db},
+            testhelpder::{self, get_next_block_info},
+            RawIngredients,
+        },
+    };
+    use ethers::prelude::*;
+    use meta_address::{get_bot_contract_info, get_rpc_info, get_token_address};
+    use meta_common::{enums::Network, constants::address_from_str};
+    use meta_dex::sandwidth::SandwichMaker;
+    use std::{fmt::format, str::FromStr, sync::Arc};
+    use tokio::{runtime::Runtime, time::Instant};
 
-// #[cfg(test)]
-// mod test {
-//     use std::str::FromStr;
+    async fn create_test(
+        network: Network,
+        searcher: Address,
+        fork_block_num: u64,
+        pool_addr: &str,
+        meats: Vec<&str>,
+        is_v2: bool,
+    ) {
+        let rpc_info = get_rpc_info(network).unwrap();
+        let sandwidth_contract_info =
+            get_bot_contract_info(meta_common::enums::BotType::SANDWIDTH_HUFF, network).unwrap();
+        let weth_address = get_token_address(meta_common::enums::Token::WETH, network).unwrap();
+        let ws_provider = testhelpder::create_ws().await;
+        let private_key = std::fs::read_to_string(format!("tmp/pk/sandwidth_searcher_{}", network))
+            .unwrap()
+            .trim()
+            .to_string();
+        let wallet_local: Arc<LocalWallet> =
+            Arc::new(private_key.parse::<LocalWallet>().unwrap().with_chain_id(rpc_info.chainId));
 
-//     use crate::{
-//         prelude::{fork_factory::ForkFactory, sandwich_types::RawIngredients},
-//         utils::{self, constants, testhelper, tx_builder::SandwichMaker},
-//     };
-//     use dotenv::dotenv;
-//     use ethers::prelude::*;
-//     use tokio::{runtime::Runtime, time::Instant};
+        let start = Instant::now();
 
-//     async fn create_test(fork_block_num: u64, pool_addr: &str, meats: Vec<&str>, is_v2: bool) {
-//         dotenv().ok();
-//         let ws_provider = testhelper::create_ws().await;
+        let pool = match is_v2 {
+            true => {
+                testhelpder::create_v2_pool(pool_addr.parse::<Address>().unwrap(), &ws_provider)
+                    .await
+            }
+            false => unimplemented!(),
+        };
 
-//         let start = Instant::now();
+        let mut victim_txs = vec![];
 
-//         let pool = match is_v2 {
-//             true => {
-//                 testhelper::create_v2_pool(pool_addr.parse::<Address>().unwrap(), &ws_provider)
-//                     .await
-//             }
-//             false => {
-//                 testhelper::create_v3_pool(pool_addr.parse::<Address>().unwrap(), &ws_provider)
-//                     .await
-//             }
-//         };
+        for tx_hash in meats {
+            let tx_hash = TxHash::from_str(tx_hash).unwrap();
+            victim_txs.push(ws_provider.get_transaction(tx_hash).await.unwrap().unwrap());
+        }
 
-//         let mut victim_txs = vec![];
+        let state =
+            get_from_txs(&ws_provider, &victim_txs, BlockNumber::Number(U64::from(fork_block_num)))
+                .await
+                .unwrap();
 
-//         for tx_hash in meats {
-//             let tx_hash = TxHash::from_str(tx_hash).unwrap();
-//             victim_txs.push(ws_provider.get_transaction(tx_hash).await.unwrap().unwrap());
-//         }
+        println!("state diff: ${:?}", state);
+        let initial_db = to_cache_db(
+            &state,
+            Some(BlockId::Number(BlockNumber::Number(fork_block_num.into()))),
+            &ws_provider,
+        )
+        .await
+        .unwrap();
+        let mut db = ForkFactory::new_sandbox_factory(
+            ws_provider.clone(),
+            initial_db,
+            Some(fork_block_num.into()),
+        );
+        println!("after ForkFactory::new_sandbox_factory");
+        let ingredients = RawIngredients::new(
+            &pool,
+            victim_txs,
+            weth_address,
+            state,
+            sandwidth_contract_info.address,
+            searcher,
+        )
+        .await
+        .unwrap();
 
-//         let state = utils::state_diff::get_from_txs(
-//             &ws_provider,
-//             &victim_txs,
-//             BlockNumber::Number(U64::from(fork_block_num)),
-//         )
-//         .await
-//         .unwrap();
+        println!("after ingredients::new");
+        match super::create_optimal_sandwich(
+            &ingredients,
+            ethers::utils::parse_ether("10").unwrap(),
+            &get_next_block_info(fork_block_num, &ws_provider).await,
+            &mut db,
+            &SandwichMaker::new(
+                weth_address,
+                sandwidth_contract_info.address,
+                wallet_local.clone(),
+                ws_provider,
+            )
+            .await,
+            network,
+            weth_address,
+            sandwidth_contract_info.address,
+            wallet_local.address(),
+        )
+        .await
+        {
+            Ok(sandwich) => println!("revenue: {:?}", sandwich.revenue),
+            Err(_) => println!("not sandwichable"),
+        };
+        println!("total_duration took: {:?}", start.elapsed());
+    }
 
-//         println!("state diff: ${:?}", state);
-//         let initial_db = utils::state_diff::to_cache_db(
-//             &state,
-//             Some(BlockId::Number(BlockNumber::Number(fork_block_num.into()))),
-//             &ws_provider,
-//         )
-//         .await
-//         .unwrap();
-//         let mut db = ForkFactory::new_sandbox_factory(
-//             ws_provider.clone(),
-//             initial_db,
-//             Some(fork_block_num.into()),
-//         );
-//         println!("after ForkFactory::new_sandbox_factory");
-//         let ingredients =
-//             RawIngredients::new(&pool, victim_txs, constants::get_weth_address(), state)
-//                 .await
-//                 .unwrap();
+    // #[test]
+    // fn sandv2_sushi_router() {
+    //     // Can't use [tokio::test] attr with `global_backed` for some reason
+    //     // so manually create a runtime
+    //     let rt = Runtime::new().unwrap();
+    //     rt.block_on(async {
+    //         create_test(
+    //             16873147,
+    //             "0xB84C45174Bfc6b8F3EaeCBae11deE63114f5c1b2",
+    //             vec!["0xb344fdc6a3b7c65c5dd971cb113567e2ee6d0636f261c3b8d624627b90694cdb"],
+    //             true,
+    //         )
+    //         .await;
+    //     });
+    // }
+    #[test]
+    fn sandv2_uni_router() {
+        // Can't use [tokio::test] attr with `global_backed` for some reason
+        // so manually create a runtime
+        let rt = Runtime::new().unwrap();
+        rt.block_on(async {
+            create_test(
+                Network::ETH,
+                address_from_str(""),
+                28594974,
+                "0xD4763C3E9ae4Ce5aB87dEA77ac59015E7Ae16246",
+                vec!["0xc25f688e1891872351e90990e3e6c0df79897e776ef3f06f45434ef1da1c750d"],
+                true,
+            )
+            .await;
+        });
+    }
 
-//         println!("after ingredients::new");
-//         match super::create_optimal_sandwich(
-//             &ingredients,
-//             ethers::utils::parse_ether("10").unwrap(),
-//             &testhelper::get_next_block_info(fork_block_num, &ws_provider).await,
-//             &mut db,
-//             &SandwichMaker::new().await,
-//         )
-//         .await
-//         {
-//             Ok(sandwich) => println!("revenue: {:?}", sandwich.revenue),
-//             Err(_) => println!("not sandwichable"),
-//         };
-//         println!("total_duration took: {:?}", start.elapsed());
-//     }
+    // #[test]
+    // fn sandv3_uniswap_universal_router_one() {
+    //     // Can't use [tokio::test] attr with `global_backed` for some reason
+    //     // so manually create a runtime
+    //     let rt = Runtime::new().unwrap();
+    //     rt.block_on(async {
+    //         create_test(
+    //             16863224,
+    //             "0x62CBac19051b130746Ec4CF96113aF5618F3A212",
+    //             vec!["0x90dfe56814821e7f76f2e4970a7b35948670a968abffebb7be69fe528283e6d8"],
+    //             false,
+    //         )
+    //         .await;
+    //     });
+    // }
 
-//     #[test]
-//     fn sandv2_sushi_router() {
-//         // Can't use [tokio::test] attr with `global_backed` for some reason
-//         // so manually create a runtime
-//         let rt = Runtime::new().unwrap();
-//         rt.block_on(async {
-//             create_test(
-//                 16873147,
-//                 "0xB84C45174Bfc6b8F3EaeCBae11deE63114f5c1b2",
-//                 vec!["0xb344fdc6a3b7c65c5dd971cb113567e2ee6d0636f261c3b8d624627b90694cdb"],
-//                 true,
-//             )
-//             .await;
-//         });
-//     }
-//     #[test]
-//     fn sandv2_uni_router() {
-//         // Can't use [tokio::test] attr with `global_backed` for some reason
-//         // so manually create a runtime
-//         let rt = Runtime::new().unwrap();
-//         rt.block_on(async {
-//             create_test(
-//                 28594974,
-//                 "0xD4763C3E9ae4Ce5aB87dEA77ac59015E7Ae16246",
-//                 vec!["0xc25f688e1891872351e90990e3e6c0df79897e776ef3f06f45434ef1da1c750d"],
-//                 true,
-//             )
-//             .await;
-//         });
-//     }
+    // #[test]
+    // fn sandv3_uniswap_universal_router_two() {
+    //     // Can't use [tokio::test] attr with `global_backed` for some reason
+    //     // so manually create a runtime
+    //     let rt = Runtime::new().unwrap();
+    //     rt.block_on(async {
+    //         create_test(
+    //             16863008,
+    //             "0xa80838D2BB3d6eBaEd1978FA23b38F91775D8378",
+    //             vec!["0xcb0d4dc905ae0662e5f18b4ad0c2af4e700e8b5969d878a2dcfd0d9507435f4d"],
+    //             false,
+    //         )
+    //         .await;
+    //     });
+    // }
 
-//     #[test]
-//     fn sandv3_uniswap_universal_router_one() {
-//         // Can't use [tokio::test] attr with `global_backed` for some reason
-//         // so manually create a runtime
-//         let rt = Runtime::new().unwrap();
-//         rt.block_on(async {
-//             create_test(
-//                 16863224,
-//                 "0x62CBac19051b130746Ec4CF96113aF5618F3A212",
-//                 vec!["0x90dfe56814821e7f76f2e4970a7b35948670a968abffebb7be69fe528283e6d8"],
-//                 false,
-//             )
-//             .await;
-//         });
-//     }
+    // #[test]
+    // fn sandv2_kyber_swap() {
+    //     // Can't use [tokio::test] attr with `global_backed` for some reason
+    //     // so manually create a runtime
+    //     let rt = Runtime::new().unwrap();
+    //     rt.block_on(async {
+    //         create_test(
+    //             16863312,
+    //             "0x08650bb9dc722C9c8C62E79C2BAfA2d3fc5B3293",
+    //             vec!["0x907894174999fdddc8d8f8e90c210cdb894b91c2c0d79ac35603007d3ce54d00"],
+    //             true,
+    //         )
+    //         .await;
+    //     });
+    // }
 
-//     #[test]
-//     fn sandv3_uniswap_universal_router_two() {
-//         // Can't use [tokio::test] attr with `global_backed` for some reason
-//         // so manually create a runtime
-//         let rt = Runtime::new().unwrap();
-//         rt.block_on(async {
-//             create_test(
-//                 16863008,
-//                 "0xa80838D2BB3d6eBaEd1978FA23b38F91775D8378",
-//                 vec!["0xcb0d4dc905ae0662e5f18b4ad0c2af4e700e8b5969d878a2dcfd0d9507435f4d"],
-//                 false,
-//             )
-//             .await;
-//         });
-//     }
+    // #[test]
+    // fn sandv2_non_sandwichable() {
+    //     // Can't use [tokio::test] attr with `global_backed` for some reason
+    //     // so manually create a runtime
+    //     let rt = Runtime::new().unwrap();
+    //     rt.block_on(async {
+    //         create_test(
+    //             16780624,
+    //             "0x657c6a08d49b4f0778f9cce1dc49d196cfce9d08",
+    //             vec!["0x77b0b15a3216885a66b3b800173e0edcae9d8d191f7093b99a46fc9346f67466"],
+    //             true,
+    //         )
+    //         .await;
+    //     });
+    // }
 
-//     #[test]
-//     fn sandv2_kyber_swap() {
-//         // Can't use [tokio::test] attr with `global_backed` for some reason
-//         // so manually create a runtime
-//         let rt = Runtime::new().unwrap();
-//         rt.block_on(async {
-//             create_test(
-//                 16863312,
-//                 "0x08650bb9dc722C9c8C62E79C2BAfA2d3fc5B3293",
-//                 vec!["0x907894174999fdddc8d8f8e90c210cdb894b91c2c0d79ac35603007d3ce54d00"],
-//                 true,
-//             )
-//             .await;
-//         });
-//     }
+    // #[test]
+    // fn sandv2_multi_with_three_expect_one_reverts() {
+    //     // Can't use [tokio::test] attr with `global_backed` for some reason
+    //     // so manually create a runtime
+    //     let rt = Runtime::new().unwrap();
+    //     rt.block_on(async {
+    //         create_test(
+    //             16780624,
+    //             "0x657c6a08d49b4f0778f9cce1dc49d196cfce9d08",
+    //             vec![
+    //                 "0x4791d05bdd6765f036ff4ae44fc27099997417e3bdb053ecb52182bbfc7767c5",
+    //                 "0x923c9ba97fea8d72e60c14d1cc360a8e7d99dd4b31274928d6a79704a8546eda",
+    //                 "0x77b0b15a3216885a66b3b800173e0edcae9d8d191f7093b99a46fc9346f67466",
+    //             ],
+    //             true,
+    //         )
+    //         .await;
+    //     });
+    // }
 
-//     #[test]
-//     fn sandv2_non_sandwichable() {
-//         // Can't use [tokio::test] attr with `global_backed` for some reason
-//         // so manually create a runtime
-//         let rt = Runtime::new().unwrap();
-//         rt.block_on(async {
-//             create_test(
-//                 16780624,
-//                 "0x657c6a08d49b4f0778f9cce1dc49d196cfce9d08",
-//                 vec!["0x77b0b15a3216885a66b3b800173e0edcae9d8d191f7093b99a46fc9346f67466"],
-//                 true,
-//             )
-//             .await;
-//         });
-//     }
+    // #[test]
+    // fn sandv2_multi_two() {
+    //     // Can't use [tokio::test] attr with `global_backed` for some reason
+    //     // so manually create a runtime
+    //     let rt = Runtime::new().unwrap();
+    //     rt.block_on(async {
+    //         create_test(
+    //             16780624,
+    //             "0x657c6a08d49B4F0778f9cce1Dc49d196cFCe9d08",
+    //             vec![
+    //                 "0x4791d05bdd6765f036ff4ae44fc27099997417e3bdb053ecb52182bbfc7767c5",
+    //                 "0x923c9ba97fea8d72e60c14d1cc360a8e7d99dd4b31274928d6a79704a8546eda",
+    //             ],
+    //             true,
+    //         )
+    //         .await;
+    //     });
+    // }
 
-//     #[test]
-//     fn sandv2_multi_with_three_expect_one_reverts() {
-//         // Can't use [tokio::test] attr with `global_backed` for some reason
-//         // so manually create a runtime
-//         let rt = Runtime::new().unwrap();
-//         rt.block_on(async {
-//             create_test(
-//                 16780624,
-//                 "0x657c6a08d49b4f0778f9cce1dc49d196cfce9d08",
-//                 vec![
-//                     "0x4791d05bdd6765f036ff4ae44fc27099997417e3bdb053ecb52182bbfc7767c5",
-//                     "0x923c9ba97fea8d72e60c14d1cc360a8e7d99dd4b31274928d6a79704a8546eda",
-//                     "0x77b0b15a3216885a66b3b800173e0edcae9d8d191f7093b99a46fc9346f67466",
-//                 ],
-//                 true,
-//             )
-//             .await;
-//         });
-//     }
-
-//     #[test]
-//     fn sandv2_multi_two() {
-//         // Can't use [tokio::test] attr with `global_backed` for some reason
-//         // so manually create a runtime
-//         let rt = Runtime::new().unwrap();
-//         rt.block_on(async {
-//             create_test(
-//                 16780624,
-//                 "0x657c6a08d49B4F0778f9cce1Dc49d196cFCe9d08",
-//                 vec![
-//                     "0x4791d05bdd6765f036ff4ae44fc27099997417e3bdb053ecb52182bbfc7767c5",
-//                     "0x923c9ba97fea8d72e60c14d1cc360a8e7d99dd4b31274928d6a79704a8546eda",
-//                 ],
-//                 true,
-//             )
-//             .await;
-//         });
-//     }
-
-//     #[test]
-//     fn sandv2_metamask_swap_router() {
-//         // Can't use [tokio::test] attr with `global_backed` for some reason
-//         // so manually create a runtime
-//         let rt = Runtime::new().unwrap();
-//         rt.block_on(async {
-//             create_test(
-//                 16873743,
-//                 "0x7A9dDcf06260404D14AbE3bE99c1804D2A5239ce",
-//                 vec!["0xcce01725bf7abfab3a4a533275cb4558a66d7794153b4ec01debaf5abd0dc21f"],
-//                 true,
-//             )
-//             .await;
-//         });
-//     }
-// }
+    // #[test]
+    // fn sandv2_metamask_swap_router() {
+    //     // Can't use [tokio::test] attr with `global_backed` for some reason
+    //     // so manually create a runtime
+    //     let rt = Runtime::new().unwrap();
+    //     rt.block_on(async {
+    //         create_test(
+    //             16873743,
+    //             "0x7A9dDcf06260404D14AbE3bE99c1804D2A5239ce",
+    //             vec!["0xcce01725bf7abfab3a4a533275cb4558a66d7794153b4ec01debaf5abd0dc21f"],
+    //             true,
+    //         )
+    //         .await;
+    //     });
+    // }
+}

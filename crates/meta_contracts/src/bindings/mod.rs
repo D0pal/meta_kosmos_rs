@@ -1,4 +1,4 @@
-mod erc20;
+pub mod erc20;
 pub use erc20::*;
 
 mod weth9;

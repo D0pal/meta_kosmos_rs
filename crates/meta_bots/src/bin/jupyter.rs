@@ -119,7 +119,7 @@ async fn run(config: JupyterConfig) -> anyhow::Result<()> {
     //         .await
     //         .unwrap();
 
-    //     bot.run().await.unwrap();
+    bot.run().await.unwrap();
     //     // log::error!("Websocket disconnected");
     // }
     Ok(())
