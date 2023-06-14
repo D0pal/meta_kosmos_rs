@@ -791,7 +791,7 @@ mod test {
         rt.block_on(async {
             create_test(
                 Network::ETH,
-                address_from_str(""),
+                address_from_str("0xF44f3819d60739cBcd7B051eE20Be34dE0B1842a"),
                 28594974,
                 "0xD4763C3E9ae4Ce5aB87dEA77ac59015E7Ae16246",
                 vec!["0xc25f688e1891872351e90990e3e6c0df79897e776ef3f06f45434ef1da1c750d"],

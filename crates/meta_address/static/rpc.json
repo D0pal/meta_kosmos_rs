@@ -20,5 +20,16 @@
         ],
         "chainId": 56,
         "explorer": "https://bscscan.com/"
+    },
+    "ETH": {
+        "archive": "https://methodical-blissful-mountain.quiknode.pro/4df963ef1e5c95b428222987008370d3ee3c3f27/",
+        "httpUrls": [
+            "https://lively-bold-sunset.quiknode.pro/a44820da0711822c6e00da793df8695e60e027a2/"
+        ],
+        "wsUrls": [
+            "wss://lively-bold-sunset.quiknode.pro/a44820da0711822c6e00da793df8695e60e027a2/"
+        ],
+        "chainId": 1,
+        "explorer": "https://etherscan.io/"
     }
 }

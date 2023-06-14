@@ -49,7 +49,7 @@ pub async fn create_fork_ws(fork_block_num: u64) -> (Arc<Provider<Ws>>, AnvilIns
 
 pub async fn create_ws() -> Arc<Provider<Ws>> {
     let ws = Ws::connect(
-        "wss://falling-proud-mountain.bsc.quiknode.pro/b53d2c8f76813ff09355ec1b8f2db1f758953010/",
+        "https://methodical-blissful-mountain.quiknode.pro/4df963ef1e5c95b428222987008370d3ee3c3f27/",
     )
     .await
     .unwrap();
