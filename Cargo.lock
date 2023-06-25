@@ -920,6 +920,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "error-chain"
+version = "0.12.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2d2f06b9cac1506ece98fe3231e3cc9c4410ec3d5b1f24ae1c8946f0742cdefc"
+dependencies = [
+ "version_check",
+]
+
+[[package]]
 name = "eth-keystore"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2151,6 +2160,30 @@ dependencies = [
  "tokio",
  "tokio-tungstenite 0.17.2",
  "tracing",
+ "url",
+]
+
+[[package]]
+name = "meta_cefi"
+version = "0.1.0"
+dependencies = [
+ "error-chain",
+ "eyre",
+ "hashbrown 0.13.2",
+ "hex",
+ "hmac",
+ "lazy_static",
+ "meta_address",
+ "meta_common",
+ "meta_util",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sha2 0.10.6",
+ "thiserror",
+ "tokio",
+ "tracing",
+ "tungstenite 0.18.0",
  "url",
 ]
 

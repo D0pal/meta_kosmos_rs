@@ -8,6 +8,7 @@ members = [
     "crates/meta_contracts",
     "crates/meta_dex",
     "crates/meta_mev_service",
+    "crates/meta_cefi",
 ]
 
 [workspace.package]
@@ -36,11 +37,12 @@ http = {version = "0.2.9"}
 # async
 tokio = { version = "1", features = ["full"] }
 tokio-util = { version = "0.7", features = ["codec"] }
+tungstenite = { version = "0.18.0", features = ["native-tls"] }
 tokio-tungstenite = { version = "0.17", features = ["native-tls"] }
 futures = "0.3"
 futures-util = { version = "0.3.28", default-features = false, features = ["sink", "std"] }
 # network
-reqwest = { version = "0.11", features = ["json"] }
+reqwest = { version = "0.11", features = ["json","blocking"] }
 # error
 eyre = "0.6.8"
 anyhow = "1.0.32"
