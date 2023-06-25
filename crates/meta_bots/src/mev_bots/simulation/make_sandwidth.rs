@@ -688,7 +688,7 @@ mod test {
             get_bot_contract_info(meta_common::enums::BotType::SANDWIDTH_HUFF, network).unwrap();
         let weth_address = get_token_address(meta_common::enums::Token::WETH, network).unwrap();
         let ws_provider = testhelpder::create_ws().await;
-        let private_key = std::fs::read_to_string(format!("tmp/pk/sandwidth_searcher_{}", network))
+        let private_key = std::fs::read_to_string(format!("/tmp/pk/sandwidth_searcher_{}", network))
             .unwrap()
             .trim()
             .to_string();
@@ -784,7 +784,7 @@ mod test {
     //     });
     // }
     #[test]
-    fn sandv2_uni_router() {
+    fn sand_sushi_v2() {
         // Can't use [tokio::test] attr with `global_backed` for some reason
         // so manually create a runtime
         let rt = Runtime::new().unwrap();
@@ -792,9 +792,9 @@ mod test {
             create_test(
                 Network::ETH,
                 address_from_str("0xF44f3819d60739cBcd7B051eE20Be34dE0B1842a"),
-                28594974,
-                "0xD4763C3E9ae4Ce5aB87dEA77ac59015E7Ae16246",
-                vec!["0xc25f688e1891872351e90990e3e6c0df79897e776ef3f06f45434ef1da1c750d"],
+                16873147,
+                "0xB84C45174Bfc6b8F3EaeCBae11deE63114f5c1b2",
+                vec!["0xb344fdc6a3b7c65c5dd971cb113567e2ee6d0636f261c3b8d624627b90694cdb"],
                 true,
             )
             .await;
