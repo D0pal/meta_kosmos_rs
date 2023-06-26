@@ -1,8 +1,8 @@
 
-use crate::client::Client;
-use crate::config::Config;
-use crate::general::General;
-use crate::market::Market;
+use crate::binance::client::Client;
+use crate::binance::config::Config;
+use crate::binance::general::General;
+use crate::binance::market::Market;
 
 #[allow(clippy::all)]
 pub enum API {

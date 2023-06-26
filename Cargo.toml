@@ -17,7 +17,7 @@ edition = "2021"
 
 [workspace.dependencies]
 proc-macro2 = "1"
-syn = { version = "1", features = ["full"]}
+syn = { version = "1", features = ["full"] }
 quote = "1"
 hex = "0.4"
 rand = "0.8"
@@ -30,19 +30,24 @@ hashbrown = "0.13.2"
 strum = { version = "0.24", features = ["derive"] }
 strum_macros = "0.24"
 # blockchain
-ethers = {version = "2.0.0", features = ["abigen", "ws"]}
-revm = {version = "3.0.0", features = ["ethersdb", "serde", "std"]}
+ethers = { version = "2.0.0", features = ["abigen", "ws"] }
+revm = { version = "3.0.0", features = ["ethersdb", "serde", "std"] }
 # web
-http = {version = "0.2.9"}
+http = { version = "0.2.9" }
 # async
 tokio = { version = "1", features = ["full"] }
 tokio-util = { version = "0.7", features = ["codec"] }
 tungstenite = { version = "0.18.0", features = ["native-tls"] }
 tokio-tungstenite = { version = "0.17", features = ["native-tls"] }
 futures = "0.3"
-futures-util = { version = "0.3.28", default-features = false, features = ["sink", "std"] }
+futures-util = { version = "0.3.28", default-features = false, features = [
+    "sink",
+    "std",
+] }
 # network
-reqwest = { version = "0.11", features = ["json","blocking"] }
+reqwest = { version = "0.11", features = ["json", "blocking"] }
+# crypto
+ring = "0.16"
 # error
 eyre = "0.6.8"
 anyhow = "1.0.32"

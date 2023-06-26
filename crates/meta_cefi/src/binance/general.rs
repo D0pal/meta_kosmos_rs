@@ -1,10 +1,10 @@
 use error_chain::bail;
 
-use crate::model::{Empty, ExchangeInformation, ServerTime, Symbol};
-use crate::client::Client;
-use crate::errors::Result;
-use crate::api::API;
-use crate::api::Spot;
+use crate::binance::model::{Empty, ExchangeInformation, ServerTime, Symbol};
+use crate::binance::client::Client;
+use crate::binance::errors::Result;
+use crate::binance::api::API;
+use crate::binance::api::Spot;
 
 #[derive(Clone)]
 pub struct General {

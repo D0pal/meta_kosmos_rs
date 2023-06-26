@@ -1,6 +1,6 @@
-use crate::errors::Result;
-use crate::config::Config;
-use crate::model::{
+use crate::binance::errors::Result;
+use crate::binance::config::Config;
+use crate::binance::model::{
     AccountUpdateEvent, AggrTradesEvent, BalanceUpdateEvent, BookTickerEvent, DayTickerEvent,
     DepthOrderBookEvent, KlineEvent, OrderBook, OrderTradeEvent, TradeEvent, DiffOrderBookEvent,
 };

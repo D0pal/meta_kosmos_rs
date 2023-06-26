@@ -1,7 +1,7 @@
-use meta_cefi::api::*;
-use meta_cefi::config::*;
-use meta_cefi::market::*;
-use meta_cefi::errors::ErrorKind as BinanceLibErrorKind;
+use meta_cefi::binance::api::*;
+use meta_cefi::binance::config::*;
+use meta_cefi::binance::errors::ErrorKind as BinanceLibErrorKind;
+use meta_cefi::binance::market::*;
 
 fn main() {
     // The general spot API endpoints; shown with
@@ -88,6 +88,4 @@ fn market_data() {
     //     }
     //     Err(e) => println!("Error: {}", e),
     // }
-
-
 }

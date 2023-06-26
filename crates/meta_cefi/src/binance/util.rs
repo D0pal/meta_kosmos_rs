@@ -1,4 +1,4 @@
-use crate::errors::Result;
+use crate::binance::errors::Result;
 use std::collections::BTreeMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 use error_chain::bail;

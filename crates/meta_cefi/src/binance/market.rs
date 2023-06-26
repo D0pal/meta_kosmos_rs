@@ -1,14 +1,14 @@
-use crate::util::build_request;
-use crate::model::{
+use crate::binance::util::build_request;
+use crate::binance::model::{
     AggTrade, AveragePrice, BookTickers, KlineSummaries, KlineSummary, OrderBook, PriceStats,
     Prices, SymbolPrice, Tickers,
 };
-use crate::client::Client;
-use crate::errors::Result;
+use crate::binance::client::Client;
+use crate::binance::errors::Result;
 use std::collections::BTreeMap;
 use serde_json::Value;
-use crate::api::API;
-use crate::api::Spot;
+use crate::binance::api::API;
+use crate::binance::api::Spot;
 use std::convert::TryInto;
 
 #[derive(Clone)]

@@ -1,13 +1,13 @@
 use error_chain::bail;
 use hex::encode as hex_encode;
 use hmac::{Hmac, Mac};
-use crate::errors::{BinanceContentError, ErrorKind, Result};
+use crate::binance::errors::{BinanceContentError, ErrorKind, Result};
 use reqwest::StatusCode;
 use reqwest::blocking::Response;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue, USER_AGENT, CONTENT_TYPE};
 use sha2::Sha256;
 use serde::de::DeserializeOwned;
-use crate::api::API;
+use crate::binance::api::API;
 
 #[derive(Clone)]
 pub struct Client {

@@ -25,6 +25,7 @@ serde_json.workspace=true
 # crypto
 hmac = "0.12.1"
 sha2 = "0.10.6"
+ring.workspace=true
 # tracing
 tracing.workspace=true
 # error

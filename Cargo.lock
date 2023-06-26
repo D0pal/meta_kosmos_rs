@@ -2177,6 +2177,7 @@ dependencies = [
  "meta_common",
  "meta_util",
  "reqwest",
+ "ring",
  "serde",
  "serde_json",
  "sha2 0.10.6",

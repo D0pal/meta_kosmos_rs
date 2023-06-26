@@ -2,7 +2,7 @@
 
 // use crate::api::*;
 // use binance::userstream::*;
-use meta_cefi::websockets::*;
+use meta_cefi::binance::websockets::*;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 fn main() {
