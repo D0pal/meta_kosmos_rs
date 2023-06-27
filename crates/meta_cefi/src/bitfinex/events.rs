@@ -1,10 +1,7 @@
-use serde::Deserialize;
-// use ticker::*;
-// use candles::Candle;
-// use trades::{TradingPair as TradesTradingPair, FundingCurrency as TradesFundingCurrency};
 use crate::bitfinex::book::{
     FundingCurrency as BookFundingCurrency, RawBook, TradingPair as BookTradingPair,
 };
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
@@ -110,4 +107,29 @@ pub struct RawBookSubscriptionMessage {
     pub freq: String,
     pub len: String,
     pub pair: String,
+}
+
+#[cfg(test)]
+mod test_events {
+    use rust_decimal::{prelude::FromPrimitive, Decimal};
+    use serde_json::{from_str};
+    use super::DataEvent;
+
+    #[test]
+    fn should_deserilize_trading_book_event() {
+        let data_str: &'static str = r#"[1,[[30367.1,7,1.1]]]"#;
+        let event: DataEvent = from_str(data_str).unwrap();
+        if let DataEvent::BookTradingSnapshotEvent(channel_id, snapshots) = event {
+            assert_eq!(channel_id, 1);
+            assert_eq!(snapshots.len(), 1);
+            let snapshot = snapshots.get(0);
+            assert!(snapshot.is_some());
+            let snapshot = snapshot.unwrap();
+            assert_eq!(snapshot.price, Decimal::from_f64(30367.1f64).unwrap());
+            assert_eq!(snapshot.count, 7);
+            assert_eq!(snapshot.amount, Decimal::from_f64(1.1f64).unwrap());
+        } else {
+            panic!("failed");
+        }
+    }
 }

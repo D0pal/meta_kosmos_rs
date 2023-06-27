@@ -22,6 +22,7 @@ hashbrown.workspace=true
 hex.workspace=true
 serde.workspace=true
 serde_json.workspace=true
+rust_decimal.workspace=true
 # crypto
 hmac = "0.12.1"
 sha2 = "0.10.6"

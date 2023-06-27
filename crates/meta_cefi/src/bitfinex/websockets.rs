@@ -1,17 +1,14 @@
 use crate::bitfinex::auth;
 use crate::bitfinex::errors::*;
 use crate::bitfinex::events::*;
+use std::net::TcpStream;
+use std::sync::mpsc::{self, channel};
 use serde_json::{from_str, json};
 use url::Url;
-
-use std::net::TcpStream;
-use tungstenite::stream::MaybeTlsStream;
-use tungstenite::connect;
-use tungstenite::handshake::client::Response;
-use tungstenite::protocol::WebSocket;
-use tungstenite::Message;
 use error_chain::bail;
-use std::sync::mpsc::{self, channel};
+use tungstenite::{
+    connect, handshake::client::Response, protocol::WebSocket, stream::MaybeTlsStream, Message,
+};
 
 static INFO: &'static str = "info";
 static SUBSCRIBED: &'static str = "subscribed";
@@ -224,7 +221,9 @@ impl WebSockets {
 
                 match message {
                     Message::Text(text) => {
+                       
                         if let Some(ref mut h) = self.event_handler {
+                            println!("event: {:?}", text);
                             if text.find(INFO) != None {
                                 let event: NotificationEvent = from_str(&text)?;
                                 h.on_connect(event);
@@ -235,10 +234,13 @@ impl WebSockets {
                                 let event: NotificationEvent = from_str(&text)?;
                                 h.on_auth(event);
                             } else {
+                                println!("default event: {:?}", text);
                                 let event: DataEvent = from_str(&text)?;
+                                println!("data event: {:?}", event);
                                 if let DataEvent::HeartbeatEvent(_a, _b) = event {
                                     continue;
                                 } else {
+
                                     h.on_data_event(event);
                                 }
                             }
@@ -248,7 +250,7 @@ impl WebSockets {
                     Message::Ping(_) | Message::Pong(_) => {}
                     Message::Close(e) => {
                         bail!(format!("Disconnected {:?}", e));
-                    },
+                    }
                     _ => {}
                 }
             }
