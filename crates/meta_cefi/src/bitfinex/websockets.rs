@@ -144,6 +144,16 @@ impl WebSockets {
         }
     }
 
+    /// subscribe order book
+    /// The Order Books channel allows you to keep track of the state of the Bitfinex order book.
+    /// Tt is provided on a price aggregated basis with customizable precision.
+    /// Upon connecting, you will receive a snapshot of the book
+    /// followed by updates for any changes to the state of the book.
+    /// # Arguments
+    /// prec: Level of price aggregation (P0, P1, P2, P3, P4). The default is P0. P0 has 5 Number of significant figures; 
+    ///       while P4 has 1 Number of significant figures
+    /// freq: Frequency of updates (F0, F1). F0=realtime / F1=2sec. The default is F0.
+    /// len: Number of price points ("1", "25", "100", "250") [default="25"]
     pub fn subscribe_books<S, P, F>(&mut self, symbol: S, et: EventType, prec: P, freq: F, len: u32)
     where
         S: Into<String>,
@@ -223,7 +233,6 @@ impl WebSockets {
                     Message::Text(text) => {
                        
                         if let Some(ref mut h) = self.event_handler {
-                            println!("event: {:?}", text);
                             if text.find(INFO) != None {
                                 let event: NotificationEvent = from_str(&text)?;
                                 h.on_connect(event);
@@ -234,9 +243,7 @@ impl WebSockets {
                                 let event: NotificationEvent = from_str(&text)?;
                                 h.on_auth(event);
                             } else {
-                                println!("default event: {:?}", text);
                                 let event: DataEvent = from_str(&text)?;
-                                println!("data event: {:?}", event);
                                 if let DataEvent::HeartbeatEvent(_a, _b) = event {
                                     continue;
                                 } else {

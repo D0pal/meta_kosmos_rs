@@ -45,7 +45,7 @@ fn main() {
     web_socket.connect().unwrap(); // check error
 
     // BOOKS
-    web_socket.subscribe_books(BTCUSD, EventType::Trading, P0, "F0", 25);
+    web_socket.subscribe_books(ETHUSD, EventType::Trading, P0, "F0", 25);
 
     web_socket.event_loop().unwrap(); // check error
 }

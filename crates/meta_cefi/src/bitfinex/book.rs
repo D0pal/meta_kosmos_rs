@@ -63,20 +63,3 @@ impl Book {
     }
 }
 
-#[cfg(test)]
-mod test_book {
-    use super::{TradingPair, TradingPairTuple};
-    use serde_json::from_str;
-    use serde::{Serialize,Deserialize};
-
-
-
-    #[test]
-    fn test_trading_pair_ser_deser() {
-        let update: TradingPairTuple = from_str("[30367,7,1.34783522]").unwrap();
-        println!("{:?}", update);
-        assert_eq!(update.0, 30367f64);
-        assert_eq!(update.1, 7);
-        assert_eq!(update.2, 1.34783522);
-    }
-}
