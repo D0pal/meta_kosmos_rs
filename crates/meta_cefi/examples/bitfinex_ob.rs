@@ -13,7 +13,7 @@ fn main() {
          dir: "logs".to_string(),
          level: Level::DEBUG,
          flame: false,
-         console: false,
+         console: true,
     };
     let guard = init_tracing(config);
 

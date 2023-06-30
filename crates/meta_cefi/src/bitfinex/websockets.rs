@@ -251,7 +251,6 @@ impl WebSockets {
 
                 match message {
                     Message::Text(text) => {
-                        println!("msg: {:?}", text);
                         if let Some(ref mut h) = self.event_handler {
                             if text.find(INFO) != None {
                                 let event: NotificationEvent = from_str(&text)?;
