@@ -2242,6 +2242,7 @@ dependencies = [
  "lazy_static",
  "meta_address",
  "meta_common",
+ "meta_tracing",
  "meta_util",
  "reqwest",
  "ring",

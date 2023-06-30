@@ -1,26 +1,32 @@
 use crate::bitfinex::auth;
+use crate::bitfinex::common::{CONF_FLAG_SEQ_ALL, CONF_OB_CHECKSUM};
 use crate::bitfinex::errors::*;
 use crate::bitfinex::events::*;
+use error_chain::bail;
+use serde_json::{from_str, json};
 use std::net::TcpStream;
 use std::sync::mpsc::{self, channel};
-use serde_json::{from_str, json};
-use url::Url;
-use error_chain::bail;
+use tracing::{debug, info};
 use tungstenite::{
     connect, handshake::client::Response, protocol::WebSocket, stream::MaybeTlsStream, Message,
 };
+use url::Url;
 
 static INFO: &'static str = "info";
 static SUBSCRIBED: &'static str = "subscribed";
 static AUTH: &'static str = "auth";
+static CONF: &'static str = "conf";
+static CHECKSUM: &'static str = "cs";
 static WEBSOCKET_URL: &'static str = "wss://api.bitfinex.com/ws/2";
 static DEAD_MAN_SWITCH_FLAG: u8 = 4;
 
 pub trait EventHandler {
     fn on_connect(&mut self, event: NotificationEvent);
     fn on_auth(&mut self, event: NotificationEvent);
+    fn on_checksum(&mut self, event: NotificationEvent);
     fn on_subscribed(&mut self, event: NotificationEvent);
     fn on_data_event(&mut self, event: DataEvent);
+    fn on_heart_beat(&mut self, channel: i32, data: String, seq: SEQUENCE);
     fn on_error(&mut self, message: Error);
 }
 
@@ -62,6 +68,20 @@ impl WebSockets {
             Err(e) => {
                 bail!(format!("Error during handshake {}", e))
             }
+        }
+    }
+
+    // { event: 'conf', flags: CONF_FLAG_SEQ_ALL + CONF_OB_CHECKSUM }
+    /// set configuration, defaults to seq and checksum
+    pub fn conf(&mut self) {
+        let msg = json!(
+        {
+            "event": "conf",
+            "flags": CONF_FLAG_SEQ_ALL + CONF_OB_CHECKSUM
+        });
+
+        if let Err(error_msg) = self.sender.send(&msg.to_string()) {
+            self.error_hander(error_msg);
         }
     }
 
@@ -150,7 +170,7 @@ impl WebSockets {
     /// Upon connecting, you will receive a snapshot of the book
     /// followed by updates for any changes to the state of the book.
     /// # Arguments
-    /// prec: Level of price aggregation (P0, P1, P2, P3, P4). The default is P0. P0 has 5 Number of significant figures; 
+    /// prec: Level of price aggregation (P0, P1, P2, P3, P4). The default is P0. P0 has 5 Number of significant figures;
     ///       while P4 has 1 Number of significant figures
     /// freq: Frequency of updates (F0, F1). F0=realtime / F1=2sec. The default is F0.
     /// len: Number of price points ("1", "25", "100", "250") [default="25"]
@@ -231,7 +251,7 @@ impl WebSockets {
 
                 match message {
                     Message::Text(text) => {
-                       
+                        println!("msg: {:?}", text);
                         if let Some(ref mut h) = self.event_handler {
                             if text.find(INFO) != None {
                                 let event: NotificationEvent = from_str(&text)?;
@@ -242,12 +262,16 @@ impl WebSockets {
                             } else if text.find(AUTH).is_some() {
                                 let event: NotificationEvent = from_str(&text)?;
                                 h.on_auth(event);
+                            } else if text.find(CONF).is_some() {
+                                info!("got info msg: {:?}", text);
+                            } else if text.find(CHECKSUM).is_some() {
+                                let event: NotificationEvent = from_str(&text)?;
+                                h.on_checksum(event);
                             } else {
                                 let event: DataEvent = from_str(&text)?;
-                                if let DataEvent::HeartbeatEvent(_a, _b) = event {
-                                    continue;
+                                if let DataEvent::HeartbeatEvent(a, b, c) = event {
+                                    h.on_heart_beat(a, b, c);
                                 } else {
-
                                     h.on_data_event(event);
                                 }
                             }

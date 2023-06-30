@@ -1,7 +1,9 @@
 use crate::bitfinex::book::{
-    FundingCurrency as BookFundingCurrency, RawBook, TradingPair as BookTradingPair,
+    FundingCurrency as BookFundingCurrency, RawBook, TradingOrderBookLevel,
 };
 use serde::Deserialize;
+
+pub type SEQUENCE = u32;
 
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
@@ -9,6 +11,7 @@ use serde::Deserialize;
 pub enum NotificationEvent {
     Auth(AuthMessage),
     Info(InfoMessage),
+    CheckSumEvent(i32, String, i64, SEQUENCE),
     TradingSubscribed(TradingSubscriptionMessage),
     FundingSubscribed(FundingSubscriptionMessage),
     CandlesSubscribed(CandlesSubscriptionMessage),
@@ -18,21 +21,21 @@ pub enum NotificationEvent {
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum DataEvent {
+    HeartbeatEvent(i32, String, SEQUENCE),
     // TickerTradingEvent (i32, TradingPair),
     // TickerFundingEvent (i32, FundingCurrency),
     // TradesTradingSnapshotEvent (i32, Vec<TradesTradingPair>),
     // TradesTradingUpdateEvent (i32, String, TradesTradingPair),
     // TradesFundingSnapshotEvent (i32, Vec<TradesFundingCurrency>),
     // TradesFundingUpdateEvent (i32, String, TradesFundingCurrency),
-    BookTradingSnapshotEvent(i32, Vec<BookTradingPair>),
-    BookTradingUpdateEvent(i32, BookTradingPair),
+    BookTradingSnapshotEvent(i32, Vec<TradingOrderBookLevel>, SEQUENCE),
+    BookTradingUpdateEvent(i32, TradingOrderBookLevel, SEQUENCE),
     BookFundingSnapshotEvent(i32, Vec<BookFundingCurrency>),
     BookFundingUpdateEvent(i32, BookFundingCurrency),
     RawBookEvent(i32, RawBook),
     RawBookUpdateEvent(i32, Vec<RawBook>),
     // CandlesSnapshotEvent (i32, Vec<Candle>),
     // CandlesUpdateEvent (i32, Candle),
-    HeartbeatEvent(i32, String),
 }
 
 #[serde(rename_all = "camelCase")]
@@ -111,15 +114,15 @@ pub struct RawBookSubscriptionMessage {
 
 #[cfg(test)]
 mod test_events {
-    use rust_decimal::{prelude::FromPrimitive, Decimal};
-    use serde_json::{from_str};
     use super::DataEvent;
+    use rust_decimal::{prelude::FromPrimitive, Decimal};
+    use serde_json::from_str;
 
     #[test]
     fn should_deserilize_trading_book_event() {
         let data_str: &'static str = r#"[1,[[30367.1,7,1.1]]]"#;
         let event: DataEvent = from_str(data_str).unwrap();
-        if let DataEvent::BookTradingSnapshotEvent(channel_id, snapshots) = event {
+        if let DataEvent::BookTradingSnapshotEvent(channel_id, snapshots, seq) = event {
             assert_eq!(channel_id, 1);
             assert_eq!(snapshots.len(), 1);
             let snapshot = snapshots.get(0);

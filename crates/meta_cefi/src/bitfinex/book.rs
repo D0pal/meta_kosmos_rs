@@ -4,13 +4,12 @@ use serde::{Deserialize, Serialize};
 use serde_json::from_str;
 use rust_decimal::Decimal;
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct TradingPair {
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct TradingOrderBookLevel {
     pub price: Decimal,
     pub count: i64,
     pub amount: Decimal,
 }
-
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FundingCurrency {
@@ -50,14 +49,14 @@ impl Book {
         Ok(book)
     }
 
-    pub fn trading_pair<S>(&self, symbol: S, precision: S) -> Result<Vec<TradingPair>>
+    pub fn trading_pair<S>(&self, symbol: S, precision: S) -> Result<Vec<TradingOrderBookLevel>>
     where
         S: Into<String>,
     {
         let endpoint: String = format!("book/t{}/{}", symbol.into(), precision.into());
         let data = self.client.get(endpoint, String::new())?;
 
-        let book: Vec<TradingPair> = from_str(data.as_str())?;
+        let book: Vec<TradingOrderBookLevel> = from_str(data.as_str())?;
 
         Ok(book)
     }
