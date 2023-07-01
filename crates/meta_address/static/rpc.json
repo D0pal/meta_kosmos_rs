@@ -1,4 +1,25 @@
 {
+    "ETH": {
+        "archive": "https://methodical-blissful-mountain.quiknode.pro/4df963ef1e5c95b428222987008370d3ee3c3f27/",
+        "httpUrls": [
+            "https://lively-bold-sunset.quiknode.pro/a44820da0711822c6e00da793df8695e60e027a2/"
+        ],
+        "wsUrls": [
+            "wss://lively-bold-sunset.quiknode.pro/a44820da0711822c6e00da793df8695e60e027a2/"
+        ],
+        "chainId": 1,
+        "explorer": "https://etherscan.io/"
+    },
+    "ARBI": {
+        "httpUrls": [
+            "https://smart-snowy-county.arbitrum-mainnet.quiknode.pro/c8a24d9f545b9634855deff3715559bd6f47bf63/"
+        ],
+        "wsUrls": [
+            "wss://smart-snowy-county.arbitrum-mainnet.quiknode.pro/c8a24d9f545b9634855deff3715559bd6f47bf63/"
+        ],
+        "chainId": 42161,
+        "explorer": "https://arbiscan.io/"
+    },
     "ZK_SYNC_ERA": {
         "httpUrls": [
             "https://zksync2-mainnet.zksync.io"
@@ -20,16 +41,5 @@
         ],
         "chainId": 56,
         "explorer": "https://bscscan.com/"
-    },
-    "ETH": {
-        "archive": "https://methodical-blissful-mountain.quiknode.pro/4df963ef1e5c95b428222987008370d3ee3c3f27/",
-        "httpUrls": [
-            "https://lively-bold-sunset.quiknode.pro/a44820da0711822c6e00da793df8695e60e027a2/"
-        ],
-        "wsUrls": [
-            "wss://lively-bold-sunset.quiknode.pro/a44820da0711822c6e00da793df8695e60e027a2/"
-        ],
-        "chainId": 1,
-        "explorer": "https://etherscan.io/"
     }
 }

@@ -1,3 +1,4 @@
+//! dex dex arbitrage bot
 use ethers::prelude::*;
 use futures::future::join_all;
 use gumdrop::Options;

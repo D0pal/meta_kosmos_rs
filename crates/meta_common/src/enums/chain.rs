@@ -27,6 +27,9 @@ pub enum Network {
     #[strum(ascii_case_insensitive, serialize = "ETH_GOERLI")]
     ETH_GOERLI,
 
+    #[strum(ascii_case_insensitive, serialize = "ARBI")]
+    ARBI,
+
     #[strum(ascii_case_insensitive, serialize = "BSC")]
     BSC,
 
