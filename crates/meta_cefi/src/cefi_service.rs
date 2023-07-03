@@ -1,31 +1,36 @@
-use crate::{
-    bitfinex::{
-        book::TradingOrderBookLevel,
-        common::*,
-        errors::*,
-        events::{DataEvent, NotificationEvent, SEQUENCE},
-        symbol::*,
-        websockets::{EventHandler, EventType, WebSockets},
-    },
-    enums::CEX,
+use crate::bitfinex::{
+    book::TradingOrderBookLevel,
+    common::*,
+    errors::*,
+    events::{DataEvent, NotificationEvent, SEQUENCE},
+    symbol::*,
+    websockets::{EventHandler, EventType, WebSockets},
 };
-use meta_common::enums::Asset;
-use rust_decimal::{prelude::ToPrimitive, Decimal};
+use meta_common::{
+    enums::{Asset, CexExchange},
+    models::{CurrentSpread, MarcketChange},
+};
+use rust_decimal::{
+    prelude::{FromPrimitive, ToPrimitive},
+    Decimal,
+};
+use std::sync::mpsc::{Sender, SyncSender};
 use std::sync::Arc;
 use std::{
     borrow::Borrow,
     collections::{BTreeMap, VecDeque},
 };
-use tracing::{debug, info};
+use tracing::{debug, error, info};
 
 #[derive(Clone, Debug)]
 pub struct BitfinexEventHandler {
+    sender: Option<SyncSender<MarcketChange>>,
     order_book: Option<OrderBook>,
     sequence: u32,
 }
 impl BitfinexEventHandler {
-    pub fn new() -> Self {
-        Self { order_book: None, sequence: 0 }
+    pub fn new(sender: Option<SyncSender<MarcketChange>>) -> Self {
+        Self { order_book: None, sequence: 0, sender }
     }
 
     fn check_sequence(&mut self, seq: u32) {
@@ -40,29 +45,22 @@ impl BitfinexEventHandler {
     }
 
     fn log_order_book(&self) {
-        println!("new order book");
+        debug!("new order book");
 
         if let Some(ref ob) = self.order_book {
-            // if let Some(((best_bid_price, best_bid_item), (best_ask_price, best_ask_item))) =
-            //     ob.bids.last_key_value().zip(ob.asks.first_key_value())
-            // {
-            //     println!("{:>8?}  | {:>8?} ", best_bid_price, best_ask_price);
-            // }
             let asks_levels = if ob.asks.len() > 5 { 5 } else { ob.asks.len() };
             let mut iter = ob.bids.iter().rev().zip(ob.asks.iter());
-            // let mut iter = ;
+
             for i in 0..asks_levels {
                 if let Some((bid_item, ask_item)) = iter.next() {
                     let (p, level) = bid_item;
                     let (ask_p, ask_level) = ask_item;
-                    println!(
+                    debug!(
                         "{:>8?} {:>8?} | {:>8?} {:>8?}",
                         level.amount, p, ask_p, ask_level.amount
                     );
                 }
             }
-
-            // let bids_levels = if ob.bids.len() > 5 { 5 } else { ob.bids.len() };
         }
     }
 }
@@ -110,10 +108,44 @@ impl EventHandler for BitfinexEventHandler {
                 channel, seq, book_update
             );
             self.check_sequence(seq);
+            let prev_best_bid = self.order_book.as_ref().map_or(Decimal::default(), |ref ob| {
+                ob.bids.last_key_value().map_or(Decimal::default(), |x| x.0.clone())
+            });
+
+            let prev_best_ask = self.order_book.as_ref().map_or(Decimal::default(), |ref ob| {
+                ob.asks.first_key_value().map_or(Decimal::default(), |x| x.0.clone())
+            });
+
             if let Some(ref mut ob) = self.order_book {
                 update_order_book(ob, book_update);
             }
-            self.log_order_book();
+            let current_best_bid = self.order_book.as_ref().map_or(Decimal::default(), |ref ob| {
+                ob.bids.last_key_value().map_or(Decimal::default(), |x| x.0.clone())
+            });
+
+            let current_best_ask = self.order_book.as_ref().map_or(Decimal::default(), |ref ob| {
+                ob.asks.first_key_value().map_or(Decimal::default(), |x| x.0.clone())
+            });
+
+            if !current_best_ask.eq(&prev_best_ask) || !current_best_bid.eq(&prev_best_bid) {
+                if let Some(ref tx) = self.sender {
+                    let ret = tx.send(MarcketChange {
+                        cex: Some(CurrentSpread {
+                            best_ask: current_best_ask,
+                            best_bid: current_best_bid,
+                        }),
+                        dex: None,
+                    });
+                    match ret {
+                        Ok(_) => {}
+                        Err(e) => {
+                            error!("error in send marcket change in bitfinex {:?}", e);
+                        }
+                    }
+                }
+            }
+
+            // self.log_order_book();
         }
     }
 
@@ -132,7 +164,7 @@ pub type KeyedOrderBook = BTreeMap<Decimal, TradingOrderBookLevel>;
 
 #[derive(Debug, Clone)]
 pub struct CexConfig {
-    keys: Option<BTreeMap<CEX, AccessKey>>,
+    keys: Option<BTreeMap<CexExchange, AccessKey>>,
 }
 
 #[derive(Debug, Clone)]
@@ -149,26 +181,49 @@ pub struct OrderBook {
 
 pub struct CefiService {
     config: Option<CexConfig>,
+    sender: Option<SyncSender<MarcketChange>>,
     btf_sockets: BTreeMap<String, Arc<WebSockets>>,
 }
 
+unsafe impl Send for CefiService {}
+unsafe impl Sync for CefiService {}
+
 impl CefiService {
-    pub fn new(config: Option<CexConfig>) -> Self {
-        Self { config, btf_sockets: BTreeMap::new() }
+    pub fn new(config: Option<CexConfig>, sender: Option<SyncSender<MarcketChange>>) -> Self {
+        Self { config, sender, btf_sockets: BTreeMap::new() }
     }
 
-    pub fn subscribe_book(&self, cex: CEX, base: Asset, quote: Asset) {
+    pub fn subscribe_book(&mut self, cex: CexExchange, base: Asset, quote: Asset) {
         let pair = get_pair(base, quote);
         match cex {
-            CEX::BITFINEX => {
+            CexExchange::BITFINEX => {
                 if !self.btf_sockets.contains_key(&pair) {
                     let mut web_socket = WebSockets::new();
-                    let handler = BitfinexEventHandler::new();
+                    let handler = BitfinexEventHandler::new(self.sender.clone());
                     web_socket.add_event_handler(handler);
                     web_socket.connect().unwrap(); // check error
                     web_socket.conf();
                     web_socket.subscribe_books(ETHUSD, EventType::Trading, P0, "F0", 100);
                     web_socket.event_loop().unwrap(); // check error
+                    self.btf_sockets.insert(pair, Arc::new(web_socket));
+                }
+            }
+        }
+    }
+
+    pub fn get_spread(&self, cex: CexExchange, base: Asset, quote: Asset) {
+        let pair = get_pair(base, quote);
+        match cex {
+            CexExchange::BITFINEX => {
+                if !self.btf_sockets.contains_key(&pair) {
+                    let web_socket = self.btf_sockets.get(&pair);
+                    if let Some(ref socket) = web_socket {
+                        if let Some(ref handler) = socket.event_handler {
+
+                        }
+                        
+                    }
+                    // self.btf_sockets.insert(pair, Arc::new(web_socket));
                 }
             }
         }
@@ -216,10 +271,12 @@ fn update_order_book(ob: &mut OrderBook, book_update: TradingOrderBookLevel) {
                 .and_modify(|x| (*x).amount = book_update.amount.abs())
                 .or_insert(book_update);
         } else {
+            let mut cloned_level = book_update.clone();
+            cloned_level.amount = book_update.amount.abs();
             ob.asks
                 .entry(book_update.price)
                 .and_modify(|x| (*x).amount = book_update.amount.abs())
-                .or_insert(book_update);
+                .or_insert(cloned_level);
         }
     }
 }

@@ -1,7 +1,6 @@
 use serde::Deserialize;
 use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString, EnumVariantNames};
 
-
 #[derive(
     Clone,
     Copy,
@@ -20,8 +19,13 @@ use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString, EnumVariantNames
     Deserialize,
     Display,
 )]
-pub enum CEX {
-
+pub enum CexExchange {
     #[strum(ascii_case_insensitive, serialize = "BITFINEX")]
     BITFINEX,
+}
+
+impl Default for CexExchange {
+    fn default() -> Self {
+        CexExchange::BITFINEX
+    }
 }

@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use strum::{AsRefStr, EnumCount, EnumIter, EnumString, EnumVariantNames, Display};
+use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString, EnumVariantNames};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PoolVariant {
@@ -36,6 +36,9 @@ pub enum DexExchange {
     #[strum(ascii_case_insensitive, serialize = "BISWAP")]
     BISWAP,
 
+    #[strum(ascii_case_insensitive, serialize = "SUSHISWAP")]
+    SUSHISWAP,
+
     #[strum(ascii_case_insensitive, serialize = "SYNC_SWAP")]
     SYNC_SWAP,
 
@@ -69,11 +72,20 @@ pub enum ContractType {
     #[strum(ascii_case_insensitive, serialize = "UNI_V2_FACTORY")]
     UNI_V2_FACTORY,
 
-    #[strum(ascii_case_insensitive, serialize = "UNI_V2_ROUTER")]
-    UNI_V2_ROUTER,
+    #[strum(ascii_case_insensitive, serialize = "UNI_V2_ROUTER_V2")]
+    UNI_V2_ROUTER_V2,
 
     #[strum(ascii_case_insensitive, serialize = "UNI_V3_FACTORY")]
     UNI_V3_FACTORY,
+
+    #[strum(ascii_case_insensitive, serialize = "UNI_V3_SWAP_ROUTER_V2")]
+    UNI_V3_SWAP_ROUTER_V2,
+
+    #[strum(ascii_case_insensitive, serialize = "UNI_V3_NFT")]
+    UNI_V3_NFT,
+
+    #[strum(ascii_case_insensitive, serialize = "UNI_V3_QUOTER_V2")]
+    UNI_V3_QUOTER_V2,
 }
 
 impl Into<String> for ContractType {

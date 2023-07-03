@@ -1,17 +1,16 @@
-pub mod mev_bots;
 pub mod forked_db;
+pub mod mev_bots;
 
-use std::env;
-use std::{result::Result, str::FromStr, path::PathBuf};
 use async_trait::async_trait;
 use config::{Config, ConfigError, File};
-use meta_common::enums::{Network, DexExchange};
+use meta_common::enums::{CexExchange, DexExchange, Network, Asset};
+use rust_decimal::Decimal;
 use serde::Deserialize;
+use std::env;
+use std::{path::PathBuf, result::Result, str::FromStr};
 use tracing::Level;
 
 use meta_tracing::TraceConfig;
-
-// use crate::AppState;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct ConfigLog {
@@ -22,13 +21,13 @@ pub struct ConfigLog {
     pub console: bool,
 }
 
-#[derive(Debug,Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct ConfigChain {
     pub network: Option<Network>,
     pub dexs: Option<Vec<DexExchange>>,
 }
 
-#[derive(Debug,Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct ConfigProvider {
     pub ws_interval_milli: Option<u64>,
 }
@@ -38,8 +37,7 @@ pub struct ConfigRds {
     pub url: String,
 }
 
-
-#[derive(Debug,Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct ConfigAccount {
     pub private_key_path: Option<PathBuf>,
 }
@@ -67,6 +65,20 @@ impl AppConfig {
     }
 }
 
+impl From<ConfigLog> for TraceConfig {
+    fn from(config_log: ConfigLog) -> Self {
+        let level = Level::from_str(&config_log.level)
+            .expect(&format!("converting level: {} error", &config_log.level));
+        TraceConfig {
+            file_name_prefix: config_log.file_name_prefix,
+            dir: config_log.dir,
+            level: level,
+            flame: config_log.flame,
+            console: config_log.console,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize)]
 pub struct JupyterConfig {
     pub log: ConfigLog,
@@ -91,17 +103,30 @@ impl JupyterConfig {
     }
 }
 
-impl From<ConfigLog> for TraceConfig {
-    fn from(config_log: ConfigLog) -> Self {
-        let level = Level::from_str(&config_log.level)
-            .expect(&format!("converting level: {} error", &config_log.level));
-        TraceConfig {
-            file_name_prefix: config_log.file_name_prefix,
-            dir: config_log.dir,
-            level: level,
-            flame: config_log.flame,
-            console: config_log.console,
-        }
-    }
+#[derive(Debug, Clone, Deserialize)]
+pub struct VenusConfig {
+    pub network: Network,
+    pub dex: DexExchange,
+    pub cex: CexExchange,
+    pub base_asset: Asset,
+    pub quote_asset: Asset,
+    pub base_asset_quote_amt: Decimal,
+    pub log: ConfigLog,
+    pub provider: ConfigProvider,
+    pub account: ConfigAccount,
 }
 
+impl VenusConfig {
+    pub fn load(dir: &str) -> Result<Config, ConfigError> {
+        let env = env::var("ENV").unwrap_or("default".into());
+        Config::builder()
+            // .add_source(File::with_name(&format!("{}/default", dir)))
+            .add_source(File::with_name(&format!("{}/{}", dir, env)).required(false))
+            .add_source(config::Environment::with_prefix("META_VENUS"))
+            .build()
+    }
+    pub fn try_new() -> Result<Self, ConfigError> {
+        let config = Self::load("config/venus")?;
+        config.try_deserialize()
+    }
+}

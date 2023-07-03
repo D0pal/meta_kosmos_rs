@@ -105,7 +105,7 @@ async fn run(opts: Opts) -> anyhow::Result<()> {
             .unwrap()
             .address;
     let market_a_swap_router_addr =
-        get_dex_address(opts.dex_a.clone(), opts.network, ContractType::UNI_V2_ROUTER)
+        get_dex_address(opts.dex_a.clone(), opts.network, ContractType::UNI_V2_ROUTER_V2)
             .unwrap()
             .address;
 
@@ -122,7 +122,7 @@ async fn run(opts: Opts) -> anyhow::Result<()> {
             .unwrap()
             .address;
     let market_b_swap_router_addr =
-        get_dex_address(opts.dex_b.clone(), opts.network, ContractType::UNI_V2_ROUTER)
+        get_dex_address(opts.dex_b.clone(), opts.network, ContractType::UNI_V2_ROUTER_V2)
             .unwrap()
             .address;
     let biswap = UniswapV2::new(

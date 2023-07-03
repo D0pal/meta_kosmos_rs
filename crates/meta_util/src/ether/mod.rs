@@ -6,3 +6,6 @@ pub use hash::*;
 
 pub mod protocol;
 pub use protocol::*;
+
+mod wei;
+pub use wei::*;

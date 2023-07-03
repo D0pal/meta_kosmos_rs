@@ -12,3 +12,4 @@ ethers.workspace=true
 serde.workspace=true
 serde_json.workspace=true
 hex.workspace=true
+rust_decimal.workspace=true

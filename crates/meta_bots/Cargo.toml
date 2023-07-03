@@ -14,6 +14,12 @@ name = "jupyter"
 test = true
 bench = true
 
+
+[[bin]]
+name = "venus"
+test = true
+bench = true
+
 [dependencies]
 # workspace
 meta_tracing = { path = "../meta_tracing" }
@@ -22,6 +28,7 @@ meta_util = { path = "../meta_util" }
 meta_address = { path = "../meta_address" }
 meta_contracts = { path = "../meta_contracts" }
 meta_dex = { path = "../meta_dex" }
+meta_cefi = { path = "../meta_cefi" }
 # blockchain
 ethers.workspace = true
 revm.workspace = true
@@ -43,6 +50,7 @@ exitcode = "1.1.2"
 hashbrown.workspace = true
 dashmap.workspace = true
 lazy_static.workspace = true
+rust_decimal.workspace=true
 # CLI
 gumdrop = "0.8.0"
 # error

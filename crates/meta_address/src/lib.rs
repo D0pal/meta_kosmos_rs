@@ -61,8 +61,8 @@ static RPC_INFO_BOOK: Lazy<HashMap<Network, RpcInfo>> =
 
 /// Fetch the addressbook for a contract by its name. If the contract name is not a part of
 /// [ethers-addressbook](https://github.com/gakonst/ethers-rs/tree/master/ethers-addressbook) we return None.
-pub fn get_token_address(name: Token, network: Network) -> Option<Address> {
-    TOKEN_ADDRESS_BOOK.get(&name.into()).map_or(None, |x| x.get(&network).cloned())
+pub fn get_token_address(token_name: Token, network: Network) -> Option<Address> {
+    TOKEN_ADDRESS_BOOK.get(&token_name.into()).map_or(None, |x| x.get(&network).cloned())
 }
 
 pub fn get_bot_contract_info(name: BotType, network: Network) -> Option<ContractInfo> {

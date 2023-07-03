@@ -2,6 +2,7 @@ use crate::bitfinex::auth;
 use crate::bitfinex::common::{CONF_FLAG_SEQ_ALL, CONF_OB_CHECKSUM};
 use crate::bitfinex::errors::*;
 use crate::bitfinex::events::*;
+use crate::cefi_service::BitfinexEventHandler;
 use error_chain::bail;
 use serde_json::{from_str, json};
 use std::net::TcpStream;
@@ -45,8 +46,11 @@ pub struct WebSockets {
     socket: Option<(WebSocket<MaybeTlsStream<TcpStream>>, Response)>,
     sender: Sender,
     rx: mpsc::Receiver<WsMessage>,
-    event_handler: Option<Box<dyn EventHandler>>,
+    pub event_handler: Option<Box<dyn EventHandler>>,
 }
+
+unsafe impl Send for WebSockets {}
+unsafe impl Sync for WebSockets {}
 
 impl WebSockets {
     pub fn new() -> WebSockets {

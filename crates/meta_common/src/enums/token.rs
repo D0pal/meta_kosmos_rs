@@ -1,6 +1,8 @@
 use serde::Deserialize;
 use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString, EnumVariantNames};
 
+use super::Asset;
+
 #[derive(
     Clone,
     Copy,
@@ -25,6 +27,9 @@ pub enum Token {
 
     #[strum(ascii_case_insensitive, serialize = "WBNB")]
     WBNB,
+
+    #[strum(ascii_case_insensitive, serialize = "WBTC")]
+    WBTC,
 
     #[strum(ascii_case_insensitive, serialize = "WETH")]
     WETH,
@@ -63,9 +68,25 @@ impl Into<String> for Token {
     }
 }
 
+impl From<Asset> for Token {
+    fn from(value: Asset) -> Self {
+        match value {
+            Asset::ETH => Token::WETH,
+            Asset::USD => Token::USDT,
+            Asset::BTC => Token::WBTC,
+        }
+    }
+}
 
 impl Default for Token {
     fn default() -> Self {
         Self::WETH
+    }
+}
+
+pub fn get_token_decimals(token: Token) -> u32 {
+    match token {
+        Token::USDC | Token::BUSD | Token::USDT => 6,
+        _ => 18,
     }
 }

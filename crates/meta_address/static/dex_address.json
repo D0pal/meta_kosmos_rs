@@ -5,7 +5,7 @@
                 "address": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
                 "created_blk_num": 10000835
             },
-            "UNI_V2_ROUTER_02": {
+            "UNI_V2_ROUTER_V2": {
                 "address": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
                 "created_blk_num": 0
             }
@@ -15,7 +15,7 @@
                 "address": "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
                 "created_blk_num": 0
             },
-            "UNI_V2_ROUTER": {
+            "UNI_V2_ROUTER_V2": {
                 "address": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",
                 "created_blk_num": 0
             }
@@ -31,11 +31,11 @@
                 "address": "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
                 "created_blk_num": 0
             },
-            "UNI_V3_SWAP_ROUTER_02": {
+            "UNI_V3_SWAP_ROUTER_V2": {
                 "address": "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
                 "created_blk_num": 13804681
             },
-            "UNI_V3_QUOTER_V3": {
+            "UNI_V3_QUOTER_V2": {
                 "address": "0x61fFE014bA17989E743c5F6cB21bF9697530B21e",
                 "created_blk_num": 0
             }
@@ -49,11 +49,11 @@
                 "address": "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
                 "created_blk_num": 0
             },
-            "UNI_V3_SWAP_ROUTER_02": {
+            "UNI_V3_SWAP_ROUTER_V2": {
                 "address": "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
                 "created_blk_num": 13804681
             },
-            "UNI_V3_QUOTER_V3": {
+            "UNI_V3_QUOTER_V2": {
                 "address": "0x61fFE014bA17989E743c5F6cB21bF9697530B21e",
                 "created_blk_num": 0
             }
@@ -65,7 +65,7 @@
                 "address": "0xc35DADB65012eC5796536bD9864eD8773aBc74C4",
                 "created_blk_num": 0
             },
-            "UNI_V2_ROUTER": {
+            "UNI_V2_ROUTER_V2": {
                 "address": "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
                 "created_blk_num": 0
             }
@@ -77,7 +77,7 @@
                 "address": "0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73",
                 "created_blk_num": 6809737
             },
-            "UNI_V2_ROUTER": {
+            "UNI_V2_ROUTER_V2": {
                 "address": "0x10ED43C718714eb63d5aA57B78B54704E256024E",
                 "created_blk_num": 0
             }
@@ -87,7 +87,7 @@
                 "address": "0x6725F303b657a9451d8BA641348b6761A6CC7a17",
                 "created_blk_num": 0
             },
-            "UNI_V2_ROUTER": {
+            "UNI_V2_ROUTER_V2": {
                 "address": "0xD99D1c33F9fC3444f8101754aBC46c52416550D1",
                 "created_blk_num": 0
             }
@@ -99,7 +99,7 @@
                 "address": "0x858E3312ed3A876947EA49d572A7C42DE08af7EE",
                 "created_blk_num": 0
             },
-            "UNI_V2_ROUTER": {
+            "UNI_V2_ROUTER_V2": {
                 "address": "0x3a6d8cA21D1CF76F653A67577FA0D27453350dD8",
                 "created_blk_num": 0
             }
@@ -111,7 +111,7 @@
                 "address": "0x40be1cba6c5b47cdf9da7f963b6f761f4c60627d",
                 "created_blk_num": 0
             },
-            "UNI_V2_ROUTER": {
+            "UNI_V2_ROUTER_V2": {
                 "address": "0x8B791913eB07C32779a16750e3868aA8495F5964",
                 "created_blk_num": 0
             }
@@ -123,7 +123,7 @@
                 "address": "0xf2DAd89f2788a8CD54625C60b55cD3d2D0ACa7Cb",
                 "created_blk_num": 0
             },
-            "UNI_V2_ROUTER": {
+            "UNI_V2_ROUTER_V2": {
                 "address": "0x2da10A1e27bF85cEdD8FFb1AbBe97e53391C0295",
                 "created_blk_num": 0
             }
