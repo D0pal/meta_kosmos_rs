@@ -9,7 +9,7 @@ base_asset_quote_amt = "0.5"
 file_name_prefix = "meta_kosmos_venus"
 dir = "logs/venus"
 level = "debug"
-console = true
+console = false
 flame = false
 
 [chain]

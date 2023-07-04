@@ -14,12 +14,15 @@ use rust_decimal::{
     prelude::{FromPrimitive, ToPrimitive},
     Decimal,
 };
-use std::sync::mpsc::{Sender, SyncSender};
-use std::sync::Arc;
 use std::{
     borrow::Borrow,
     collections::{BTreeMap, VecDeque},
 };
+use std::{
+    borrow::BorrowMut,
+    sync::mpsc::{Sender, SyncSender},
+};
+use std::{cell::RefCell, sync::Arc};
 use tracing::{debug, error, info};
 
 #[derive(Clone, Debug)]
@@ -28,6 +31,7 @@ pub struct BitfinexEventHandler {
     order_book: Option<OrderBook>,
     sequence: u32,
 }
+
 impl BitfinexEventHandler {
     pub fn new(sender: Option<SyncSender<MarcketChange>>) -> Self {
         Self { order_book: None, sequence: 0, sender }
@@ -65,6 +69,9 @@ impl BitfinexEventHandler {
     }
 }
 impl EventHandler for BitfinexEventHandler {
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
     fn on_connect(&mut self, event: NotificationEvent) {
         if let NotificationEvent::Info(info) = event {
             info!("bitfinex platform status: {:?}, version {}", info.platform, info.version);
@@ -129,6 +136,10 @@ impl EventHandler for BitfinexEventHandler {
 
             if !current_best_ask.eq(&prev_best_ask) || !current_best_bid.eq(&prev_best_bid) {
                 if let Some(ref tx) = self.sender {
+                    println!(
+                        "send cex price change, current_best_ask: {:?}, current_best_bid: {:?} ",
+                        current_best_ask, current_best_bid
+                    );
                     let ret = tx.send(MarcketChange {
                         cex: Some(CurrentSpread {
                             best_ask: current_best_ask,
@@ -182,7 +193,7 @@ pub struct OrderBook {
 pub struct CefiService {
     config: Option<CexConfig>,
     sender: Option<SyncSender<MarcketChange>>,
-    btf_sockets: BTreeMap<String, Arc<WebSockets>>,
+    btf_sockets: BTreeMap<String, WebSockets>,
 }
 
 unsafe impl Send for CefiService {}
@@ -198,34 +209,56 @@ impl CefiService {
         match cex {
             CexExchange::BITFINEX => {
                 if !self.btf_sockets.contains_key(&pair) {
-                    let mut web_socket = WebSockets::new();
                     let handler = BitfinexEventHandler::new(self.sender.clone());
-                    web_socket.add_event_handler(handler);
-                    web_socket.connect().unwrap(); // check error
-                    web_socket.conf();
-                    web_socket.subscribe_books(ETHUSD, EventType::Trading, P0, "F0", 100);
-                    web_socket.event_loop().unwrap(); // check error
-                    self.btf_sockets.insert(pair, Arc::new(web_socket));
+                    let mut web_socket = WebSockets::new();
+                    self.btf_sockets.insert(pair.to_owned(), web_socket);
+                    self.btf_sockets.entry(pair).and_modify(|web_socket| {
+                        (*web_socket).add_event_handler(handler);
+                        (*web_socket).connect().unwrap(); // check error
+                        (*web_socket).conf();
+                        (*web_socket).subscribe_books(ETHUSD, EventType::Trading, P0, "F0", 100);
+                        (*web_socket).event_loop().unwrap(); // check error
+                    });
                 }
             }
         }
     }
 
-    pub fn get_spread(&self, cex: CexExchange, base: Asset, quote: Asset) {
+    pub fn get_spread(&self, cex: CexExchange, base: Asset, quote: Asset) -> Option<CurrentSpread> {
         let pair = get_pair(base, quote);
+        let mut best_ask = Decimal::default();
+        let mut best_bid = Decimal::default();
         match cex {
             CexExchange::BITFINEX => {
-                if !self.btf_sockets.contains_key(&pair) {
+                if self.btf_sockets.contains_key(&pair) {
                     let web_socket = self.btf_sockets.get(&pair);
-                    if let Some(ref socket) = web_socket {
-                        if let Some(ref handler) = socket.event_handler {
-
+                    if let Some(socket) = web_socket {
+                        if let Some(ref handler) = (socket).event_handler {
+                            let btf_handler =
+                                (handler.as_any()).downcast_ref::<BitfinexEventHandler>();
+                 
+                            if let Some(btf) = btf_handler {
+                       
+                                if let Some(ref ob) = btf.order_book {
+                             
+                                    if let Some((_, ask_level)) = ob.asks.first_key_value() {
+                                        best_ask = ask_level.price.clone();
+                                    }
+                                    if let Some((_, bid_level)) = ob.bids.last_key_value() {
+                                        best_bid = bid_level.price.clone();
+                                    }
+                                }
+                            }
                         }
-                        
                     }
-                    // self.btf_sockets.insert(pair, Arc::new(web_socket));
+                 
                 }
             }
+        }
+        if best_ask.is_zero() || best_bid.is_zero() {
+            None
+        } else {
+            Some(CurrentSpread { best_bid: best_bid, best_ask: best_ask })
         }
     }
 }

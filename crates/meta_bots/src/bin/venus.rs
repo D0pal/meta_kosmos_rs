@@ -40,7 +40,10 @@ use std::{
     path::PathBuf,
     rc::Rc,
     str::FromStr,
-    sync::{mpsc, Arc, Mutex},
+    sync::{
+        atomic::{AtomicPtr, Ordering},
+        mpsc, Arc, Mutex, RwLock as SyncRwLock,
+    },
     thread,
     time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
@@ -121,18 +124,24 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
             match config.cex {
                 CexExchange::BITFINEX => {
                     let (tx, mut rx) = mpsc::sync_channel::<MarcketChange>(1000);
-                    let (tx_tokio, mut rx_tokio) =
-                        tokio::sync::mpsc::channel::<MarcketChange>(1000);
-                    let cefi_service = CefiService::new(None, Some(tx.clone()));
-                    let cefi_service = Arc::new(Mutex::new(cefi_service));
+                    // let (tx_tokio, mut rx_tokio) =
+                    //     tokio::sync::mpsc::channel::<MarcketChange>(1000);
+                    let mut cefi_service = CefiService::new(None, Some(tx.clone()));
+
+                    let cefi_service = unsafe { &mut cefi_service as *mut CefiService };
+                    let cefi_service = Arc::new(AtomicPtr::new(cefi_service));
+
                     {
                         let cefi_service = cefi_service.clone();
                         thread::spawn(move || {
-                            cefi_service.lock().unwrap().borrow_mut().subscribe_book(
-                                CexExchange::BITFINEX,
-                                config.base_asset,
-                                config.quote_asset,
-                            );
+                            let a = cefi_service.load(Ordering::Relaxed);
+                            unsafe {
+                                (*a).subscribe_book(
+                                    CexExchange::BITFINEX,
+                                    config.base_asset,
+                                    config.quote_asset,
+                                );
+                            }
                         });
                     }
 
@@ -207,11 +216,6 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                                         .checked_div(config.base_asset_quote_amt)
                                                         .unwrap();
 
-                                                        debug!(
-                                                                "block number {:?}, sell price: {:?}, buy price: {:?} ",
-                                                                block.number, sell_price, buy_price
-                                                            );
-
                                                         if !sell_price.eq(&(*(last_dex_sell_price
                                                             .read()
                                                             .await)))
@@ -225,16 +229,26 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                                                 sell_price;
                                                             *(last_dex_buy_price.write().await) =
                                                                 buy_price;
-                                                            tx_tokio
-                                                                .clone()
-                                                                .send(MarcketChange {
+
+                                                            println!("send dex price change, block number {:?}, sell price: {:?}, buy price: {:?} ",block.number, sell_price, buy_price);
+                                                            let ret =
+                                                                tx.clone().send(MarcketChange {
                                                                     cex: None,
                                                                     dex: Some(CurrentSpread {
                                                                         best_bid: sell_price,
                                                                         best_ask: buy_price,
                                                                     }),
-                                                                })
-                                                                .await;
+                                                                });
+                                                            // .await;
+                                                            match ret {
+                                                                Ok(()) => debug!(
+                                                                    "send price chagne success"
+                                                                ),
+                                                                Err(e) => {
+                                                                    eprintln!("error in send dex price change, {:?}",e);
+                                                                    panic!("error in send dex price change, {:?}",e);
+                                                                }
+                                                            }
                                                         }
                                                     }
                                                     Err(e) => {
@@ -253,17 +267,30 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                     }
 
                     loop {
-                        if let Ok(cex_change) = rx.recv() {
-                            if let Some(spread) = cex_change.cex {
-                                debug!(
+                        if let Ok(change) = rx.recv() {
+                            if let Some(spread) = change.cex {
+                                println!(
                                     "cex spread change, cex bid {:?}, cex ask {:?}, dex bid {:?}, dex ask {:?}",
-                                    spread.best_bid, spread.best_ask, last_dex_sell_price, last_dex_buy_price
+                                    spread.best_bid, spread.best_ask, last_dex_sell_price.read().await, last_dex_buy_price.read().await
                                 );
                             }
-                        }
-
-                        if let Some(dex_change) = rx_tokio.recv().await {
-                            debug!("dex price change: {:?}", dex_change);
+                            if let Some(spread) = change.dex {
+                                let a = cefi_service.clone().load(Ordering::Relaxed);
+                                let ret = unsafe {
+                                    (*a).get_spread(
+                                        CexExchange::BITFINEX,
+                                        config.base_asset,
+                                        config.quote_asset,
+                                    )
+                                };
+                                match ret {
+                                    Some(cex_spread) => println!(
+                                        "dex spread change, cex bid {:?}, cex ask {:?}, dex bid {:?}, dex ask {:?}",
+                                        cex_spread.best_bid, cex_spread.best_ask, spread.best_bid, spread.best_ask
+                                    ),
+                                    None => {}
+                                }
+                            }
                         }
                     }
                 }

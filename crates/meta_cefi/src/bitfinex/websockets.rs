@@ -29,6 +29,7 @@ pub trait EventHandler {
     fn on_data_event(&mut self, event: DataEvent);
     fn on_heart_beat(&mut self, channel: i32, data: String, seq: SEQUENCE);
     fn on_error(&mut self, message: Error);
+    fn as_any(&self) -> &dyn std::any::Any;
 }
 
 pub enum EventType {
