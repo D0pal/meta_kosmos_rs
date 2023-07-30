@@ -39,6 +39,7 @@ strum_macros = "0.24"
 # blockchain
 ethers = { version = "2.0.0", features = ["abigen", "ws"] }
 revm = { version = "3.0.0", features = ["ethersdb", "serde", "std"] }
+foundry-evm={git="https://github.com/foundry-rs/foundry.git"}
 # web
 http = { version = "0.2.9" }
 # async

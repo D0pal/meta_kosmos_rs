@@ -13,4 +13,13 @@ serde.workspace=true
 serde_json.workspace=true
 lazy_static.workspace=true
 once_cell.workspace=true
+strum.workspace=true
+strum_macros.workspace=true
 ethers.workspace=true
+
+[build-dependencies]
+anyhow.workspace=true
+syn.workspace=true
+proc-macro2.workspace=true
+quote.workspace=true
+serde_json.workspace=true

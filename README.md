@@ -5,6 +5,11 @@
 cargo test --package meta_address --lib -- tests::test_token_addr --exact --nocapture
 ```
 
+## lint
+```
+cargo +nightly fmt
+cargo fix
+```
 
 ## scripts
 - examples

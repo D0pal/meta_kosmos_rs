@@ -2187,12 +2187,18 @@ dependencies = [
 name = "meta_address"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "ethers",
  "lazy_static",
  "meta_common",
  "once_cell",
+ "proc-macro2",
+ "quote",
  "serde",
  "serde_json",
+ "strum",
+ "strum_macros",
+ "syn 1.0.109",
 ]
 
 [[package]]

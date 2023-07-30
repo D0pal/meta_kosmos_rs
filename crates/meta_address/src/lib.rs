@@ -1,10 +1,10 @@
-use ethers::{abi::Hash, core::types::Address};
-use ethers::prelude::*;
-use meta_common::enums::{BotType, ContractType, DexExchange, Network, Token};
+use ethers::{core::types::Address, prelude::*};
+use meta_common::enums::{BotType, ContractType, DexExchange, Network, Asset};
 use once_cell::sync::Lazy;
-use serde::Deserialize;
 use std::collections::HashMap;
-/// Wrapper around a hash map that maps a [network](https://github.com/gakonst/ethers-rs/blob/master/ethers-core/src/types/network.rs) to the contract's deployed address on that network.
+
+include!(concat!(env!("OUT_DIR"), "/token_enum.rs"));
+
 #[derive(Clone, Debug, Deserialize)]
 pub struct Contract {
     addresses: HashMap<Network, Address>,
@@ -17,6 +17,13 @@ impl Contract {
         self.addresses.get(&network).cloned()
     }
 }
+#[derive(Clone, Debug, Deserialize)]
+pub struct TokenInfo {
+    pub decimals: u8,
+    pub address: Address,
+    pub native: bool,
+    pub unwrap_to: Option<Token>,
+}
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct ContractInfo {
@@ -24,14 +31,6 @@ pub struct ContractInfo {
     pub created_blk_num: u64,
     pub byte_code: Option<Bytes>,
 }
-
-// impl DexAddress {
-//     /// Returns the address of the contract on the specified chain. If the contract's address is
-//     /// not found in the addressbook, the getter returns None.
-//     pub fn address(&self, contract_type: ContractType) -> Option<Address> {
-//         self.addresses.get(&contract_type).cloned()
-//     }
-// }
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct RpcInfo {
@@ -46,7 +45,7 @@ const DEX_ADDRESS_JSON: &str = include_str!("../static/dex_address.json");
 const BOT_ADDRESS_JSON: &str = include_str!("../static/bot_address.json");
 const RPC_JSON: &str = include_str!("../static/rpc.json");
 
-static TOKEN_ADDRESS_BOOK: Lazy<HashMap<Token, HashMap<Network, Address>>> =
+static TOKEN_ADDRESS_BOOK: Lazy<HashMap<String, HashMap<Network, TokenInfo>>> =
     Lazy::new(|| serde_json::from_str(TOKEN_ADDRESS_JSON).unwrap());
 
 static DEX_ADDRESS_BOOK: Lazy<
@@ -55,13 +54,10 @@ static DEX_ADDRESS_BOOK: Lazy<
 
 static BOT_ADDRESS_BOOK: Lazy<HashMap<BotType, HashMap<Network, ContractInfo>>> =
     Lazy::new(|| serde_json::from_str(BOT_ADDRESS_JSON).unwrap());
-
 static RPC_INFO_BOOK: Lazy<HashMap<Network, RpcInfo>> =
     Lazy::new(|| serde_json::from_str(RPC_JSON).unwrap());
 
-/// Fetch the addressbook for a contract by its name. If the contract name is not a part of
-/// [ethers-addressbook](https://github.com/gakonst/ethers-rs/tree/master/ethers-addressbook) we return None.
-pub fn get_token_address(token_name: Token, network: Network) -> Option<Address> {
+pub fn get_token_info<T: Into<String>>(token_name: T, network: Network) -> Option<TokenInfo> {
     TOKEN_ADDRESS_BOOK.get(&token_name.into()).map_or(None, |x| x.get(&network).cloned())
 }
 
@@ -82,39 +78,63 @@ pub fn get_dex_address(
 pub fn get_rpc_info(network: Network) -> Option<RpcInfo> {
     RPC_INFO_BOOK.get(&network.into()).cloned()
 }
+impl From<String> for Token {
+    fn from(value: String) -> Self {
+       value.into()
+    }
+}
+impl From<Asset> for Token {
+    fn from(value: Asset) -> Self {
+        match value {
+            Asset::ETH => Token::WETH,
+            Asset::USD => Token::USDT,
+            Asset::BTC => Token::WBTC,
+            _ => value.to_string().into()
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
+    use crate::Token;
     use meta_common::{
         constants::address_from_str,
-        enums::{ContractType, DexExchange, Network, Token},
+        enums::{ContractType, DexExchange, Network},
     };
 
     use super::*;
 
     #[test]
+    fn test_token_enum() {
+        assert_eq!("BTC".to_string(), Token::BTC.to_string());
+    }
+
+    #[test]
     fn test_token_addr() {
         assert_eq!(
-            get_token_address(Token::WBNB, Network::BSC).unwrap(),
-            address_from_str("0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c")
+            get_token_info(Token::WETH, Network::ETH).unwrap().address,
+            address_from_str("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")
+        );
+
+        assert_eq!(
+            get_token_info("WETH", Network::ETH).unwrap().address,
+            address_from_str("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")
         );
     }
 
     #[test]
     fn test_dex_addr() {
-        assert!(get_dex_address(DexExchange::PANCAKE, Network::BSC, ContractType::UNI_V2_FACTORY)
-            .is_some());
+        assert!(get_dex_address(
+            DexExchange::UNISWAP_V3,
+            Network::ETH,
+            ContractType::UNI_V3_QUOTER_V2
+        )
+        .is_some());
         assert_eq!(
-            get_dex_address(DexExchange::PANCAKE, Network::BSC, ContractType::UNI_V2_FACTORY)
+            get_dex_address(DexExchange::UNISWAP_V3, Network::ETH, ContractType::UNI_V3_QUOTER_V2)
                 .unwrap()
                 .address,
-            address_from_str("0xcA143Ce32Fe78f1f7019d7d551a6402fC5350c73")
-        );
-        assert_eq!(
-            get_dex_address(DexExchange::PANCAKE, Network::BSC, ContractType::UNI_V2_FACTORY)
-                .unwrap()
-                .created_blk_num,
-            6809737
+            address_from_str("0x61fFE014bA17989E743c5F6cB21bF9697530B21e")
         );
     }
 

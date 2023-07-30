@@ -3,12 +3,12 @@ use ethers::prelude::*;
 use futures::future::join_all;
 use futures_util::future::try_join_all;
 use gumdrop::Options;
-use meta_address::{get_bot_contract_info, get_dex_address, get_rpc_info, get_token_address};
+use meta_address::{get_bot_contract_info, get_dex_address, get_rpc_info, get_token_address, Token,};
 use meta_bots::{AppConfig, VenusConfig};
 use meta_cefi::cefi_service::CefiService;
 use meta_common::{
     enums::{
-        get_token_decimals, Asset, BotType, CexExchange, ContractType, DexExchange, Network, Token,
+        get_token_decimals, Asset, BotType, CexExchange, ContractType, DexExchange, Network, 
     },
     models::{CurrentSpread, MarcketChange},
 };
@@ -124,11 +124,10 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
             match config.cex {
                 CexExchange::BITFINEX => {
                     let (tx, mut rx) = mpsc::sync_channel::<MarcketChange>(1000);
-                    // let (tx_tokio, mut rx_tokio) =
-                    //     tokio::sync::mpsc::channel::<MarcketChange>(1000);
+
                     let mut cefi_service = CefiService::new(None, Some(tx.clone()));
 
-                    let cefi_service = unsafe { &mut cefi_service as *mut CefiService };
+                    let cefi_service = &mut cefi_service as *mut CefiService;
                     let cefi_service = Arc::new(AtomicPtr::new(cefi_service));
 
                     {
@@ -230,7 +229,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                                             *(last_dex_buy_price.write().await) =
                                                                 buy_price;
 
-                                                            println!("send dex price change, block number {:?}, sell price: {:?}, buy price: {:?} ",block.number, sell_price, buy_price);
+                                                            debug!("send dex price change, block number {:?}, sell price: {:?}, buy price: {:?} ",block.number, sell_price, buy_price);
                                                             let ret =
                                                                 tx.clone().send(MarcketChange {
                                                                     cex: None,
@@ -239,7 +238,6 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                                                         best_ask: buy_price,
                                                                     }),
                                                                 });
-                                                            // .await;
                                                             match ret {
                                                                 Ok(()) => debug!(
                                                                     "send price chagne success"
@@ -268,13 +266,17 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
 
                     loop {
                         if let Ok(change) = rx.recv() {
-                            if let Some(spread) = change.cex {
-                                println!(
+                            if let Some(cex_spread) = change.cex {
+                                let (dex_bid, dex_ask) = (
+                                    *last_dex_sell_price.read().await,
+                                    *last_dex_buy_price.read().await,
+                                );
+                                debug!(
                                     "cex spread change, cex bid {:?}, cex ask {:?}, dex bid {:?}, dex ask {:?}",
-                                    spread.best_bid, spread.best_ask, last_dex_sell_price.read().await, last_dex_buy_price.read().await
+                                    cex_spread.best_bid, cex_spread.best_ask, dex_bid, dex_ask
                                 );
                             }
-                            if let Some(spread) = change.dex {
+                            if let Some(dex_spread) = change.dex {
                                 let a = cefi_service.clone().load(Ordering::Relaxed);
                                 let ret = unsafe {
                                     (*a).get_spread(
@@ -284,9 +286,9 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                     )
                                 };
                                 match ret {
-                                    Some(cex_spread) => println!(
+                                    Some(cex_spread) => debug!(
                                         "dex spread change, cex bid {:?}, cex ask {:?}, dex bid {:?}, dex ask {:?}",
-                                        cex_spread.best_bid, cex_spread.best_ask, spread.best_bid, spread.best_ask
+                                        cex_spread.best_bid, cex_spread.best_ask, dex_spread.best_bid, dex_spread.best_ask
                                     ),
                                     None => {}
                                 }
@@ -328,7 +330,7 @@ async fn main_impl() -> anyhow::Result<()> {
     }
     let guard = init_tracing(app_config.log.clone().into());
 
-    println!("venus config: {:?}", app_config);
+    debug!("venus config: {:?}", app_config);
     run(app_config).await;
     Ok(())
 }

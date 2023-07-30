@@ -16,9 +16,9 @@ use std::{
 };
 use tracing::{debug, info, instrument::WithSubscriber, warn, Level};
 
-use meta_address::{get_bot_contract_info, get_dex_address, get_rpc_info, get_token_address};
+use meta_address::{get_bot_contract_info, get_dex_address, get_rpc_info, get_token_address,Token};
 use meta_bots::AppConfig;
-use meta_common::enums::{BotType, ContractType, DexExchange, Network, Token};
+use meta_common::enums::{BotType, ContractType, DexExchange, Network, };
 use meta_contracts::{
     bindings::{
         flash_bots_router::{FlashBotsRouter, UniswapWethParams},
@@ -39,10 +39,10 @@ struct Opts {
     #[options(help = "blockchain network, such as ETH, BSC")]
     network: Network,
 
-    #[options(help = "base token, such as USDT")]
+    #[options(help = "base token, such as USDT", default="WETH")]
     base_token: Token,
 
-    #[options(help = "quote token, tokenIn, such as WBNB, BUSD")]
+    #[options(help = "quote token, tokenIn, such as WBNB, BUSD", default="USDC")]
     quote_token: Token,
 
     #[options(help = "dex a, such as PANCAKE")]

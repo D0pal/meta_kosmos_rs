@@ -1,5 +1,6 @@
 use ethers::abi::Address;
-use meta_common::enums::{Token, Network};
+use meta_common::enums::{ Network};
+use meta_address::Token;
 
 #[derive(Debug, Clone)]
 pub struct TokenInfo {

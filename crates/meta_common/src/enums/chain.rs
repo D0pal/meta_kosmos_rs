@@ -33,6 +33,10 @@ pub enum Network {
     #[strum(ascii_case_insensitive, serialize = "BSC")]
     BSC,
 
+
+    #[strum(ascii_case_insensitive, serialize = "MANTLE")]
+    MANTLE,
+
     #[strum(ascii_case_insensitive, serialize = "BSC_TEST")]
     BSC_TEST,
 
