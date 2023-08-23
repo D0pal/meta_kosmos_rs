@@ -4,7 +4,10 @@ use ethers::types::transaction::eip2930::{AccessList, AccessListItem};
 use ethers::types::{Address, BigEndianHash, Bytes, H256, U256};
 use ethers::utils::parse_ether;
 use meta_address::get_bot_contract_info;
-use meta_common::enums::{BotType, Network};
+use meta_common::{
+    enums::{BotType, Network},
+    traits::ContractCode,
+};
 use meta_dex::prelude::BlockInfo;
 use revm::primitives::{ExecutionResult, Output, TransactTo};
 use revm::{
@@ -75,7 +78,11 @@ pub fn inject_sando(
         rU256::from(0),
         0,
         Bytecode::new_raw(
-            get_bot_contract_info(BotType::SANDWIDTH_HUFF, network).unwrap().byte_code.unwrap().0,
+            get_bot_contract_info(BotType::SANDWIDTH_HUFF, network)
+                .unwrap()
+                .get_byte_code_and_hash()
+                .0
+                 .0,
         ),
     );
     fork_factory.insert_account_info(sandwich.0.into(), account);
@@ -89,7 +96,11 @@ pub fn inject_sando(
 
     // update changes
     fork_factory
-        .insert_account_storage(weth_address.0.into(), slot.into(), sandwidth_contract_starting_weth_balance.into())
+        .insert_account_storage(
+            weth_address.0.into(),
+            slot.into(),
+            sandwidth_contract_starting_weth_balance.into(),
+        )
         .unwrap();
 }
 
@@ -105,7 +116,7 @@ fn inject_braindance_code(network: Network, fork_factory: &mut ForkFactory) {
         rU256::from(0),
         0,
         Bytecode::new_raw(
-            get_bot_contract_info(BotType::BRAIN_DANCE_SOL, network).unwrap().byte_code.unwrap().0,
+            get_bot_contract_info(BotType::BRAIN_DANCE_SOL, network).unwrap().get_byte_code_and_hash().0.0,
         ),
     );
     fork_factory.insert_account_info((*DEV_BRAINDANCE_ADDRESS).0.into(), account);

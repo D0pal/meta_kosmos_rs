@@ -3,13 +3,12 @@ use ethers::prelude::*;
 use futures::future::join_all;
 use futures_util::future::try_join_all;
 use gumdrop::Options;
-use meta_address::{get_bot_contract_info, get_dex_address, get_rpc_info, get_token_address, Token,};
+use meta_address::enums::Asset;
+use meta_address::{get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info, Token};
 use meta_bots::{AppConfig, VenusConfig};
 use meta_cefi::cefi_service::CefiService;
 use meta_common::{
-    enums::{
-        get_token_decimals, Asset, BotType, CexExchange, ContractType, DexExchange, Network, 
-    },
+    enums::{BotType, CexExchange, ContractType, DexExchange, Network},
     models::{CurrentSpread, MarcketChange},
 };
 use meta_contracts::{
@@ -26,10 +25,7 @@ use meta_contracts::{
 };
 use meta_dex::enums::TokenInfo;
 use meta_tracing::init_tracing;
-use meta_util::{
-    address_from_str,
-    ether::{decimal_from_wei, decimal_to_wei},
-};
+use meta_util::ether::{address_from_str, decimal_from_wei, decimal_to_wei};
 use rust_decimal::Decimal;
 use serde::Deserialize;
 use std::{
@@ -77,9 +73,10 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
     info!("run jupyter app with config: {:?}", config);
     let rpc_info = get_rpc_info(config.network).unwrap();
     debug!("rpc info {:?}", rpc_info);
-
-    let provider_ws =
-        Provider::<Ws>::connect(rpc_info.wsUrls[0].clone()).await.expect("ws connect error");
+    let rpc_provider = config.provider.provider.expect("need rpc provider");
+    let provider_ws = Provider::<Ws>::connect(rpc_info.ws_urls.get(&rpc_provider).unwrap().clone())
+        .await
+        .expect("ws connect error");
     // let provider_ws = Provider::<Http>::connect(&rpc_info.httpUrls[0]).await;
     let provider_ws =
         provider_ws.interval(Duration::from_millis(config.provider.ws_interval_milli.unwrap()));
@@ -90,32 +87,32 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
         .trim()
         .to_string();
     let wallet_local: Arc<LocalWallet> =
-        Arc::new(private_key.parse::<LocalWallet>().unwrap().with_chain_id(rpc_info.chainId));
+        Arc::new(private_key.parse::<LocalWallet>().unwrap().with_chain_id(rpc_info.chain_id));
 
     match config.dex {
-        DexExchange::UNISWAP_V3 => {
+        DexExchange::UniswapV3 => {
             let (base_token, quote_token) = (config.base_asset.into(), config.quote_asset.into());
-            let (base_token_address, quote_token_address) = (
-                get_token_address(base_token, config.network).unwrap(),
-                get_token_address(quote_token, config.network).unwrap(),
-            );
+            let base_token_info = get_token_info(base_token, config.network).unwrap();
+            let quote_token_info = get_token_info(quote_token, config.network).unwrap();
+            let (base_token_address, quote_token_address) =
+                (base_token_info.address, quote_token_info.address);
             let base_token: TokenInfo = TokenInfo {
                 token: base_token,
-                decimals: get_token_decimals(base_token),
+                decimals: base_token_info.decimals,
                 network: config.network,
                 address: base_token_address,
             };
             let quote_token: TokenInfo = TokenInfo {
                 token: quote_token,
-                decimals: get_token_decimals(quote_token),
+                decimals: quote_token_info.decimals,
                 network: config.network,
                 address: quote_token_address,
             };
 
             let quoter_address = get_dex_address(
-                DexExchange::UNISWAP_V3,
+                DexExchange::UniswapV3,
                 config.network,
-                ContractType::UNI_V3_QUOTER_V2,
+                ContractType::UniV3QuoterV2,
             )
             .unwrap();
 
@@ -167,7 +164,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                                 // quote for 500, 3000, all pools
                                                 let base_quote_amt_in_wei = decimal_to_wei(
                                                     config.base_asset_quote_amt,
-                                                    base_token.decimals,
+                                                    base_token.decimals.into(),
                                                 );
                                                 debug!("amt_in_wei: {:?}, base_token_address: {:?}, quote_token_address: {:?}", base_quote_amt_in_wei, base_token_address, quote_token_address);
                                                 let rets = try_join_all([
@@ -203,14 +200,14 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                                         let (amount_out, _, _, _) = sell;
                                                         let sell_price = decimal_from_wei(
                                                             amount_out,
-                                                            quote_token.decimals,
+                                                            quote_token.decimals.into(),
                                                         )
                                                         .checked_div(config.base_asset_quote_amt)
                                                         .unwrap();
                                                         let (amount_in, _, _, _) = buy;
                                                         let buy_price = decimal_from_wei(
                                                             amount_in,
-                                                            quote_token.decimals,
+                                                            quote_token.decimals.into(),
                                                         )
                                                         .checked_div(config.base_asset_quote_amt)
                                                         .unwrap();

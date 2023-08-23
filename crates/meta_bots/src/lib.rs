@@ -3,7 +3,8 @@ pub mod mev_bots;
 
 use async_trait::async_trait;
 use config::{Config, ConfigError, File};
-use meta_common::enums::{CexExchange, DexExchange, Network, Asset};
+use meta_common::enums::{CexExchange, DexExchange, Network,  RpcProvider};
+use meta_address::enums::Asset;
 use rust_decimal::Decimal;
 use serde::Deserialize;
 use std::env;
@@ -24,12 +25,14 @@ pub struct ConfigLog {
 #[derive(Debug, Clone, Deserialize)]
 pub struct ConfigChain {
     pub network: Option<Network>,
+    pub provider: Option<RpcProvider>,
     pub dexs: Option<Vec<DexExchange>>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct ConfigProvider {
     pub ws_interval_milli: Option<u64>,
+    pub provider: Option<RpcProvider>
 }
 
 #[derive(Debug, Deserialize)]

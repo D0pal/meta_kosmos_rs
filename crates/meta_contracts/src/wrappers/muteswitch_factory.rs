@@ -10,7 +10,7 @@ use meta_common::{
     constants::ZERO_ADDRESS,
     enums::{DexExchange, Network},
 };
-use meta_util::{address_from_str,address_to_str};
+use meta_util::ether::{address_from_str,address_to_str};
 
 use std::{
     borrow::BorrowMut,

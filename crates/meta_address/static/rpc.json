@@ -1,45 +1,45 @@
 {
     "ETH": {
         "archive": "https://methodical-blissful-mountain.quiknode.pro/4df963ef1e5c95b428222987008370d3ee3c3f27/",
-        "httpUrls": [
-            "https://lively-bold-sunset.quiknode.pro/a44820da0711822c6e00da793df8695e60e027a2/"
-        ],
-        "wsUrls": [
-            "wss://lively-bold-sunset.quiknode.pro/a44820da0711822c6e00da793df8695e60e027a2/"
-        ],
-        "chainId": 1,
+        "http_urls": {
+            "Quick": "https://lively-bold-sunset.quiknode.pro/a44820da0711822c6e00da793df8695e60e027a2/"
+        },
+        "ws_urls": {
+            "Quick": "wss://lively-bold-sunset.quiknode.pro/a44820da0711822c6e00da793df8695e60e027a2/"
+        },
+        "chain_id": 1,
         "explorer": "https://etherscan.io/"
     },
     "ARBI": {
-        "httpUrls": [
-            "https://smart-snowy-county.arbitrum-mainnet.quiknode.pro/c8a24d9f545b9634855deff3715559bd6f47bf63/"
-        ],
-        "wsUrls": [
-            "wss://smart-snowy-county.arbitrum-mainnet.quiknode.pro/c8a24d9f545b9634855deff3715559bd6f47bf63/"
-        ],
-        "chainId": 42161,
+        "http_urls": {
+            "Quick": "https://smart-snowy-county.arbitrum-mainnet.quiknode.pro/c8a24d9f545b9634855deff3715559bd6f47bf63/"
+        },
+        "ws_urls": {
+            "Quick": "wss://smart-snowy-county.arbitrum-mainnet.quiknode.pro/c8a24d9f545b9634855deff3715559bd6f47bf63/"
+        },
+        "chain_id": 42161,
         "explorer": "https://arbiscan.io/"
     },
     "ZK_SYNC_ERA": {
-        "httpUrls": [
-            "https://zksync2-mainnet.zksync.io"
-        ],
-        "wsUrls": [
-            "wss://mainnet.era.zksync.io/ws"
-        ],
-        "chainId": 324,
+        "http_urls": {
+            "Official": "https://zksync2-mainnet.zksync.io"
+        },
+        "ws_urls": {
+            "Official": "wss://mainnet.era.zksync.io/ws"
+        },
+        "chain_id": 324,
         "explorer": "https://explorer.zksync.io/"
     },
     "BSC": {
-        "httpUrls": [
-            "https://falling-proud-mountain.bsc.quiknode.pro/b53d2c8f76813ff09355ec1b8f2db1f758953010",
-            "https://rpc.ankr.com/bsc/fd1df65634ef7b46509966f82e10e29dedf263d73aebec4d7c1cf2529a23bcf6"
-        ],
-        "wsUrls": [
-            "wss://falling-proud-mountain.bsc.quiknode.pro/b53d2c8f76813ff09355ec1b8f2db1f758953010",
-            "wss://rpc.ankr.com/bsc/ws/fd1df65634ef7b46509966f82e10e29dedf263d73aebec4d7c1cf2529a23bcf6"
-        ],
-        "chainId": 56,
+        "http_urls": {
+            "Quick": "https://falling-proud-mountain.bsc.quiknode.pro/b53d2c8f76813ff09355ec1b8f2db1f758953010",
+            "Ankr": "https://rpc.ankr.com/bsc/fd1df65634ef7b46509966f82e10e29dedf263d73aebec4d7c1cf2529a23bcf6"
+        },
+        "ws_urls": {
+            "Quick": "wss://falling-proud-mountain.bsc.quiknode.pro/b53d2c8f76813ff09355ec1b8f2db1f758953010",
+            "Ankr": "wss://rpc.ankr.com/bsc/ws/fd1df65634ef7b46509966f82e10e29dedf263d73aebec4d7c1cf2529a23bcf6"
+        },
+        "chain_id": 56,
         "explorer": "https://bscscan.com/"
     }
 }

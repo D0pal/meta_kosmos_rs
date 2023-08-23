@@ -58,7 +58,6 @@ fn build_enums() -> anyhow::Result<TokenStream> {
     Ok(quote! {
         use serde::Deserialize;
         use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString, EnumVariantNames};
-        use meta_common::{Asset};
 
         #[derive(
             Clone,

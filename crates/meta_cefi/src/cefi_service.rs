@@ -7,9 +7,10 @@ use crate::bitfinex::{
     websockets::{EventHandler, EventType, WebSockets},
 };
 use meta_common::{
-    enums::{Asset, CexExchange},
+    enums::{CexExchange},
     models::{CurrentSpread, MarcketChange},
 };
+use meta_address::enums::Asset;
 use rust_decimal::{
     prelude::{FromPrimitive, ToPrimitive},
     Decimal,
@@ -324,7 +325,7 @@ mod test_cefi {
     };
 
     use super::{construct_order_book, get_pair, update_order_book};
-    use meta_common::enums::Asset;
+    use meta_address::enums::Asset;
     use rust_decimal::{
         prelude::{FromPrimitive, ToPrimitive},
         Decimal,

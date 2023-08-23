@@ -11,7 +11,7 @@ mod test_enums {
 
     #[test]
     fn should_dexs_from_str() {
-        let ret = dexs_from_str("PANCAKE,UNISWAP_V2".to_string());
-        assert_eq!(ret,vec![DexExchange::PANCAKE, DexExchange::UNISWAP_V2]);
+        let ret = dexs_from_str("PANCAKE,UniswapV2".to_string());
+        assert_eq!(ret,vec![DexExchange::PANCAKE, DexExchange::UniswapV2]);
     }
 }

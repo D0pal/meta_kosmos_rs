@@ -8,6 +8,8 @@ edition = "2021"
 [dependencies]
 # workspace
 meta_common = { path = "../meta_common" }
+meta_util = { path = "../meta_util" }
+meta_macro = { path = "../meta_macro" }
 # Data
 serde.workspace=true
 serde_json.workspace=true

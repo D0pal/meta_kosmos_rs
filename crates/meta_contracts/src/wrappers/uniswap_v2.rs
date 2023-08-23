@@ -12,7 +12,7 @@ use meta_common::{
     constants::ZERO_ADDRESS,
     enums::{DexExchange, Network},
 };
-use meta_util::{address_from_str,address_to_str};
+use meta_util::ether::{address_from_str,address_to_str};
 
 use std::{
     borrow::BorrowMut,
@@ -48,7 +48,7 @@ impl<M: Middleware> UniswapV2<M> {
         // let config_contract = Config::new(config_address, client.clone());
         debug!("init UniswapV2 with network {} dex {} factory_address {}",network, dex, factory_address);
         let factory_contract = match dex {
-            DexExchange::MUTE_SWITCH => UniswapV2FactoryEnum::MUTE_SWITCH(MuteSwitchFactory::new(factory_address, client.clone())),
+            DexExchange::MuteSwitch => UniswapV2FactoryEnum::MUTE_SWITCH(MuteSwitchFactory::new(factory_address, client.clone())),
             _ => UniswapV2FactoryEnum::UNISWAP_V2(UniswapV2Factory::new(factory_address, client.clone()))
         };
         let swap_router_contract = UniswapV2Router02::new(swap_router_addr, client.clone());

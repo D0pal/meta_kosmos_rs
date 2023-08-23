@@ -1,0 +1,16 @@
+[package]
+name = "meta_python"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "meta_python"
+crate-type = ["cdylib"]
+
+[dependencies]
+ohio_util = { path = "../meta_util" }
+tokio = { version = "1", features = ["full"] }
+pyo3 = { version = "0.19.2", features = ["extension-module", "multiple-pymethods"] }
+pyo3-asyncio = {version = "0.19.0", features = ["attributes", "tokio-runtime"]}
+
+

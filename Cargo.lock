@@ -2191,6 +2191,8 @@ dependencies = [
  "ethers",
  "lazy_static",
  "meta_common",
+ "meta_macro",
+ "meta_util",
  "once_cell",
  "proc-macro2",
  "quote",
@@ -2309,6 +2311,19 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
+]
+
+[[package]]
+name = "meta_macro"
+version = "0.1.0"
+dependencies = [
+ "convert_case 0.6.0",
+ "hex",
+ "meta_common",
+ "meta_util",
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
 ]
 
 [[package]]

@@ -36,20 +36,26 @@ pub enum DexExchange {
     #[strum(ascii_case_insensitive, serialize = "BISWAP")]
     BISWAP,
 
+    #[strum(ascii_case_insensitive, serialize = "AGNI")]
+    AGNI,
+
+    #[strum(ascii_case_insensitive, serialize = "IZUMI")]
+    IZUMI,
+
     #[strum(ascii_case_insensitive, serialize = "SUSHISWAP")]
     SUSHISWAP,
 
-    #[strum(ascii_case_insensitive, serialize = "SYNC_SWAP")]
-    SYNC_SWAP,
+    #[strum(ascii_case_insensitive, serialize = "SyncSwap")]
+    SyncSwap,
 
-    #[strum(ascii_case_insensitive, serialize = "MUTE_SWITCH")]
-    MUTE_SWITCH,
+    #[strum(ascii_case_insensitive, serialize = "MuteSwitch")]
+    MuteSwitch,
 
-    #[strum(ascii_case_insensitive, serialize = "UNISWAP_V2")]
-    UNISWAP_V2,
+    #[strum(ascii_case_insensitive, serialize = "UniswapV2")]
+    UniswapV2,
 
-    #[strum(ascii_case_insensitive, serialize = "UNISWAP_V3")]
-    UNISWAP_V3,
+    #[strum(ascii_case_insensitive, serialize = "UniswapV3")]
+    UniswapV3,
 }
 
 impl Into<String> for DexExchange {
@@ -69,23 +75,32 @@ impl Into<String> for DexExchange {
 )]
 // #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash, Deserialize, EnumVariantNames)]
 pub enum ContractType {
-    #[strum(ascii_case_insensitive, serialize = "UNI_V2_FACTORY")]
-    UNI_V2_FACTORY,
+    #[strum(ascii_case_insensitive, serialize = "UniV2Factory")]
+    UniV2Factory,
 
-    #[strum(ascii_case_insensitive, serialize = "UNI_V2_ROUTER_V2")]
-    UNI_V2_ROUTER_V2,
+    #[strum(ascii_case_insensitive, serialize = "UniV2RouterV2")]
+    UniV2RouterV2,
 
-    #[strum(ascii_case_insensitive, serialize = "UNI_V3_FACTORY")]
-    UNI_V3_FACTORY,
+    #[strum(ascii_case_insensitive, serialize = "UniV3Factory")]
+    UniV3Factory,
 
-    #[strum(ascii_case_insensitive, serialize = "UNI_V3_SWAP_ROUTER_V2")]
-    UNI_V3_SWAP_ROUTER_V2,
+    #[strum(ascii_case_insensitive, serialize = "UniV3SwapRouterV2")]
+    UniV3SwapRouterV2,
 
-    #[strum(ascii_case_insensitive, serialize = "UNI_V3_NFT")]
-    UNI_V3_NFT,
+    #[strum(ascii_case_insensitive, serialize = "UniV3Nft")]
+    UniV3Nft,
 
-    #[strum(ascii_case_insensitive, serialize = "UNI_V3_QUOTER_V2")]
-    UNI_V3_QUOTER_V2,
+    #[strum(ascii_case_insensitive, serialize = "UniV3QuoterV2")]
+    UniV3QuoterV2,
+
+    #[strum(ascii_case_insensitive, serialize = "IzumiLiquidityManager")]
+    IzumiLiquidityManager,
+
+    #[strum(ascii_case_insensitive, serialize = "IzumiLimitOrderManager")]
+    IzumiLimitOrderManager,
+
+    #[strum(ascii_case_insensitive, serialize = "IzumiSwapRouter")]
+    IzumiSwapRouter,
 }
 
 impl Into<String> for ContractType {
@@ -99,13 +114,13 @@ mod test_dex {
     use super::DexExchange;
     #[test]
     fn should_str_into_dex_enum() {
-        let dex: DexExchange = "MUTE_SWITCH".try_into().unwrap();
-        assert_eq!(dex, DexExchange::MUTE_SWITCH);
+        let dex: DexExchange = "MuteSwitch".try_into().unwrap();
+        assert_eq!(dex, DexExchange::MuteSwitch);
     }
 
     #[test]
     fn should_str_split() {
-        let dex: Vec<&str> = "MUTE_SWITCH,PANCAKE".split(',').collect();
+        let dex: Vec<&str> = "MuteSwitch,PANCAKE".split(',').collect();
         println!("{:?}", dex);
     }
 }

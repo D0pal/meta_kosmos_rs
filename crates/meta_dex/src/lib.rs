@@ -42,12 +42,12 @@ impl<M: Middleware> Dex<M> {
     ) -> Self {
         
         let pool_variant: PoolVariant = match dex_exchange {
-            DexExchange::UNISWAP_V3 => PoolVariant::UniswapV3,
+            DexExchange::UniswapV3 => PoolVariant::UniswapV3,
             _ => PoolVariant::UniswapV2,
         };
         let contract_type = match pool_variant {
-            PoolVariant::UniswapV2 => ContractType::UNI_V2_FACTORY,
-            PoolVariant::UniswapV3 => ContractType::UNI_V3_FACTORY,
+            PoolVariant::UniswapV2 => ContractType::UniV2Factory,
+            PoolVariant::UniswapV3 => ContractType::UniV3Factory,
         };
         let factory_contract_info = get_dex_address(dex_exchange, network, contract_type).unwrap();
         Dex {

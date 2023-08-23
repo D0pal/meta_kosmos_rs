@@ -9,3 +9,6 @@ pub use protocol::*;
 
 mod wei;
 pub use wei::*;
+
+mod address;
+pub use address::*;

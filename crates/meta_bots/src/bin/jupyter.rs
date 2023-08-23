@@ -18,9 +18,11 @@ use std::{
 };
 use tracing::{debug, info, instrument::WithSubscriber, warn, Level};
 
-use meta_address::{get_bot_contract_info, get_dex_address, get_rpc_info, get_token_address,Token};
+use meta_address::{
+    get_bot_contract_info, get_dex_address, get_rpc_info, get_token_address, Token,
+};
 use meta_bots::{mev_bots::sandwidth::BotSandwidth, JupyterConfig};
-use meta_common::enums::{BotType, ContractType, DexExchange, Network, };
+use meta_common::enums::{BotType, ContractType, DexExchange, Network};
 use meta_contracts::{
     bindings::{
         flash_bots_router::{FlashBotsRouter, UniswapWethParams},
@@ -33,7 +35,7 @@ use meta_contracts::{
 };
 use meta_dex::{sync_dex, Dex};
 use meta_tracing::init_tracing;
-use meta_util::{address_from_str, enums::dexs_from_str};
+use meta_util::ether::{address_from_str, enums::dexs_from_str};
 
 #[derive(Debug, Clone, Options)]
 struct Opts {
@@ -51,11 +53,13 @@ struct Opts {
 
 async fn run(config: JupyterConfig) -> anyhow::Result<()> {
     info!("run jupyter app with config: {:?}", config);
+    let provider = config.chain.provider.expect("provider required");
     let rpc_info = get_rpc_info(config.chain.network.unwrap()).unwrap();
     debug!("rpc info {:?}", rpc_info);
 
-    let provider_ws =
-        Provider::<Ws>::connect(rpc_info.wsUrls[0].clone()).await.expect("ws connect error");
+    let provider_ws = Provider::<Ws>::connect(rpc_info.ws_urls.get(&provider).unwrap().clone())
+        .await
+        .expect("ws connect error");
     // let provider_ws = Provider::<Http>::connect(&rpc_info.httpUrls[0]).await;
     let provider_ws =
         provider_ws.interval(Duration::from_millis(config.provider.ws_interval_milli.unwrap()));
@@ -66,7 +70,7 @@ async fn run(config: JupyterConfig) -> anyhow::Result<()> {
         .trim()
         .to_string();
     let wallet_local: Arc<LocalWallet> =
-        Arc::new(private_key.parse::<LocalWallet>().unwrap().with_chain_id(rpc_info.chainId));
+        Arc::new(private_key.parse::<LocalWallet>().unwrap().with_chain_id(rpc_info.chain_id));
     // let wallet_local = wallet_local;
     let searcher_address = wallet_local.address();
     // let wallet = SignerMiddleware::new(provider_ws.clone(), wallet_local.clone());

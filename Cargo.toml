@@ -9,6 +9,10 @@ members = [
     "crates/meta_dex",
     "crates/meta_mev_service",
     "crates/meta_cefi",
+    "crates/meta_macro",
+]
+exclude = [
+    "crates/meta_python"
 ]
 
 [workspace.package]
@@ -36,10 +40,11 @@ dashmap = "5.4"
 hashbrown = "0.13.2"
 strum = { version = "0.24", features = ["derive"] }
 strum_macros = "0.24"
+convert_case = "0.6"
 # blockchain
 ethers = { version = "2.0.0", features = ["abigen", "ws"] }
 revm = { version = "3.0.0", features = ["ethersdb", "serde", "std"] }
-foundry-evm={git="https://github.com/foundry-rs/foundry.git"}
+foundry-evm = { git = "https://github.com/foundry-rs/foundry.git" }
 # web
 http = { version = "0.2.9" }
 # async

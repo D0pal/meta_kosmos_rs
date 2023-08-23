@@ -16,9 +16,9 @@ use std::{
 };
 use tracing::{debug, info, instrument::WithSubscriber, warn, Level};
 
-use meta_address::{get_bot_contract_info, get_dex_address, get_rpc_info, get_token_address,Token};
+use meta_address::{get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info,Token};
 use meta_bots::AppConfig;
-use meta_common::enums::{BotType, ContractType, DexExchange, Network, };
+use meta_common::enums::{BotType, ContractType, DexExchange, Network, RpcProvider, };
 use meta_contracts::{
     bindings::{
         flash_bots_router::{FlashBotsRouter, UniswapWethParams},
@@ -30,7 +30,7 @@ use meta_contracts::{
     },
 };
 use meta_tracing::init_tracing;
-use meta_util::address_from_str;
+use meta_util::ether::address_from_str;
 
 #[derive(Debug, Clone, Options)]
 struct Opts {
@@ -38,6 +38,9 @@ struct Opts {
 
     #[options(help = "blockchain network, such as ETH, BSC")]
     network: Network,
+
+    #[options(help = "blockchain network, such as ETH, BSC")]
+    provider: RpcProvider,
 
     #[options(help = "base token, such as USDT", default="WETH")]
     base_token: Token,
@@ -68,21 +71,22 @@ struct Opts {
 }
 
 async fn run(opts: Opts) -> anyhow::Result<()> {
+    let provider = opts.provider;
     let rpc_info = get_rpc_info(opts.network).unwrap();
     info!(
         "run bot with arguments, chain: {} base_token: {}, quote_token: {},  ws provider url: {:?}",
-        opts.network, opts.base_token, opts.quote_token, rpc_info.wsUrls[0]
+        opts.network, opts.base_token, opts.quote_token, provider
     );
 
     let provider =
-        Provider::<Ws>::connect(rpc_info.wsUrls[0].clone()).await.expect("ws connect error");
+        Provider::<Ws>::connect(rpc_info.ws_urls.get(&provider).unwrap().clone()).await.expect("ws connect error");
     let provider = provider.interval(Duration::from_millis(opts.interval));
 
     info!("privatekey path {:?}", opts.private_key_path); // {:?} is explained in https://doc.rust-lang.org/std/fmt/index.html
     let private_key = std::fs::read_to_string(opts.private_key_path).unwrap().trim().to_string();
     let wallet: LocalWallet = private_key.parse().unwrap();
 
-    let wallet = wallet.with_chain_id(rpc_info.chainId);
+    let wallet = wallet.with_chain_id(rpc_info.chain_id);
     let executor_address = wallet.address();
     let client = SignerMiddleware::new(provider, wallet);
     let client = NonceManagerMiddleware::new(client, executor_address);
@@ -90,8 +94,8 @@ async fn run(opts: Opts) -> anyhow::Result<()> {
     info!("profits will be sent to {:?}", executor_address);
     let quote_amt_in = u128::pow(10, 17);
 
-    let quote_addr = get_token_address(opts.quote_token, opts.network).unwrap();
-    let base_addr = get_token_address(opts.base_token, opts.network).unwrap();
+    let quote_addr = get_token_info(opts.quote_token, opts.network).unwrap().address;
+    let base_addr = get_token_info(opts.base_token, opts.network).unwrap().address;
     debug!("quote_addr: {}, base_addr: {} ", quote_addr, base_addr);
 
     let quote_asset = Erc20Wrapper::new(opts.network, quote_addr, client.clone()).await;
@@ -101,11 +105,11 @@ async fn run(opts: Opts) -> anyhow::Result<()> {
     let flashbots_router = FlashBotsRouter::new(bot_address, client.clone());
 
     let market_a_factory_addr =
-        get_dex_address(opts.dex_a.clone(), opts.network, ContractType::UNI_V2_FACTORY)
+        get_dex_address(opts.dex_a.clone(), opts.network, ContractType::UniV2Factory)
             .unwrap()
             .address;
     let market_a_swap_router_addr =
-        get_dex_address(opts.dex_a.clone(), opts.network, ContractType::UNI_V2_ROUTER_V2)
+        get_dex_address(opts.dex_a.clone(), opts.network, ContractType::UniV2RouterV2)
             .unwrap()
             .address;
 
@@ -118,11 +122,11 @@ async fn run(opts: Opts) -> anyhow::Result<()> {
     );
 
     let market_b_factory_addr =
-        get_dex_address(opts.dex_b.clone(), opts.network, ContractType::UNI_V2_FACTORY)
+        get_dex_address(opts.dex_b.clone(), opts.network, ContractType::UniV2Factory)
             .unwrap()
             .address;
     let market_b_swap_router_addr =
-        get_dex_address(opts.dex_b.clone(), opts.network, ContractType::UNI_V2_ROUTER_V2)
+        get_dex_address(opts.dex_b.clone(), opts.network, ContractType::UniV2RouterV2)
             .unwrap()
             .address;
     let biswap = UniswapV2::new(

@@ -1,23 +1,12 @@
 pub mod enums;
 pub mod ether;
 
-use std::str::FromStr;
+
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use ethers::types::Address;
+
 use hex;
 
-
-pub fn address_to_str(addr: &Address) -> String {
-    let str: String = hex::encode(addr);
-    str
-}
-
-pub fn address_from_str(addr: &str) -> Address {
-    Address::from_str(addr)
-        .to_owned()
-        .expect("cannot convert string to address")
-}
 
 pub fn int_from_hex_str(input: &str) -> u64 {
     let parsed = input.replace("0x", "");
