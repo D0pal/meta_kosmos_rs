@@ -19,7 +19,7 @@ use std::{
 use tracing::{debug, info, instrument::WithSubscriber, warn, Level};
 
 use meta_address::{
-    get_bot_contract_info, get_dex_address, get_rpc_info, get_token_address, Token,
+    get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info, Token,
 };
 use meta_bots::{mev_bots::sandwidth::BotSandwidth, JupyterConfig};
 use meta_common::enums::{BotType, ContractType, DexExchange, Network};
@@ -35,7 +35,7 @@ use meta_contracts::{
 };
 use meta_dex::{sync_dex, Dex};
 use meta_tracing::init_tracing;
-use meta_util::ether::{address_from_str, enums::dexs_from_str};
+use meta_util::{enums::dexs_from_str, ether::address_from_str};
 
 #[derive(Debug, Clone, Options)]
 struct Opts {
@@ -101,8 +101,14 @@ async fn run(config: JupyterConfig) -> anyhow::Result<()> {
     let sandwitdh_contract_info = get_bot_contract_info(BotType::SANDWIDTH_HUFF, network).unwrap();
 
     let weth_address = match network {
-        Network::BSC => get_token_address(Token::WBNB, Network::BSC),
-        _ => get_token_address(Token::WETH, network),
+        Network::BSC => {
+            let info = get_token_info(Token::WBNB, Network::BSC).unwrap();
+            info.address
+        },
+        _ => {
+            let info = get_token_info(Token::WETH, network).unwrap();
+            info.address
+        },
     };
 
     // Execution loop (reconnect bot if it dies)
@@ -112,7 +118,7 @@ async fn run(config: JupyterConfig) -> anyhow::Result<()> {
         network,
         sandwitdh_contract_info.address,
         sandwitdh_contract_info.created_blk_num.into(),
-        weth_address.unwrap(),
+        weth_address,
         dexes.clone(),
         pools,
         provider_ws.clone(),

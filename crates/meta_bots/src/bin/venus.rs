@@ -26,8 +26,13 @@ use meta_contracts::{
 use meta_dex::enums::TokenInfo;
 use meta_tracing::init_tracing;
 use meta_util::ether::{address_from_str, decimal_from_wei, decimal_to_wei};
-use rust_decimal::Decimal;
+use meta_util::get_price_delta_in_bp;
+use rust_decimal::{
+    prelude::{FromPrimitive, Signed},
+    Decimal,
+};
 use serde::Deserialize;
+use std::ops::Sub;
 use std::{
     borrow::{Borrow, BorrowMut},
     cell::RefCell,
@@ -304,17 +309,25 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                             }
 
                             if cex_bid > dex_ask {
-                                debug!(
-                                    "found a cross, cex bid {:?}, dex ask {:?}",
-                                    cex_bid, dex_ask
-                                );
+                                if get_price_delta_in_bp(cex_bid, dex_ask)
+                                    > Decimal::from_f32(10f32).unwrap()
+                                {
+                                    debug!(
+                                        "found a cross, cex bid {:?}, dex ask {:?}",
+                                        cex_bid, dex_ask
+                                    );
+                                }
                             }
 
                             if dex_bid > cex_bid {
-                                debug!(
-                                    "found a cross, dex bid {:?}, cex ask {:?}",
-                                    dex_bid, cex_ask
-                                );
+                                if get_price_delta_in_bp(dex_bid, cex_ask)
+                                    > Decimal::from_f32(10f32).unwrap()
+                                {
+                                    debug!(
+                                        "found a cross, dex bid {:?}, cex ask {:?}",
+                                        dex_bid, cex_ask
+                                    );
+                                }
                             }
                         }
                     }
