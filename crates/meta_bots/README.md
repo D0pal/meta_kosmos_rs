@@ -8,8 +8,10 @@ cargo run --bin ${BIN} -- --network ${NETWORK} -q ${QUOTE} -b ${BASE} --dex-a ${
 ## Jupyter
 sandwidth 
 ```
-cargo run -p meta_bots --bin jupyter -- --dexs PANCAKE,BISWAP --network BSC
+cargo run -p meta_bots --bin jupyter --release -- --dexs PANCAKE,BISWAP --network BSC
 ```
 
 ## Venus
-JIT
+```
+cargo run -p meta_bots --bin venus --release -- -b ARB -q USD --network ARBI -d UniswapV3 -c BITFINEX
+```

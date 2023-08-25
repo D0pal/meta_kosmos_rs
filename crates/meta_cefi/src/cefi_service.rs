@@ -137,10 +137,10 @@ impl EventHandler for BitfinexEventHandler {
 
             if !current_best_ask.eq(&prev_best_ask) || !current_best_bid.eq(&prev_best_bid) {
                 if let Some(ref tx) = self.sender {
-                    println!(
-                        "send cex price change, current_best_ask: {:?}, current_best_bid: {:?} ",
-                        current_best_ask, current_best_bid
-                    );
+                    // println!(
+                    //     "send cex price change, current_best_ask: {:?}, current_best_bid: {:?} ",
+                    //     current_best_ask, current_best_bid
+                    // );
                     let ret = tx.send(MarcketChange {
                         cex: Some(CurrentSpread {
                             best_ask: current_best_ask,
@@ -217,7 +217,7 @@ impl CefiService {
                         (*web_socket).add_event_handler(handler);
                         (*web_socket).connect().unwrap(); // check error
                         (*web_socket).conf();
-                        (*web_socket).subscribe_books(ETHUSD, EventType::Trading, P0, "F0", 100);
+                        (*web_socket).subscribe_books(get_bitfinex_trade_symbol(base, quote), EventType::Trading, P0, "F0", 100);
                         (*web_socket).event_loop().unwrap(); // check error
                     });
                 }
@@ -266,6 +266,10 @@ impl CefiService {
 
 fn get_pair(base: Asset, quote: Asset) -> String {
     format!("{}_{}", base, quote)
+}
+
+fn get_bitfinex_trade_symbol(base: Asset, quote: Asset) -> String {
+    format!("{}{}", base, quote)
 }
 
 fn construct_order_book(levels: Vec<TradingOrderBookLevel>) -> OrderBook {
@@ -324,7 +328,7 @@ mod test_cefi {
         util::to_decimal,
     };
 
-    use super::{construct_order_book, get_pair, update_order_book};
+    use super::*;
     use meta_address::enums::Asset;
     use rust_decimal::{
         prelude::{FromPrimitive, ToPrimitive},
@@ -335,6 +339,12 @@ mod test_cefi {
     fn test_get_pair() {
         let ret = get_pair(Asset::ETH, Asset::USD);
         assert_eq!(ret, "ETH_USD");
+    }
+
+    #[test]
+    fn test_get_bitfinex_trade_symbol() {
+        let ret = get_bitfinex_trade_symbol(Asset::ARB, Asset::USD);
+        assert_eq!(ret, "ARBUSD");
     }
 
     #[test]

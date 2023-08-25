@@ -70,7 +70,7 @@ struct Opts {
 }
 
 async fn run(config: VenusConfig) -> anyhow::Result<()> {
-    info!("run jupyter app with config: {:?}", config);
+    info!("run venus app with config: {:?}", config);
     let rpc_info = get_rpc_info(config.network).unwrap();
     debug!("rpc info {:?}", rpc_info);
     let rpc_provider = config.provider.provider.expect("need rpc provider");
@@ -263,14 +263,22 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
 
                     loop {
                         if let Ok(change) = rx.recv() {
+                            let (mut cex_bid, mut cex_ask, mut dex_bid, mut dex_ask) = (
+                                Decimal::default(),
+                                Decimal::default(),
+                                Decimal::default(),
+                                Decimal::default(),
+                            );
                             if let Some(cex_spread) = change.cex {
-                                let (dex_bid, dex_ask) = (
+                                let (current_dex_bid, current_dex_ask) = (
                                     *last_dex_sell_price.read().await,
                                     *last_dex_buy_price.read().await,
                                 );
-                                debug!(
-                                    "cex spread change, cex bid {:?}, cex ask {:?}, dex bid {:?}, dex ask {:?}",
-                                    cex_spread.best_bid, cex_spread.best_ask, dex_bid, dex_ask
+                                (cex_bid, cex_ask, dex_bid, dex_ask) = (
+                                    cex_spread.best_bid,
+                                    cex_spread.best_ask,
+                                    current_dex_bid,
+                                    current_dex_ask,
                                 );
                             }
                             if let Some(dex_spread) = change.dex {
@@ -283,12 +291,30 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                     )
                                 };
                                 match ret {
-                                    Some(cex_spread) => debug!(
-                                        "dex spread change, cex bid {:?}, cex ask {:?}, dex bid {:?}, dex ask {:?}",
-                                        cex_spread.best_bid, cex_spread.best_ask, dex_spread.best_bid, dex_spread.best_ask
-                                    ),
+                                    Some(cex_spread) => {
+                                        (cex_bid, cex_ask, dex_bid, dex_ask) = (
+                                            cex_spread.best_bid,
+                                            cex_spread.best_ask,
+                                            dex_spread.best_bid,
+                                            dex_spread.best_ask,
+                                        );
+                                    }
                                     None => {}
                                 }
+                            }
+
+                            if cex_bid > dex_ask {
+                                debug!(
+                                    "found a cross, cex bid {:?}, dex ask {:?}",
+                                    cex_bid, dex_ask
+                                );
+                            }
+
+                            if dex_bid > cex_bid {
+                                debug!(
+                                    "found a cross, dex bid {:?}, cex ask {:?}",
+                                    dex_bid, cex_ask
+                                );
                             }
                         }
                     }
