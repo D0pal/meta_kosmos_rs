@@ -309,23 +309,25 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                             }
 
                             if cex_bid > dex_ask {
-                                if get_price_delta_in_bp(cex_bid, dex_ask)
-                                    > Decimal::from_f32(10f32).unwrap()
+                                let change = get_price_delta_in_bp(cex_bid, dex_ask);
+                                if 
+                                change > Decimal::from_f32(20f32).unwrap()
                                 {
-                                    debug!(
-                                        "found a cross, cex bid {:?}, dex ask {:?}",
-                                        cex_bid, dex_ask
+                                    info!(
+                                        "found a cross, cex bid {:?}, dex ask {:?}, price change {:?}",
+                                        cex_bid, dex_ask, change
                                     );
                                 }
                             }
 
                             if dex_bid > cex_bid {
-                                if get_price_delta_in_bp(dex_bid, cex_ask)
-                                    > Decimal::from_f32(10f32).unwrap()
+                                let change = get_price_delta_in_bp(dex_bid, cex_ask);
+                                if 
+                                   change > Decimal::from_f32(20f32).unwrap()
                                 {
-                                    debug!(
-                                        "found a cross, dex bid {:?}, cex ask {:?}",
-                                        dex_bid, cex_ask
+                                    info!(
+                                        "found a cross, dex bid {:?}, cex ask {:?}, price change {:?}",
+                                        dex_bid, cex_ask, change
                                     );
                                 }
                             }

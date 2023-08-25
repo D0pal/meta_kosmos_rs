@@ -13,5 +13,9 @@ cargo run -p meta_bots --bin jupyter --release -- --dexs PANCAKE,BISWAP --networ
 
 ## Venus
 ```
+cargo build -p meta_bots --release
+cp ./target/release/venus ./venus
+export ENV=prod 
 cargo run -p meta_bots --bin venus --release -- -b ARB -q USD --network ARBI -d UniswapV3 -c BITFINEX
+nohup ./venus -b ARB -q USD --network ARBI -d UniswapV3 -c BITFINEX >venus.log 2>&1 &
 ```
