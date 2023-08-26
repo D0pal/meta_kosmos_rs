@@ -1,9 +1,16 @@
+pub mod enums;
+
 use ethers::core::types::Address;
-use meta_common::enums::{Token, ContractType, Network, Bot};
+use meta_common::{
+    enums::{ContractType, DexExchange, Network, RpcProvider, BotType},
+    traits::ContractCode,
+};
+use meta_macro::impl_contract_code;
 use once_cell::sync::Lazy;
-use serde::Deserialize;
 use std::collections::HashMap;
-/// Wrapper around a hash map that maps a [network](https://github.com/gakonst/ethers-rs/blob/master/ethers-core/src/types/network.rs) to the contract's deployed address on that network.
+
+include!(concat!(env!("OUT_DIR"), "/token_enum.rs"));
+
 #[derive(Clone, Debug, Deserialize)]
 pub struct Contract {
     addresses: HashMap<Network, Address>,
@@ -18,23 +25,30 @@ impl Contract {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct DexAddress {
-    addresses: HashMap<ContractType, Address>,
+#[impl_contract_code()]
+pub struct TokenInfo {
+    pub decimals: u8,
+    pub address: Address,
+    pub native: bool,
+    pub unwrap_to: Option<Token>,
+    pub byte_code: Option<String>,
+    pub code_hash: Option<String>,
 }
 
-impl DexAddress {
-    /// Returns the address of the contract on the specified chain. If the contract's address is
-    /// not found in the addressbook, the getter returns None.
-    pub fn address(&self, contract_type: ContractType) -> Option<Address> {
-        self.addresses.get(&contract_type).cloned()
-    }
+#[derive(Clone, Debug, Deserialize)]
+#[impl_contract_code()]
+pub struct ContractInfo {
+    pub address: Address,
+    pub created_blk_num: u64,
+    pub byte_code: Option<String>,
+    pub code_hash: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct RpcInfo {
-    pub httpUrls: Vec<String>,
-    pub wsUrls: Vec<String>,
-    pub chainId: u16,
+    pub http_urls: HashMap<RpcProvider, String>,
+    pub ws_urls: HashMap<RpcProvider, String>,
+    pub chain_id: u16,
     pub explorer: String,
 }
 
@@ -43,32 +57,56 @@ const DEX_ADDRESS_JSON: &str = include_str!("../static/dex_address.json");
 const BOT_ADDRESS_JSON: &str = include_str!("../static/bot_address.json");
 const RPC_JSON: &str = include_str!("../static/rpc.json");
 
-static TOKEN_ADDRESS_BOOK: Lazy<HashMap<Token, Contract>> =
+/// <token_name, <network, token_info>>
+static NAMED_TOKEN_INFO_BOOK: Lazy<HashMap<String, HashMap<Network, TokenInfo>>> =
     Lazy::new(|| serde_json::from_str(TOKEN_ADDRESS_JSON).unwrap());
 
-static DEX_ADDRESS_BOOK: Lazy<HashMap<String, HashMap<Network, DexAddress>>> =
-    Lazy::new(|| serde_json::from_str(DEX_ADDRESS_JSON).unwrap());
+/// <network, <token_address, token_info>>
+static ADDRESSED_TOKEN_INFO_BOOK: Lazy<HashMap<Network, HashMap<Address, TokenInfo>>> =
+    Lazy::new(|| {
+        let mut book = HashMap::default();
+        NAMED_TOKEN_INFO_BOOK.iter().for_each(|(_, val)| {
+            val.iter().for_each(|(network, info)| {
+                if !book.contains_key(network) {
+                    book.insert(network.to_owned(), HashMap::new());
+                }
+                let info_map = book.get_mut(network).unwrap();
+                info_map.entry(info.address).or_insert(info.to_owned());
+            })
+        });
+        book
+    });
 
-static BOT_ADDRESS_BOOK: Lazy<HashMap<Bot, Contract>> =
+static DEX_ADDRESS_BOOK: Lazy<
+    HashMap<DexExchange, HashMap<Network, HashMap<ContractType, ContractInfo>>>,
+> = Lazy::new(|| serde_json::from_str(DEX_ADDRESS_JSON).unwrap());
+static BOT_ADDRESS_BOOK: Lazy<HashMap<BotType, HashMap<Network, ContractInfo>>> =
     Lazy::new(|| serde_json::from_str(BOT_ADDRESS_JSON).unwrap());
 
 static RPC_INFO_BOOK: Lazy<HashMap<Network, RpcInfo>> =
     Lazy::new(|| serde_json::from_str(RPC_JSON).unwrap());
 
-/// Fetch the addressbook for a contract by its name. If the contract name is not a part of
-/// [ethers-addressbook](https://github.com/gakonst/ethers-rs/tree/master/ethers-addressbook) we return None.
-pub fn get_token_address(name: Token) -> Option<Contract> {
-    TOKEN_ADDRESS_BOOK.get(&name.into()).cloned()
+pub fn get_token_info<T: Into<String>>(token_name: T, network: Network) -> Option<TokenInfo> {
+    NAMED_TOKEN_INFO_BOOK.get(&token_name.into()).map_or(None, |x| x.get(&network).cloned())
 }
 
-pub fn get_bot_address(name: Bot) -> Option<Contract> {
-    BOT_ADDRESS_BOOK.get(&name.into()).cloned()
+pub fn get_addressed_token_info(network: Network, address: Address) -> Option<TokenInfo> {
+    ADDRESSED_TOKEN_INFO_BOOK.get(&network).map_or(None, |x| x.get(&address).cloned())
 }
 
-pub fn get_dex_address<S: Into<String>>(dex_name: S, chain_name: Network) -> Option<DexAddress> {
+pub fn get_bot_contract_info(name: BotType, network: Network) -> Option<ContractInfo> {
+    BOT_ADDRESS_BOOK.get(&name.into()).map_or(None, |v| v.get(&network).cloned())
+}
+
+
+pub fn get_dex_address(
+    dex_name: DexExchange,
+    chain_name: Network,
+    contract_type: ContractType,
+) -> Option<ContractInfo> {
     DEX_ADDRESS_BOOK
         .get(&dex_name.into())
-        .map_or(None, |v| v.get(&chain_name).cloned())
+        .map_or(None, |v| v.get(&chain_name).map_or(None, |v| v.get(&contract_type).cloned()))
 }
 
 pub fn get_rpc_info(network: Network) -> Option<RpcInfo> {
@@ -77,66 +115,87 @@ pub fn get_rpc_info(network: Network) -> Option<RpcInfo> {
 
 #[cfg(test)]
 mod tests {
-    use meta_common::{
-        constants::address_from_str,
-        enums::{ContractType, Dex, Network, Token},
-    };
+    use meta_common::enums::{ContractType, DexExchange, Network};
+    use meta_util::ether::address_from_str;
 
     use super::*;
 
     #[test]
+    fn test_token_enum() {
+        assert_eq!("BTC".to_string(), Token::BTC.to_string());
+    }
+
+    #[test]
     fn test_token_addr() {
-        println!("{:?}", get_token_address(Token::WBNB));
-        assert!(get_token_address(Token::WBNB).is_some());
-        println!(
-            "{:?}",
-            get_token_address(Token::WBNB)
-                .unwrap()
-                .address(Network::BSC)
-                .unwrap()
+        let eth_weth = get_token_info(Token::WETH, Network::ETH).unwrap();
+        assert_eq!(
+            eth_weth.address,
+            address_from_str("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")
+        );
+        // assert_eq!(
+        //     eth_weth.get_byte_code_and_hash().1,
+        //     [
+        //         208, 160, 107, 18, 172, 71, 134, 59, 92, 123, 228, 24, 92, 45, 234, 173, 28, 97,
+        //         85, 112, 51, 245, 108, 125, 78, 167, 68, 41, 203, 178, 94, 35
+        //     ]
+        // );
+
+        assert_eq!(
+            get_token_info("WETH", Network::ETH).unwrap().address,
+            address_from_str("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")
+        );
+
+        assert_eq!(
+            get_token_info(Token::WETH, Network::ARBI).unwrap().address,
+            address_from_str("0x82aF49447D8a07e3bd95BD0d56f35241523fBab1")
         );
         assert_eq!(
-            get_token_address(Token::WBNB)
-                .unwrap()
-                .address(Network::BSC)
-                .unwrap(),
-            address_from_str("0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c")
+            get_token_info(Token::USDC, Network::ARBI).unwrap().address,
+            address_from_str("0xaf88d065e77c8cc2239327c5edb3a432268e5831")
         );
-        assert!(get_token_address(Token::BUSD).is_some());
-        assert!(get_token_address(Token::EMPTY).is_none());
-
-        assert!(get_token_address(Token::WBNB)
-            .unwrap()
-            .address(Network::BSC)
-            .is_some());
-        assert!(get_token_address(Token::WBNB)
-            .unwrap()
-            .address(Network::BSC_TEST)
-            .is_some());
     }
 
+    #[test]
+    fn test_get_addressed_token_info() {
+        let eth_weth = get_addressed_token_info(
+            Network::ETH,
+            address_from_str("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"),
+        )
+        .unwrap();
+        assert_eq!(
+            eth_weth.address,
+            address_from_str("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")
+        );
+        // assert_eq!(
+        //     eth_weth.get_byte_code_and_hash().1,
+        //     [
+        //         208, 160, 107, 18, 172, 71, 134, 59, 92, 123, 228, 24, 92, 45, 234, 173, 28, 97,
+        //         85, 112, 51, 245, 108, 125, 78, 167, 68, 41, 203, 178, 94, 35
+        //     ]
+        // );
+    }
     #[test]
     fn test_dex_addr() {
-        assert!(get_dex_address(Dex::PANCAKE, Network::BSC).is_some());
-        assert!(get_dex_address(Dex::PANCAKE, Network::BSC)
-            .unwrap()
-            .address(ContractType::UNI_V2_FACTORY)
-            .is_some());
-    }
-
-    #[test]
-    fn test_get_bot_address() {
-        assert!(get_bot_address(Bot::ATOMIC_SWAP_ROUTER).is_some());
-        let bot_addrs = get_bot_address(Bot::ATOMIC_SWAP_ROUTER).unwrap();
-        let addr = bot_addrs.address(Network::ZK_SYNC_ERA).unwrap();
-        assert_eq!(addr, address_from_str("0xea57F2ca01dAb59139b1AFC483bd29cE8B727361"));
+        let quoter =
+            get_dex_address(DexExchange::UniswapV3, Network::ETH, ContractType::UniV3QuoterV2);
+        assert!(quoter.is_some());
+        let quoter = quoter.unwrap();
+        assert_eq!(quoter.address, address_from_str("0x61fFE014bA17989E743c5F6cB21bF9697530B21e"));
+        // assert_eq!(
+        //     quoter.get_byte_code_and_hash().1,
+        //     [
+        //         6, 20, 143, 71, 208, 244, 26, 104, 211, 188, 151, 0, 48, 167, 21, 14, 93, 96, 140,
+        //         251, 194, 141, 55, 36, 64, 162, 228, 28, 229, 67, 217, 43
+        //     ]
+        // );
     }
 
     #[test]
     fn test_get_rpc_info() {
-        assert!(get_rpc_info(Network::ZK_SYNC_ERA).is_some());
-        let rpc_info = get_rpc_info(Network::ZK_SYNC_ERA).unwrap();
-        assert_eq!(rpc_info.chainId, 324);
-        assert_eq!(rpc_info.httpUrls[0], "https://zksync2-mainnet.zksync.io");
+        assert!(get_rpc_info(Network::ETH).is_some());
+        let rpc_info = get_rpc_info(Network::ETH).unwrap();
+        println!("rpc {:?}", rpc_info);
+        assert_eq!(rpc_info.chain_id, 1);
+        assert_eq!(rpc_info.ws_urls.get(&RpcProvider::Quick), Some(&"wss://lively-bold-sunset.quiknode.pro/a44820da0711822c6e00da793df8695e60e027a2/".to_string()));
     }
 }

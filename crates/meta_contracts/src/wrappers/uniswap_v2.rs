@@ -10,9 +10,9 @@ use ethers::prelude::*;
 use futures::future::join_all;
 use meta_common::{
     constants::ZERO_ADDRESS,
-    enums::{Dex, Network},
+    enums::{DexExchange, Network},
 };
-use meta_util::{address_from_str,address_to_str};
+use meta_util::ether::{address_from_str,address_to_str};
 
 use std::{
     borrow::BorrowMut,
@@ -31,7 +31,7 @@ pub enum UniswapV2FactoryEnum<M> {
 pub struct UniswapV2<M> {
     // pub config_contract: Config<M>,
     pub network: Network,
-    pub dex: Dex,
+    pub dex: DexExchange,
     pub factory_contract: UniswapV2FactoryEnum<M>,
     // pub swap_router_contract: UniswapV2Router02<M>,
     pub client: Arc<M>,
@@ -40,7 +40,7 @@ pub struct UniswapV2<M> {
 impl<M: Middleware> UniswapV2<M> {
     pub fn new(
         network: Network,
-        dex: Dex,
+        dex: DexExchange,
         factory_address: Address,
         swap_router_addr: Address,
         client: Arc<M>,
@@ -48,7 +48,7 @@ impl<M: Middleware> UniswapV2<M> {
         // let config_contract = Config::new(config_address, client.clone());
         debug!("init UniswapV2 with network {} dex {} factory_address {}",network, dex, factory_address);
         let factory_contract = match dex {
-            Dex::MUTE_SWITCH => UniswapV2FactoryEnum::MUTE_SWITCH(MuteSwitchFactory::new(factory_address, client.clone())),
+            DexExchange::MuteSwitch => UniswapV2FactoryEnum::MUTE_SWITCH(MuteSwitchFactory::new(factory_address, client.clone())),
             _ => UniswapV2FactoryEnum::UNISWAP_V2(UniswapV2Factory::new(factory_address, client.clone()))
         };
         let swap_router_contract = UniswapV2Router02::new(swap_router_addr, client.clone());
@@ -137,14 +137,14 @@ pub struct UniswapV2PairState {
 #[derive(Clone)]
 pub struct UniswapV2PairWrapper<M> {
     pub network: Network,
-    pub dex: Dex,
+    pub dex: DexExchange,
     pub state: UniswapV2PairState,
     pub pair_contract: UniswapV2Pair<M>,
     // pub client: Arc<M>,
 }
 
 impl<M: Middleware> UniswapV2PairWrapper<M> {
-    async fn new(network: Network, dex: Dex, pair_contract: UniswapV2Pair<M>) -> Self {
+    async fn new(network: Network, dex: DexExchange, pair_contract: UniswapV2Pair<M>) -> Self {
         let tokens_rets = join_all([
             pair_contract.token_0().call(),
             pair_contract.token_1().call(),

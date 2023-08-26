@@ -10,13 +10,14 @@ edition = "2021"
 meta_common= {path="../meta_common"}
 meta_util= {path="../meta_util"}
 
-ethers = { git = "https://github.com/gakonst/ethers-rs", features = ["ws", 'ipc', "legacy", "rustls"] }
-futures = "0.3.21"
-tracing = "0.1.29"
+ethers.workspace=true
+futures.workspace=true
+tracing.workspace=true
 # Data
+lazy_static.workspace=true
 
 [dev-dependencies]
 mockall="0.11.3"
 
 [build-dependencies]
-ethers = {git = "https://github.com/gakonst/ethers-rs", features = ["abigen"]}
+ethers.workspace=true

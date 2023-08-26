@@ -1,6 +1,0 @@
-[log]
-file_name_prefix = "meta_kosmos"
-dir = "logs"
-level = "info"
-console = true
-flame = false

@@ -1,0 +1,37 @@
+[package]
+name = "meta_cefi"
+version.workspace = true
+edition.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# workspace
+meta_common= {path="../meta_common"}
+meta_util= {path="../meta_util"}
+meta_address= {path="../meta_address"}
+meta_tracing= {path="../meta_tracing"}
+# async
+tokio.workspace=true
+# web
+reqwest.workspace=true
+tungstenite.workspace=true
+url = "2.2.2"
+# data
+lazy_static.workspace=true
+hashbrown.workspace=true
+hex.workspace=true
+serde.workspace=true
+serde_json.workspace=true
+rust_decimal.workspace=true
+strum.workspace=true
+# crypto
+hmac = "0.12.1"
+sha2 = "0.10.6"
+ring.workspace=true
+# tracing
+tracing.workspace=true
+# error
+eyre.workspace=true
+thiserror.workspace=true
+error-chain = { version = "0.12.4", default-features = false }

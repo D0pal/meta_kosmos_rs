@@ -1,0 +1,14 @@
+[log]
+file_name_prefix = "meta_kosmos"
+dir = "logs"
+level = "debug"
+console = true
+flame = false
+
+[chain]
+
+[provider]
+ws_interval_milli = 100
+
+[accounts]
+private_key_path = "/tmp/pk/jupyter"

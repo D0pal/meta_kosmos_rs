@@ -1,0 +1,27 @@
+[package]
+name = "meta_dex"
+version.workspace = true
+edition.workspace = true
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+# workspace
+meta_common= {path="../meta_common"}
+meta_util= {path="../meta_util"}
+meta_address= {path="../meta_address"}
+meta_contracts= {path="../meta_contracts"}
+# blockchain
+ethers.workspace=true
+# async
+tokio.workspace=true
+# data
+lazy_static.workspace=true
+hashbrown.workspace=true
+# tracing
+tracing.workspace=true
+# error
+eyre.workspace=true
+thiserror.workspace=true
+# misc
+indicatif.workspace=true

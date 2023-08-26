@@ -9,23 +9,54 @@ name = "mercury"
 test = true
 bench = true
 
+[[bin]]
+name = "jupyter"
+test = true
+bench = true
+
+
+[[bin]]
+name = "venus"
+test = true
+bench = true
+
 [dependencies]
 # workspace
-meta_tracing= {path="../meta_tracing"}
-meta_common= {path="../meta_common"}
-meta_util= {path="../meta_util"}
-meta_address= {path="../meta_address"}
-meta_contracts={path="../meta_contracts"}
-tokio = { version = "1", features = ["full"] }
-ethers = { git = "https://github.com/gakonst/ethers-rs", features = ["ws", 'ipc', "legacy", "rustls"] }
+meta_tracing = { path = "../meta_tracing" }
+meta_common = { path = "../meta_common" }
+meta_util = { path = "../meta_util" }
+meta_address = { path = "../meta_address" }
+meta_contracts = { path = "../meta_contracts" }
+meta_dex = { path = "../meta_dex" }
+meta_cefi = { path = "../meta_cefi" }
+# blockchain
+ethers.workspace = true
+revm.workspace = true
+ethers-flashbots = { git = "https://github.com/onbjerg/ethers-flashbots", rev="db147d1f5b5e1904857cd76b9ce697b12a414fec" }
+# async
+tokio.workspace = true
+futures.workspace = true
+futures-util.workspace = true
+tokio-tungstenite.workspace = true
 async-trait = "0.1.57"
 config = "0.13.2"
-serde ={version = "1.0.145", features = ["derive"]}
-futures = "0.3.21"
+url = "2.3.1"
+# network
+reqwest.workspace = true
+# data
+serde.workspace = true
+serde_json.workspace = true
 exitcode = "1.1.2"
+hashbrown.workspace = true
+dashmap.workspace = true
+lazy_static.workspace = true
+rust_decimal.workspace=true
 # CLI
 gumdrop = "0.8.0"
-# Error Handling
-eyre = "0.6.8"
-anyhow = "1.0.32"
-tracing = "0.1.29"
+# error
+thiserror.workspace = true
+anyhow.workspace = true
+eyre.workspace = true
+# tracing
+tracing.workspace = true
+colored.workspace = true

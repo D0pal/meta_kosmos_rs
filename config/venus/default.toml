@@ -1,0 +1,22 @@
+network = "ARBI"
+dex = "UniswapV3"
+cex = "BITFINEX"
+quote_asset = "USD"
+base_asset = "ARB"
+base_asset_quote_amt = "200"
+
+[log]
+file_name_prefix = "meta_kosmos_venus"
+dir = "logs/venus"
+level = "debug"
+console = false
+flame = false
+
+[chain]
+
+[provider]
+ws_interval_milli = 40
+provider="Quick"
+
+[account]
+private_key_path = "/tmp/pk/venus"
