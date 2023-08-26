@@ -12,10 +12,12 @@
     },
     "ARBI": {
         "http_urls": {
-            "Quick": "https://smart-snowy-county.arbitrum-mainnet.quiknode.pro/c8a24d9f545b9634855deff3715559bd6f47bf63/"
+            "Quick": "https://smart-snowy-county.arbitrum-mainnet.quiknode.pro/c8a24d9f545b9634855deff3715559bd6f47bf63/",
+            "Custom": "http://localhost:8547"
         },
         "ws_urls": {
-            "Quick": "wss://smart-snowy-county.arbitrum-mainnet.quiknode.pro/c8a24d9f545b9634855deff3715559bd6f47bf63/"
+            "Quick": "wss://smart-snowy-county.arbitrum-mainnet.quiknode.pro/c8a24d9f545b9634855deff3715559bd6f47bf63/",
+            "Custom": "ws://localhost:8548"
         },
         "chain_id": 42161,
         "explorer": "https://arbiscan.io/"

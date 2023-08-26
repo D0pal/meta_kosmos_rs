@@ -77,9 +77,11 @@ struct Opts {
 async fn run(config: VenusConfig) -> anyhow::Result<()> {
     info!("run venus app with config: {:?}", config);
     let rpc_info = get_rpc_info(config.network).unwrap();
-    debug!("rpc info {:?}", rpc_info);
+    
     let rpc_provider = config.provider.provider.expect("need rpc provider");
-    let provider_ws = Provider::<Ws>::connect(rpc_info.ws_urls.get(&rpc_provider).unwrap().clone())
+    let rpc_url = rpc_info.ws_urls.get(&rpc_provider).unwrap();
+    info!("rpc_url {:?}", rpc_url);
+    let provider_ws = Provider::<Ws>::connect(rpc_url)
         .await
         .expect("ws connect error");
     // let provider_ws = Provider::<Http>::connect(&rpc_info.httpUrls[0]).await;
