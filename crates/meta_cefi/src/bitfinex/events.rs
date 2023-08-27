@@ -3,6 +3,8 @@ use crate::bitfinex::book::{
 };
 use serde::Deserialize;
 
+use super::wallet::{FundingCreditSnapshot, NewOrderOnReq, PositionSnapshot, WalletSnapshot, BU, TeEvent, OcEvent, TuEvent};
+
 pub type SEQUENCE = u32;
 
 #[derive(Debug, Deserialize)]
@@ -11,7 +13,6 @@ pub type SEQUENCE = u32;
 pub enum NotificationEvent {
     Auth(AuthMessage),
     Info(InfoMessage),
-    CheckSumEvent(i32, String, i64, SEQUENCE),
     TradingSubscribed(TradingSubscriptionMessage),
     FundingSubscribed(FundingSubscriptionMessage),
     CandlesSubscribed(CandlesSubscriptionMessage),
@@ -21,7 +22,18 @@ pub enum NotificationEvent {
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 pub enum DataEvent {
-    HeartbeatEvent(i32, String, SEQUENCE),
+    HeartbeatEvent(i32, String, SEQUENCE),     // "hb"
+    CheckSumEvent(i32, String, i64, SEQUENCE), // "cs"
+    WalletSnapshotEvent(i32, String, Vec<WalletSnapshot>, SEQUENCE, i32), // "ws"
+    WalletUpdateEvent(i32, String, WalletSnapshot, SEQUENCE, i32), // "ws"
+    PositionSnapshotEvent(i32, String, Vec<PositionSnapshot>, SEQUENCE, i32), // "ps"
+    FundingCreditSnapshotEvent(i32, String, Vec<FundingCreditSnapshot>, SEQUENCE, i32), // fcs
+    BuEvent(i32, String, BU, SEQUENCE, i32),   // bu
+    TeEvent(i32, String, TeEvent, SEQUENCE,i32),
+    OcEvent(i32, String, OcEvent, SEQUENCE, i32),
+    TuEvent(i32,String, TuEvent, SEQUENCE, i32),
+    NewOrderOnReq(i32, String, NewOrderOnReq, SEQUENCE),
+
     // TickerTradingEvent (i32, TradingPair),
     // TickerFundingEvent (i32, FundingCurrency),
     // TradesTradingSnapshotEvent (i32, Vec<TradesTradingPair>),
@@ -114,7 +126,7 @@ pub struct RawBookSubscriptionMessage {
 
 #[cfg(test)]
 mod test_events {
-    use super::DataEvent;
+    use super::{DataEvent, NotificationEvent};
     use rust_decimal::{prelude::FromPrimitive, Decimal};
     use serde_json::from_str;
 
@@ -134,5 +146,58 @@ mod test_events {
         } else {
             panic!("failed");
         }
+    }
+
+    #[test]
+    fn should_deserilize_wallet_snpahsot_event() {
+        let data_str = "[0,\"ws\",[[\"exchange\",\"ETH\",0.01050273,0,null,null,null],[\"exchange\",\"OMG\",0.9,0,null,null,null]],2,3437]";
+        let event: DataEvent = from_str(data_str).unwrap();
+        println!("event {:?}", event);
+    }
+
+    #[test]
+    fn should_deserilize_wallet_update_event() {
+        let data_str = "[0,\"wu\",[\"exchange\",\"ETH\",0.01050273,0,0.01050273,null,null],7,3437]";
+        let event: DataEvent = from_str(data_str).unwrap();
+        println!("event {:?}", event);
+    }
+
+    #[test]
+    fn should_deserialize_on_req_event() {
+        let data_str = "[0,\"n\",[1693149294,\"on-req\",null,null,[125362310565,0,1693149294631,\"tARBUSD\",1693149294892,1693149294892,-10,-10,\"EXCHANGE MARKET\",null,null,null,0,\"ACTIVE\",null,null,0.96033,0,0,0,null,null,null,0,0,null,null,null,\"API>BFX\",null,null,{}],null,\"SUCCESS\",\"Submitting exchange market sell order for -10 ARB.\"],202]";
+        let event: DataEvent = from_str(data_str).unwrap();
+        println!("event {:?}", event);
+    }
+
+    #[test]
+    fn test_te_event() {
+        let data = "[0,\"te\",[1410994544,\"tARBUSD\",1693152682775,125268311676,-1,0.95851,\"EXCHANGE MARKET\",0.95851,-1,null,null,1693152682536],185,3452]";
+        let event: DataEvent = from_str(data).unwrap();
+        println!("event {:?}", event);
+    }
+
+    #[test]
+    fn test_oc_event() {
+     let data =    "[0,\"oc\",[125271920288,0,1693153165935,\"tARBUSD\",1693153166200,1693153166202,0,1,\"EXCHANGE MARKET\",null,null,null,0,\"EXECUTED @ 0.95902(1.0)\",null,null,0.9591,0.95902,0,0,null,null,null,0,0,null,null,null,\"API>BFX\",null,null,{}],197,3459]";
+     let event: DataEvent = from_str(data).unwrap();
+     println!("event {:?}", event);
+
+
+    }
+
+    #[test]
+    fn should_deserilize_auth_event() {
+        let data_str: &'static str = "{\"event\":\"auth\",\"status\":\"OK\",\"chanId\":0,\"userId\":1345240,\"auth_id\":\"b950467e-f808-46ce-8fc1-a4e29059c97b\",\"caps\":{\"orders\":{\"read\":1,\"write\":1},\"account\":{\"read\":1,\"write\":0},\"funding\":{\"read\":1,\"write\":0},\"history\":{\"read\":1,\"write\":0},\"wallets\":{\"read\":1,\"write\":1},\"withdraw\":{\"read\":0,\"write\":1},\"positions\":{\"read\":0,\"write\":0},\"ui_withdraw\":{\"read\":0,\"write\":0}}}";
+        let event: NotificationEvent = from_str(data_str).unwrap();
+        println!("event: {:?}", event);
+    }
+
+    #[test]
+    fn should_deserilize_check_sum_event() {
+        let data_str: &'static str = "[60715,\"cs\",-297359522,67]";
+        let slice = &data_str[8..10];
+        println!("slice {:?}", slice);
+        let event: NotificationEvent = from_str(data_str).unwrap();
+        println!("event: {:?}", event);
     }
 }

@@ -2,11 +2,13 @@ use crate::bitfinex::auth;
 use crate::bitfinex::common::{CONF_FLAG_SEQ_ALL, CONF_OB_CHECKSUM};
 use crate::bitfinex::errors::*;
 use crate::bitfinex::events::*;
-use crate::cefi_service::BitfinexEventHandler;
+use crate::bitfinex::orders::OrderType;
 use error_chain::bail;
+use meta_util::time::get_current_ts;
 use serde_json::{from_str, json};
 use std::net::TcpStream;
 use std::sync::mpsc::{self, channel};
+use std::time::Instant;
 use tracing::{debug, info};
 use tungstenite::{
     connect, handshake::client::Response, protocol::WebSocket, stream::MaybeTlsStream, Message,
@@ -18,16 +20,17 @@ static SUBSCRIBED: &'static str = "subscribed";
 static AUTH: &'static str = "auth";
 static CONF: &'static str = "conf";
 static CHECKSUM: &'static str = "cs";
+static FUNDING_CREDIT_SNAPSHOT: &'static str = "fcs";
 static WEBSOCKET_URL: &'static str = "wss://api.bitfinex.com/ws/2";
 static DEAD_MAN_SWITCH_FLAG: u8 = 4;
 
 pub trait EventHandler {
     fn on_connect(&mut self, event: NotificationEvent);
     fn on_auth(&mut self, event: NotificationEvent);
-    fn on_checksum(&mut self, event: NotificationEvent);
     fn on_subscribed(&mut self, event: NotificationEvent);
-    fn on_data_event(&mut self, event: DataEvent);
     fn on_heart_beat(&mut self, channel: i32, data: String, seq: SEQUENCE);
+    fn on_checksum(&mut self, event: i64);
+    fn on_data_event(&mut self, event: DataEvent);
     fn on_error(&mut self, message: Error);
     fn as_any(&self) -> &dyn std::any::Any;
 }
@@ -200,6 +203,31 @@ impl WebSockets {
         }
     }
 
+    pub fn submit_order<S, F>(&mut self, symbol: S, qty: F)
+    where
+        S: Into<String>,
+        F: Into<String>,
+    {
+        let cid = get_current_ts().as_millis();
+        let msg = json!(
+        [
+            0,
+            "on", // order new
+            null,
+            {
+                "gid": 0,
+                "cid": cid,
+                "type": OrderType::EXCHANGE_MARKET.to_string(),
+                "symbol": symbol.into(),
+                "amount": qty.into(),
+            }
+        ]);
+
+        if let Err(error_msg) = self.sender.send(&msg.to_string()) {
+            self.error_hander(error_msg);
+        }
+    }
+
     pub fn subscribe_raw_books<S>(&mut self, symbol: S, et: EventType)
     where
         S: Into<String>,
@@ -239,7 +267,12 @@ impl WebSockets {
                     match self.rx.try_recv() {
                         Ok(msg) => match msg {
                             WsMessage::Text(text) => {
-                                socket.0.write_message(Message::Text(text))?;
+                                println!("ws write message {:?}", text);
+                                let ret = socket.0.write_message(Message::Text(text));
+                                match ret {
+                                    Err(e) => eprintln!("{:?}", e),
+                                    Ok(()) => {}
+                                }
                             }
                             WsMessage::Close => {
                                 return socket.0.close(None).map_err(|e| e.into());
@@ -256,6 +289,7 @@ impl WebSockets {
 
                 match message {
                     Message::Text(text) => {
+                        // println!("got msg: {:?}", text);
                         if let Some(ref mut h) = self.event_handler {
                             if text.find(INFO) != None {
                                 let event: NotificationEvent = from_str(&text)?;
@@ -267,17 +301,23 @@ impl WebSockets {
                                 let event: NotificationEvent = from_str(&text)?;
                                 h.on_auth(event);
                             } else if text.find(CONF).is_some() {
-                                info!("got info msg: {:?}", text);
-                            } else if text.find(CHECKSUM).is_some() {
-                                let event: NotificationEvent = from_str(&text)?;
-                                h.on_checksum(event);
+                                info!("got conf msg: {:?}", text);
                             } else {
+                                // if text.find(FUNDING_CREDIT_SNAPSHOT).is_some() {  // conflicts with fcs
+                                //     let fcs_event: DataEvent = from_str(&text)?;
+                                //     println!("fcs_event {:?}", fcs_event);
+                                // }
+                                // if text.find(CHECKSUM).is_some() {  // conflicts with fcs
+                                //     let event: DataEvent = from_str(&text)?;
+                                //     h.on_checksum(event);
+                                // }
                                 let event: DataEvent = from_str(&text)?;
-                                if let DataEvent::HeartbeatEvent(a, b, c) = event {
-                                    h.on_heart_beat(a, b, c);
-                                } else {
-                                    h.on_data_event(event);
-                                }
+                                h.on_data_event(event);
+                                // if let DataEvent::HeartbeatEvent(a, b, c) = event {
+                                //     h.on_heart_beat(a, b, c);
+                                // } else {
+                                //     h.on_data_event(event);
+                                // }
                             }
                         }
                     }

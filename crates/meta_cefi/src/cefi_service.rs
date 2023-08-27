@@ -6,11 +6,11 @@ use crate::bitfinex::{
     symbol::*,
     websockets::{EventHandler, EventType, WebSockets},
 };
+use meta_address::enums::Asset;
 use meta_common::{
-    enums::{CexExchange},
+    enums::CexExchange,
     models::{CurrentSpread, MarcketChange},
 };
-use meta_address::enums::Asset;
 use rust_decimal::{
     prelude::{FromPrimitive, ToPrimitive},
     Decimal,
@@ -80,6 +80,7 @@ impl EventHandler for BitfinexEventHandler {
     }
 
     fn on_auth(&mut self, _event: NotificationEvent) {
+        println!("bitfinex on auth event {:?}", _event);
         debug!("bitfinex on auth event {:?}", _event);
     }
 
@@ -89,21 +90,48 @@ impl EventHandler for BitfinexEventHandler {
         }
     }
 
-    fn on_checksum(&mut self, event: NotificationEvent) {
-        debug!("received checksum event: {:?}", event);
-        match event {
-            NotificationEvent::CheckSumEvent(_a, _b, _c, sequence) => self.check_sequence(sequence),
-            _ => panic!("checksum event expected"),
-        }
+    fn on_checksum(&mut self, event: i64) {
+        // debug!("received checksum event: {:?}", event);
+        // match event {
+        //     DataEvent::CheckSumEvent(_a, _b, _c, sequence) => self.check_sequence(sequence),
+        //     _ => panic!("checksum event expected"),
+        // }
     }
 
-    fn on_heart_beat(&mut self, channel: i32, data: String, seq: SEQUENCE) {
-        debug!("received heart beat event: {:?}", data);
-        self.check_sequence(seq);
-    }
+    fn on_heart_beat(&mut self, channel: i32, data: String, seq: SEQUENCE) {}
 
     fn on_data_event(&mut self, event: DataEvent) {
-        if let DataEvent::BookTradingSnapshotEvent(channel, book_snapshot, seq) = event {
+        if let DataEvent::HeartbeatEvent(a, b, seq) = event {
+            debug!("handle heart beat event");
+            self.check_sequence(seq);
+            self.on_heart_beat(a, b, seq);
+        } else if let DataEvent::CheckSumEvent(a, b, data, seq) = event {
+            debug!("handle checksum event");
+            self.check_sequence(seq);
+            self.on_checksum(data);
+        } else if let DataEvent::FundingCreditSnapshotEvent(_, _, _, seq, _) = event {
+            debug!("handle fcs event {:?}", event);
+            self.check_sequence(seq);
+        } else if let DataEvent::NewOrderOnReq(_, _, _, seq) = event {
+            debug!("handle on req event {:?}", event);
+            self.check_sequence(seq);
+        } else if let DataEvent::WalletUpdateEvent(_, _, _, seq, _) = event {
+            debug!("handle on wu event {:?}", event);
+            self.check_sequence(seq);
+        } else if let DataEvent::TeEvent(_, _, _, seq, _) = event {
+            debug!("handle on te event {:?}", event);
+            self.check_sequence(seq);
+        } else if let DataEvent::BuEvent(_, _, _, seq, _) = event {
+            debug!("handle on bu event {:?}", event);
+            self.check_sequence(seq);
+        } else if let DataEvent::OcEvent(_, _, _, seq, _) = event {
+            debug!("handle on oc event {:?}", event);
+            self.check_sequence(seq);
+        }else if let DataEvent::TuEvent(_, _, _, seq, _) = event {
+            debug!("handle on tu event {:?}", event);
+            self.check_sequence(seq);
+        } else if let DataEvent::BookTradingSnapshotEvent(channel, book_snapshot, seq) = event {
+            debug!("handle ob snapshot event sequence {:?}", { seq });
             info!(
                 "bitfinex order book snapshot channel({}) sequence({}) {:?}",
                 channel, seq, book_snapshot
@@ -111,6 +139,7 @@ impl EventHandler for BitfinexEventHandler {
             self.check_sequence(seq);
             self.order_book = Some(construct_order_book(book_snapshot));
         } else if let DataEvent::BookTradingUpdateEvent(channel, book_update, seq) = event {
+            debug!("handle ob update event sequence {:?}", { seq });
             debug!(
                 "bitfinex order book update channel({}) sequence({}) {:?}",
                 channel, seq, book_update
@@ -176,7 +205,7 @@ pub type KeyedOrderBook = BTreeMap<Decimal, TradingOrderBookLevel>;
 
 #[derive(Debug, Clone)]
 pub struct CexConfig {
-    keys: Option<BTreeMap<CexExchange, AccessKey>>,
+    pub keys: Option<BTreeMap<CexExchange, AccessKey>>,
 }
 
 #[derive(Debug, Clone)]
@@ -209,6 +238,7 @@ impl CefiService {
         let pair = get_pair(base, quote);
         match cex {
             CexExchange::BITFINEX => {
+                let ak = self.config.as_ref().unwrap().keys.as_ref().unwrap().get(&cex).unwrap();
                 if !self.btf_sockets.contains_key(&pair) {
                     let handler = BitfinexEventHandler::new(self.sender.clone());
                     let mut web_socket = WebSockets::new();
@@ -216,9 +246,36 @@ impl CefiService {
                     self.btf_sockets.entry(pair).and_modify(|web_socket| {
                         (*web_socket).add_event_handler(handler);
                         (*web_socket).connect().unwrap(); // check error
+                        (*web_socket).auth(
+                            ak.api_key.to_string(),
+                            ak.api_secret.to_string(),
+                            false,
+                            &[],
+                        ); // check error
                         (*web_socket).conf();
-                        (*web_socket).subscribe_books(get_bitfinex_trade_symbol(base, quote), EventType::Trading, P0, "F0", 100);
+                        (*web_socket).subscribe_books(
+                            get_bitfinex_trade_symbol(base, quote),
+                            EventType::Trading,
+                            P0,
+                            "F0",
+                            100,
+                        );
                         (*web_socket).event_loop().unwrap(); // check error
+                    });
+                }
+            }
+        }
+    }
+
+    pub fn submit_order(&mut self, cex: CexExchange, base: Asset, quote: Asset, amount: Decimal) {
+        let pair = get_pair(base, quote);
+
+        match cex {
+            CexExchange::BITFINEX => {
+                let symbol = format!("t{:?}{:?}", base, quote);
+                if self.btf_sockets.contains_key(&pair) {
+                    self.btf_sockets.entry(pair).and_modify(|web_socket| {
+                        (*web_socket).submit_order(symbol, amount.to_string());
                     });
                 }
             }
@@ -237,11 +294,9 @@ impl CefiService {
                         if let Some(ref handler) = (socket).event_handler {
                             let btf_handler =
                                 (handler.as_any()).downcast_ref::<BitfinexEventHandler>();
-                 
+
                             if let Some(btf) = btf_handler {
-                       
                                 if let Some(ref ob) = btf.order_book {
-                             
                                     if let Some((_, ask_level)) = ob.asks.first_key_value() {
                                         best_ask = ask_level.price.clone();
                                     }
@@ -252,7 +307,6 @@ impl CefiService {
                             }
                         }
                     }
-                 
                 }
             }
         }
