@@ -1,3 +1,4 @@
+pub mod api;
 pub mod errors;
 pub mod events;
 pub mod websockets;
@@ -6,3 +7,6 @@ pub mod client;
 pub mod auth;
 pub mod common;
 pub mod symbol;
+pub mod orders;
+pub mod model;
+pub mod wallet;
