@@ -6,7 +6,7 @@ use gumdrop::Options;
 use meta_address::enums::Asset;
 use meta_address::{get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info, Token};
 use meta_bots::{AppConfig, VenusConfig};
-use meta_cefi::cefi_service::CefiService;
+use meta_cefi::cefi_service::{CefiService, CexConfig, AccessKey};
 use meta_common::{
     enums::{BotType, CexExchange, ContractType, DexExchange, Network},
     models::{CurrentSpread, MarcketChange},
@@ -38,6 +38,7 @@ use rust_decimal::{
     Decimal,
 };
 use serde::Deserialize;
+use std::collections::BTreeMap;
 use std::ops::Sub;
 use std::{
     borrow::{Borrow, BorrowMut},
@@ -145,7 +146,17 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                 CexExchange::BITFINEX => {
                     let (tx, mut rx) = mpsc::sync_channel::<MarcketChange>(1000);
 
-                    let mut cefi_service = CefiService::new(None, Some(tx.clone()));
+                    let mut map = BTreeMap::new();
+                    let ak = config.bitfinex.unwrap();
+                    map.insert(
+                        CexExchange::BITFINEX,
+                        AccessKey {
+                            api_key: ak.api_key.to_string(),
+                            api_secret: ak.api_secret.to_string(),
+                        },
+                    );
+                    let cex_config = CexConfig { keys: Some(map) };
+                    let mut cefi_service = CefiService::new(Some(cex_config), Some(tx.clone()));
 
                     let cefi_service = &mut cefi_service as *mut CefiService;
                     let cefi_service = Arc::new(AtomicPtr::new(cefi_service));

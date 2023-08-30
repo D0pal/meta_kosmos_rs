@@ -3,6 +3,7 @@ pub mod mev_bots;
 
 use async_trait::async_trait;
 use config::{Config, ConfigError, File};
+use meta_cefi::cefi_service::AccessKey;
 use meta_common::enums::{CexExchange, DexExchange, Network,  RpcProvider};
 use meta_address::enums::Asset;
 use rust_decimal::Decimal;
@@ -117,6 +118,7 @@ pub struct VenusConfig {
     pub log: ConfigLog,
     pub provider: ConfigProvider,
     pub account: ConfigAccount,
+    pub bitfinex: Option<AccessKey>
 }
 
 impl VenusConfig {

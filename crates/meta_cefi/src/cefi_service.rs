@@ -15,6 +15,7 @@ use rust_decimal::{
     prelude::{FromPrimitive, ToPrimitive},
     Decimal,
 };
+use serde::Deserialize;
 use std::{
     borrow::Borrow,
     collections::{BTreeMap, VecDeque},
@@ -195,7 +196,7 @@ impl EventHandler for BitfinexEventHandler {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct AccessKey {
     pub api_key: String,
     pub api_secret: String,
