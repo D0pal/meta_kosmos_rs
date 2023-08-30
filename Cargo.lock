@@ -2204,6 +2204,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "meta_alchemy"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "dashmap",
+ "ethers",
+ "eyre",
+ "futures",
+ "futures-util",
+ "gumdrop",
+ "hashbrown 0.13.2",
+ "hex",
+ "lazy_static",
+ "meta_address",
+ "meta_common",
+ "meta_contracts",
+ "meta_dex",
+ "meta_util",
+ "once_cell",
+ "reqwest",
+ "revm",
+ "rust_decimal",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+]
+
+[[package]]
 name = "meta_bots"
 version = "0.1.0"
 dependencies = [
@@ -2300,6 +2329,7 @@ dependencies = [
 name = "meta_dex"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "ethers",
  "eyre",
  "hashbrown 0.13.2",
@@ -2360,6 +2390,7 @@ dependencies = [
  "ethers",
  "hex",
  "meta_common",
+ "revm",
  "rust_decimal",
  "serde",
  "serde_json",

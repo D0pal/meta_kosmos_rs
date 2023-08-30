@@ -3,6 +3,7 @@ pub mod pool;
 pub mod sandwidth;
 pub mod oracle;
 pub mod enums;
+pub mod defi;
 
 pub mod prelude {
     pub use super::{error::*, pool::*, sandwidth::*, oracle::*};

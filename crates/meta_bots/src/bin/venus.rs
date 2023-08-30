@@ -77,13 +77,11 @@ struct Opts {
 async fn run(config: VenusConfig) -> anyhow::Result<()> {
     info!("run venus app with config: {:?}", config);
     let rpc_info = get_rpc_info(config.network).unwrap();
-    
+
     let rpc_provider = config.provider.provider.expect("need rpc provider");
     let rpc_url = rpc_info.ws_urls.get(&rpc_provider).unwrap();
     info!("rpc_url {:?}", rpc_url);
-    let provider_ws = Provider::<Ws>::connect(rpc_url)
-        .await
-        .expect("ws connect error");
+    let provider_ws = Provider::<Ws>::connect(rpc_url).await.expect("ws connect error");
     // let provider_ws = Provider::<Http>::connect(&rpc_info.httpUrls[0]).await;
     let provider_ws =
         provider_ws.interval(Duration::from_millis(config.provider.ws_interval_milli.unwrap()));
@@ -312,9 +310,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
 
                             if cex_bid > dex_ask {
                                 let change = get_price_delta_in_bp(cex_bid, dex_ask);
-                                if 
-                                change > Decimal::from_f32(20f32).unwrap()
-                                {
+                                if change > Decimal::from_f32(20f32).unwrap() {
                                     info!(
                                         "found a cross, cex bid {:?}, dex ask {:?}, price change {:?}",
                                         cex_bid, dex_ask, change
@@ -324,9 +320,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
 
                             if dex_bid > cex_bid {
                                 let change = get_price_delta_in_bp(dex_bid, cex_ask);
-                                if 
-                                   change > Decimal::from_f32(20f32).unwrap()
-                                {
+                                if change > Decimal::from_f32(20f32).unwrap() {
                                     info!(
                                         "found a cross, dex bid {:?}, cex ask {:?}, price change {:?}",
                                         dex_bid, cex_ask, change
@@ -341,6 +335,47 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
         _ => {
             todo!()
         }
+    }
+}
+
+#[derive(Debug)]
+pub struct CexInstruction {
+    venue: CexExchange,
+    amount: Decimal,
+}
+
+#[derive(Debug)]
+pub struct DexInstruction {
+    venue: DexExchange,
+    amount: Decimal,
+}
+
+
+#[derive(Debug)]
+pub struct ArbitrageInstruction {
+    base_asset: Asset,
+    quote_asset: Asset,
+    cex: CexInstruction,
+    dex: DexInstruction,
+}
+
+async fn try_arbitrage(instruction: ArbitrageInstruction, cefi_service_ptr: *mut CefiService) {
+    info!("start arbitrage with instruction {:?}", instruction);
+    match instruction.cex.venue {
+        CexExchange::BITFINEX => unsafe {
+            (*cefi_service_ptr).submit_order(
+                CexExchange::BITFINEX,
+                instruction.base_asset,
+                instruction.quote_asset,
+                instruction.cex.amount,
+            );
+        },
+        _ => unimplemented!(),
+    }
+
+    match instruction.dex.venue {
+        DexExchange::UniswapV3 => unimplemented!(),
+        _ => unimplemented!(),
     }
 }
 

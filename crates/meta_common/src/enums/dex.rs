@@ -7,6 +7,12 @@ pub enum PoolVariant {
     UniswapV3,
 }
 
+impl  Default for PoolVariant {
+    fn default() -> Self {
+        Self::UniswapV2
+    }
+}
+
 #[derive(
     Default,
     Clone,

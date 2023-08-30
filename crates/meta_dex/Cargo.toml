@@ -22,6 +22,7 @@ hashbrown.workspace=true
 tracing.workspace=true
 # error
 eyre.workspace=true
+anyhow.workspace=true
 thiserror.workspace=true
 # misc
 indicatif.workspace=true

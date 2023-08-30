@@ -1,6 +1,7 @@
 pub mod enums;
 pub mod ether;
 pub mod time;
+pub mod defi;
 
 use std::time::{SystemTime, UNIX_EPOCH};
 use rust_decimal::{Decimal, prelude::{Signed, FromPrimitive}};
