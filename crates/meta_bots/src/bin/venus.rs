@@ -11,10 +11,14 @@ use meta_common::{
     enums::{BotType, CexExchange, ContractType, DexExchange, Network},
     models::{CurrentSpread, MarcketChange},
 };
+use meta_contracts::bindings::{
+    ExactInputSingleParams, ExactOutputParams, ExactOutputSingleParams,
+};
 use meta_contracts::{
     bindings::{
         flash_bots_router::{FlashBotsRouter, UniswapWethParams},
         quoter_v2::QuoterV2,
+        swap_router::SwapRouter,
         uniswap_v2_pair::{SwapFilter, UniswapV2PairEvents},
         QuoteExactInputSingleParams, QuoteExactOutputSingleParams,
     },
@@ -25,8 +29,10 @@ use meta_contracts::{
 };
 use meta_dex::enums::TokenInfo;
 use meta_tracing::init_tracing;
+use meta_util::defi::get_token0_and_token1;
 use meta_util::ether::{address_from_str, decimal_from_wei, decimal_to_wei};
 use meta_util::get_price_delta_in_bp;
+use meta_util::time::get_current_ts;
 use rust_decimal::{
     prelude::{FromPrimitive, Signed},
     Decimal,
@@ -74,6 +80,8 @@ struct Opts {
     private_key_path: Option<PathBuf>,
 }
 
+pub const V3_FEE: u32 = 500u32;
+
 async fn run(config: VenusConfig) -> anyhow::Result<()> {
     info!("run venus app with config: {:?}", config);
     let rpc_info = get_rpc_info(config.network).unwrap();
@@ -91,9 +99,12 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
         .unwrap()
         .trim()
         .to_string();
-    let wallet_local: Arc<LocalWallet> =
-        Arc::new(private_key.parse::<LocalWallet>().unwrap().with_chain_id(rpc_info.chain_id));
-
+    let wallet: LocalWallet =
+        private_key.parse::<LocalWallet>().unwrap().with_chain_id(rpc_info.chain_id);
+    let wallet_address = wallet.address();
+    let wallet = SignerMiddleware::new(provider_ws.clone(), wallet);
+    let wallet = NonceManagerMiddleware::new(wallet, wallet_address);
+    let wallet = Arc::new(wallet);
     match config.dex {
         DexExchange::UniswapV3 => {
             let (base_token, quote_token) = (config.base_asset.into(), config.quote_asset.into());
@@ -120,8 +131,15 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                 ContractType::UniV3QuoterV2,
             )
             .unwrap();
+            let swap_router_address = get_dex_address(
+                DexExchange::UniswapV3,
+                config.network,
+                ContractType::UniV3SwapRouterV2,
+            )
+            .unwrap();
 
             let quoter = QuoterV2::new(quoter_address.address, provider_ws.clone());
+            let swap_router = SwapRouter::new(swap_router_address.address, wallet.clone());
 
             match config.cex {
                 CexExchange::BITFINEX => {
@@ -179,7 +197,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                                                     token_in: base_token.address,
                                                                     token_out: quote_token.address,
                                                                     amount_in: base_quote_amt_in_wei,
-                                                                    fee: 500,
+                                                                    fee: V3_FEE,
                                                                     sqrt_price_limit_x96: 0.into(),
                                                                 },
                                                             )
@@ -190,7 +208,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                                                     token_in: quote_token.address,
                                                                     token_out: base_token.address,
                                                                     amount: base_quote_amt_in_wei,
-                                                                    fee: 500,
+                                                                    fee: V3_FEE,
                                                                     sqrt_price_limit_x96: U256::from_str_radix("1461446703485210103287273052203988822378723970341", 10).unwrap(),
                                                                 },
                                                             )
@@ -315,6 +333,36 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                         "found a cross, cex bid {:?}, dex ask {:?}, price change {:?}",
                                         cex_bid, dex_ask, change
                                     );
+                                    let mut amount =
+                                        config.base_asset_quote_amt.clone();
+                                    amount.set_sign_negative(true);
+                                    let instraction = ArbitrageInstruction {
+                                        cex: CexInstruction {
+                                            venue: CexExchange::BITFINEX,
+                                            amount: amount,
+                                            base_asset: config.base_asset,
+                                            quote_asset: config.quote_asset,
+                                        },
+                                        dex: DexInstruction {
+                                            venue: DexExchange::UniswapV3,
+                                            amount: config.base_asset_quote_amt,
+                                            base_token: base_token.clone(),
+                                            quote_token: quote_token.clone(),
+                                            recipient: wallet_address,
+                                        },
+                                    };
+                                    let dex_ptr = &swap_router
+                                        as *const SwapRouter<
+                                            NonceManagerMiddleware<
+                                                SignerMiddleware<Arc<Provider<Ws>>, LocalWallet>,
+                                            >,
+                                        >;
+                                    try_arbitrage(
+                                        instraction,
+                                        cefi_service.clone().load(Ordering::Relaxed),
+                                        dex_ptr,
+                                    )
+                                    .await;
                                 }
                             }
 
@@ -342,31 +390,37 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
 pub struct CexInstruction {
     venue: CexExchange,
     amount: Decimal,
+    base_asset: Asset,
+    quote_asset: Asset,
 }
 
 #[derive(Debug)]
 pub struct DexInstruction {
     venue: DexExchange,
     amount: Decimal,
+    base_token: TokenInfo,
+    quote_token: TokenInfo,
+    recipient: Address,
 }
-
 
 #[derive(Debug)]
 pub struct ArbitrageInstruction {
-    base_asset: Asset,
-    quote_asset: Asset,
     cex: CexInstruction,
     dex: DexInstruction,
 }
 
-async fn try_arbitrage(instruction: ArbitrageInstruction, cefi_service_ptr: *mut CefiService) {
+async fn try_arbitrage<'a, M: Middleware>(
+    instruction: ArbitrageInstruction,
+    cefi_service_ptr: *mut CefiService,
+    swap_router_ptr: *const SwapRouter<M>,
+) {
     info!("start arbitrage with instruction {:?}", instruction);
     match instruction.cex.venue {
         CexExchange::BITFINEX => unsafe {
             (*cefi_service_ptr).submit_order(
                 CexExchange::BITFINEX,
-                instruction.base_asset,
-                instruction.quote_asset,
+                instruction.cex.base_asset,
+                instruction.cex.quote_asset,
                 instruction.cex.amount,
             );
         },
@@ -374,8 +428,73 @@ async fn try_arbitrage(instruction: ArbitrageInstruction, cefi_service_ptr: *mut
     }
 
     match instruction.dex.venue {
-        DexExchange::UniswapV3 => unimplemented!(),
+        DexExchange::UniswapV3 => {
+            let ddl = get_current_ts().as_secs() + 1000000;
+            let amt = decimal_to_wei(
+                instruction.dex.amount.abs(),
+                instruction.dex.base_token.decimals.into(),
+            );
+            if instruction.dex.amount.is_sign_negative() {
+                // sell
+                let param_input = ExactInputSingleParams {
+                    token_in: instruction.dex.base_token.address,
+                    token_out: instruction.dex.quote_token.address,
+                    fee: V3_FEE,
+                    recipient: instruction.dex.recipient,
+                    deadline: ddl.into(),
+                    amount_in: amt,
+                    amount_out_minimum: U256::default(),
+                    sqrt_price_limit_x96: get_swap_price_limit(
+                        instruction.dex.base_token.address,
+                        instruction.dex.quote_token.address,
+                        instruction.dex.base_token.address,
+                    ),
+                };
+                unsafe {
+                    let call = (*swap_router_ptr).exact_input_single(param_input);
+                    let ret = call.send().await;
+                    match ret {
+                        Ok(ref tx) => info!("send v3 exact input transaction {:?}", tx),
+                        Err(e) => error!("error in send tx {:?}", e),
+                    }
+                }
+            } else {
+                // buy
+                let param_output = ExactOutputSingleParams {
+                    token_in: instruction.dex.quote_token.address,
+                    token_out: instruction.dex.base_token.address,
+                    fee: V3_FEE,
+                    recipient: instruction.dex.recipient,
+                    deadline: ddl.into(),
+                    amount_out: amt,
+                    amount_in_maximum: U256::MAX,
+                    sqrt_price_limit_x96: get_swap_price_limit(
+                        instruction.dex.base_token.address,
+                        instruction.dex.quote_token.address,
+                        instruction.dex.quote_token.address,
+                    ),
+                };
+                unsafe {
+                    // let ret: Result<PendingTransaction<'_, _>, ContractError<_>> =
+                    let call = (*swap_router_ptr).exact_output_single(param_output);
+                    let ret = call.send().await;
+                    match ret {
+                        Ok(ref tx) => info!("send v3 exact output transaction {:?}", tx),
+                        Err(e) => error!("error in send tx {:?}", e),
+                    }
+                }
+            }
+        }
         _ => unimplemented!(),
+    }
+}
+
+fn get_swap_price_limit(token_1: Address, token_2: Address, token_in: Address) -> U256 {
+    let (token_0, token_1) = get_token0_and_token1(token_1, token_2);
+    if token_in.eq(&token_0) {
+        U256::zero()
+    } else {
+        U256::MAX
     }
 }
 

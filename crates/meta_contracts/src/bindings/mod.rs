@@ -25,6 +25,10 @@ pub use nonfungibletokenpositiondescriptor::*;
 mod quoterv2;
 pub use quoterv2::*;
 
+
+mod swaprouter;
+pub use swaprouter::*;
+
 mod uniswapv3pool;
 pub use uniswapv3pool::*;
 // end uniswap_v3
