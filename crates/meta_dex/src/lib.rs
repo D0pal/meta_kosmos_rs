@@ -1,25 +1,31 @@
+pub mod defi;
+pub mod enums;
 pub mod error;
+pub mod oracle;
 pub mod pool;
 pub mod sandwidth;
-pub mod oracle;
-pub mod enums;
-pub mod defi;
-
 pub mod prelude {
-    pub use super::{error::*, pool::*, sandwidth::*, oracle::*};
+    pub use super::{error::*, oracle::*, pool::*, sandwidth::*};
 }
-
-
-use std::sync::Arc;
 
 use ethers::{prelude::*, utils::__serde_json::de};
 use eyre::Result;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
-use meta_address::get_dex_address;
+use meta_address::{get_dex_address, ContractInfo};
+use crate::enums::TokenInfo;
 use meta_common::enums::{ContractType, DexExchange, Network, PoolVariant};
 use meta_contracts::bindings::uniswap_v2_factory::UniswapV2Factory;
-use tracing::{debug, debug_span, info, instrument, trace, warn};
-
+use meta_contracts::bindings::{
+    swap_router::SwapRouter, ExactInputSingleParams, ExactOutputSingleParams,
+};
+use meta_util::time::get_current_ts;
+use meta_util::{defi::get_swap_price_limit, ether::decimal_to_wei};
+use rust_decimal::{
+    prelude::{FromPrimitive, Signed},
+    Decimal,
+};
+use std::sync::Arc;
+use tracing::{debug, debug_span, error, info, instrument, trace, warn};
 
 use crate::prelude::{PairSyncError, Pool};
 
@@ -36,12 +42,7 @@ pub struct Dex<M> {
 impl<M: Middleware> Dex<M> {
     /// # Description
     /// Creates a new dex instance
-    pub fn new(
-        client: Arc<M>,
-        network: Network,
-        dex_exchange: DexExchange,
-    ) -> Self {
-        
+    pub fn new(client: Arc<M>, network: Network, dex_exchange: DexExchange) -> Self {
         let pool_variant: PoolVariant = match dex_exchange {
             DexExchange::UniswapV3 => PoolVariant::UniswapV3,
             _ => PoolVariant::UniswapV2,
@@ -79,7 +80,8 @@ impl<M: Middleware> Dex<M> {
         debug!("start fetch within range {:?}, {:?}", from_block, to_block);
         match self.pool_variant {
             PoolVariant::UniswapV2 => {
-                let uniswap_v2_factory = UniswapV2Factory::new(self.factory_address, self.client.clone());
+                let uniswap_v2_factory =
+                    UniswapV2Factory::new(self.factory_address, self.client.clone());
                 let pools = uniswap_v2_factory
                     .pair_created_filter()
                     .from_block(BlockNumber::Number(from_block.into()))
@@ -136,20 +138,25 @@ pub async fn sync_dex<M: Middleware + 'static>(
             let dex = dex.clone();
             async move {
                 progress_bar.set_style(
-                    ProgressStyle::with_template("{msg} {bar:40.green/grey} {pos:>7}/{len:7} Blocks")
-                        .unwrap()
-                        .progress_chars("##-"),
+                    ProgressStyle::with_template(
+                        "{msg} {bar:40.green/grey} {pos:>7}/{len:7} Blocks",
+                    )
+                    .unwrap()
+                    .progress_chars("##-"),
                 );
-    
-                let pools = get_all_pools(dex, start_block, end_block, progress_bar.clone()).await?;
-    
+
+                let pools =
+                    get_all_pools(dex, start_block, end_block, progress_bar.clone()).await?;
+
                 progress_bar.reset();
                 progress_bar.set_style(
-                    ProgressStyle::with_template("{msg} {bar:40.green/grey} {pos:>7}/{len:7} Pairs")
-                        .unwrap()
-                        .progress_chars("##-"),
+                    ProgressStyle::with_template(
+                        "{msg} {bar:40.green/grey} {pos:>7}/{len:7} Pairs",
+                    )
+                    .unwrap()
+                    .progress_chars("##-"),
                 );
-    
+
                 Ok::<Vec<Pool>, PairSyncError>(pools)
             }
         }));
@@ -176,7 +183,6 @@ async fn get_all_pools<M: Middleware + 'static>(
     end_block: BlockNumber,
     progress_bar: ProgressBar,
 ) -> Result<Vec<Pool>, PairSyncError> {
-
     // define the step for searching a range of blocks for pair created events
     let step = 1000;
 
@@ -205,16 +211,19 @@ async fn get_all_pools<M: Middleware + 'static>(
             let dex = dex.clone();
             async move {
                 let mut pools_all = vec![];
-    
+
                 //Get pair created event logs within the block range
                 let to_block = from_block + step as u64;
-    
-                let mut pools = dex.fetch_pair_created_event(from_block, to_block).await.expect("unable to fetch");
-    
+
+                let mut pools = dex
+                    .fetch_pair_created_event(from_block, to_block)
+                    .await
+                    .expect("unable to fetch");
+
                 // increment the progres bar by the step
                 progress_bar.inc(step as u64);
                 pools_all.append(&mut pools);
-    
+
                 Ok::<Vec<Pool>, ProviderError>(pools_all)
             }
         }));
@@ -229,4 +238,83 @@ async fn get_all_pools<M: Middleware + 'static>(
         }
     }
     Ok(aggregated_pairs)
+}
+
+pub async fn swap_exact_in_single<M: Middleware>(
+    swap_router_ptr: *const SwapRouter<M>,
+    token_in: TokenInfo,
+    token_out: TokenInfo,
+    fee: u32,
+    amount: Decimal,
+    recipient: Address,
+) {
+    let ddl = get_current_ts().as_secs() + 1000000;
+    let amount_in_wei = decimal_to_wei(amount, token_in.decimals.into());
+    let param_output = ExactInputSingleParams {
+        token_in: token_in.address,
+        token_out: token_out.address,
+        fee: fee,
+        recipient: recipient,
+        deadline: ddl.into(),
+        amount_in: amount_in_wei,
+        amount_out_minimum: U256::zero(),
+        sqrt_price_limit_x96: get_swap_price_limit(
+            token_in.address,
+            token_out.address,
+            token_in.address,
+        ),
+    };
+    unsafe {
+        info!("swap params {:?}", param_output);
+
+        let call = (*swap_router_ptr)
+            .exact_input_single(param_output)
+            .gas(2_000_000)
+            .gas_price(300_000_000);
+        let ret = call.send().await;
+        match ret {
+            Ok(ref tx) => info!("send v3 exact input transaction {:?}", tx),
+            Err(e) => error!("error in send swap {:?}", e),
+        }
+    }
+}
+pub async fn swap_exact_out_single<M: Middleware>(
+    swap_router_ptr: *const SwapRouter<M>,
+    token_in: TokenInfo,
+    token_out: TokenInfo,
+    fee: u32,
+    amount: Decimal,
+    recipient: Address,
+) {
+    let ddl = get_current_ts().as_secs() + 1000000;
+    let amount_out_wei = decimal_to_wei(amount, token_out.decimals.into());
+    let param_output = ExactOutputSingleParams {
+        token_in: token_in.address,
+        token_out: token_out.address,
+        fee: fee,
+        recipient: recipient,
+        deadline: ddl.into(),
+        amount_out: amount_out_wei,
+        amount_in_maximum: decimal_to_wei(
+            amount.checked_mul(Decimal::from_i32(20000).unwrap()).unwrap(),
+            token_in.decimals.into(),
+        ),
+        sqrt_price_limit_x96: get_swap_price_limit(
+            token_in.address,
+            token_out.address,
+            token_in.address,
+        ),
+    };
+    unsafe {
+        info!("swap params {:?}", param_output);
+        let call = (*swap_router_ptr)
+            .exact_output_single(param_output)
+            .gas(1_800_000)
+            .gas_price(300_000_000);
+        let ret = call.send().await;
+        match ret {
+            Ok(ref tx) => info!("send v3 exact out single transaction {:?}", tx),
+            Err(e) => error!("error in send swap {:?}", e),
+        }
+    }
 }

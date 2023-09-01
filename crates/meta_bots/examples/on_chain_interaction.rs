@@ -3,9 +3,9 @@ use foundry_evm::decode::decode_revert;
 use futures::future::join_all;
 use futures_util::future::try_join_all;
 use gumdrop::Options;
-use meta_address::get_rpc_info;
 use meta_address::{enums::Asset, TokenInfo};
 use meta_address::{get_bot_contract_info, get_dex_address, get_token_info, Token};
+use meta_address::{get_rpc_info, ContractInfo};
 use meta_bots::{AppConfig, VenusConfig};
 use meta_cefi::cefi_service::CefiService;
 use meta_common::enums::{Network, RpcProvider};
@@ -101,62 +101,111 @@ async fn main() {
     println!("router_address {:?}", router.address);
 
     // let start = tokio::time::Instant::now();
-
     // let elapsed = tokio::time::Instant::now().duration_since(start).as_millis();
     // println!("tx {:?}, total spent {:?} ms", tx, elapsed);
 
     let swap_router_contract_info =
         get_dex_address(DexExchange::UniswapV3, network, ContractType::UniV3SwapRouterV2).unwrap();
 
-    let swap_router = SwapRouter::new(swap_router_contract_info.address, wallet.clone());
+    // swap_exact_in_single(
+    //     swap_router_contract_info,
+    //     arb_token_info,
+    //     usdc_token_info,
+    //     500,
+    //     Decimal::from_f64(12.0).unwrap(),
+    //     wallet_address,
+    //     wallet.clone(),
+    // )
+    // .await;
 
+    // swap_exact_out_single(
+    //     swap_router_contract_info,
+    //     usdc_token_info,
+    //     arb_token_info,
+    //     500,
+    //     Decimal::from_f64(12.0).unwrap(),
+    //     wallet_address,
+    //     wallet.clone(),
+    // )
+    // .await;
+}
+
+async fn swap_exact_in_single(
+    swap_router_contract_info: ContractInfo,
+    token_in: TokenInfo,
+    token_out: TokenInfo,
+    fee: u32,
+    amount: Decimal,
+    recipient: Address,
+    wallet: Arc<NonceManagerMiddleware<SignerMiddleware<Arc<Provider<Ws>>, LocalWallet>>>,
+) {
     let ddl = get_current_ts().as_secs() + 1000000;
-
-    // let param_output = ExactOutputSingleParams {
-    //     token_in: usdc_token_info.address,
-    //     token_out: arb_token_info.address,
-    //     fee: V3_FEE,
-    //     recipient: wallet_address,
-    //     deadline: ddl.into(),
-    //     amount_out: amt,
-    //     amount_in_maximum: U256::MAX,
-    //     sqrt_price_limit_x96: get_swap_price_limit(
-    //         arb_token_info.address,
-    //         usdc_token_info.address,
-    //         usdc_token_info.address,
-    //     ),
-    // };
-    // println!("swap params {:?}", param_output);
-    // let call = swap_router.exact_output_single(param_output);
-    // let ret = call.send().await;
-    // match ret {
-    //     Ok(ref tx) => println!("send v3 exact output transaction {:?}", tx),
-    //     Err(e) => eprintln!("error in send tx {:?}", e),
-    // }
-
+    let amount_in_wei = decimal_to_wei(amount, token_in.decimals.into());
     let param_output = ExactInputSingleParams {
-        token_in: weth_token_info.address,
-        token_out: usdc_token_info.address,
-        fee: V3_FEE,
-        recipient: wallet_address,
+        token_in: token_in.address,
+        token_out: token_out.address,
+        fee: fee,
+        recipient: recipient,
         deadline: ddl.into(),
-        amount_in: decimal_to_wei(
-            Decimal::from_f64(0.01f64).unwrap().abs(),
-            weth_token_info.decimals.into(),
-        ),
+        amount_in: amount_in_wei,
         amount_out_minimum: U256::zero(),
         sqrt_price_limit_x96: get_swap_price_limit(
-            weth_token_info.address,
-            usdc_token_info.address,
-            weth_token_info.address,
+            token_in.address,
+            token_out.address,
+            token_in.address,
         ),
     };
     println!("swap params {:?}", param_output);
-    let call = swap_router.exact_input_single(param_output);
+    let swap_router = SwapRouter::new(swap_router_contract_info.address, wallet.clone());
+    let call = swap_router.exact_input_single(param_output).gas(2_000_000).gas_price(300_000_000);
     let ret = call.send().await;
     match ret {
         Ok(ref tx) => println!("send v3 exact input transaction {:?}", tx),
         Err(e) => {
+            eprintln!("e {:?}", e);
+            let revert_bytes = e.as_revert().unwrap();
+            let msg = decode_revert(revert_bytes, None, None);
+            eprintln!("error in send tx {:?}", msg);
+        }
+    }
+}
+async fn swap_exact_out_single(
+    swap_router_contract_info: ContractInfo,
+    token_in: TokenInfo,
+    token_out: TokenInfo,
+    fee: u32,
+    amount: Decimal,
+    recipient: Address,
+    wallet: Arc<NonceManagerMiddleware<SignerMiddleware<Arc<Provider<Ws>>, LocalWallet>>>,
+) {
+    let ddl = get_current_ts().as_secs() + 1000000;
+    let amount_in_wei = decimal_to_wei(amount, token_out.decimals.into());
+    let param_output = ExactOutputSingleParams {
+        token_in: token_in.address,
+        token_out: token_out.address,
+        fee: fee,
+        recipient: recipient,
+        deadline: ddl.into(),
+        amount_out: amount_in_wei,
+        amount_in_maximum: decimal_to_wei(
+            amount.checked_mul(Decimal::from_i32(2000).unwrap()).unwrap(),
+            token_in.decimals.into(),
+        ),
+        sqrt_price_limit_x96: get_swap_price_limit(
+            token_in.address,
+            token_out.address,
+            token_in.address,
+        ),
+    };
+
+    let swap_router = SwapRouter::new(swap_router_contract_info.address, wallet.clone());
+    println!("swap params {:?}", param_output);
+    let call = swap_router.exact_output_single(param_output).gas(1_800_000).gas_price(300_000_000);
+    let ret = call.send().await;
+    match ret {
+        Ok(ref tx) => println!("send v3 exact out single transaction {:?}", tx),
+        Err(e) => {
+            eprintln!("e {:?}", e);
             let revert_bytes = e.as_revert().unwrap();
             let msg = decode_revert(revert_bytes, None, None);
             eprintln!("error in send tx {:?}", msg);

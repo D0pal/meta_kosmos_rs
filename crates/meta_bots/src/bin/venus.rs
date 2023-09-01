@@ -28,6 +28,7 @@ use meta_contracts::{
     },
 };
 use meta_dex::enums::TokenInfo;
+use meta_dex::{swap_exact_in_single, swap_exact_out_single};
 use meta_tracing::init_tracing;
 use meta_util::defi::{get_swap_price_limit, get_token0_and_token1};
 use meta_util::ether::{address_from_str, decimal_from_wei, decimal_to_wei};
@@ -455,7 +456,13 @@ async fn try_arbitrage<'a, M: Middleware>(
     swap_router_ptr: *const SwapRouter<M>,
 ) {
     info!("start arbitrage with instruction {:?}", instruction);
-    info!("start send cex trade, venue {:?}, base_asset {:?}, quote_asset {:?}, amount {:?}", instruction.cex.venue,instruction.cex.base_asset, instruction.cex.quote_asset,instruction.cex.amount);
+    info!(
+        "start send cex trade, venue {:?}, base_asset {:?}, quote_asset {:?}, amount {:?}",
+        instruction.cex.venue,
+        instruction.cex.base_asset,
+        instruction.cex.quote_asset,
+        instruction.cex.amount
+    );
     match instruction.cex.venue {
         CexExchange::BITFINEX => unsafe {
             (*cefi_service_ptr).submit_order(
@@ -472,64 +479,34 @@ async fn try_arbitrage<'a, M: Middleware>(
     match instruction.dex.venue {
         DexExchange::UniswapV3 => {
             let ddl = get_current_ts().as_secs() + 1000000;
-            let amt = decimal_to_wei(
-                instruction.dex.amount.abs(),
-                instruction.dex.base_token.decimals.into(),
-            );
+
             if instruction.dex.amount.is_sign_negative() {
                 // sell
-                info!("start send dex sell trade, venue: {:?}, token_in {:?}, token_out {:?}, amount_in {:?}", instruction.dex.venue, instruction.dex.base_token.token,
-                instruction.dex.quote_token.token, amt);
-                let param_input = ExactInputSingleParams {
-                    token_in: instruction.dex.base_token.address,
-                    token_out: instruction.dex.quote_token.address,
-                    fee: V3_FEE,
-                    recipient: instruction.dex.recipient,
-                    deadline: ddl.into(),
-                    amount_in: amt,
-                    amount_out_minimum: U256::default(),
-                    sqrt_price_limit_x96: get_swap_price_limit(
-                        instruction.dex.base_token.address,
-                        instruction.dex.quote_token.address,
-                        instruction.dex.base_token.address,
-                    ),
-                };
-                unsafe {
-                    let call = (*swap_router_ptr).exact_input_single(param_input);
-                    let ret = call.send().await;
-                    match ret {
-                        Ok(ref tx) => info!("send v3 exact input transaction {:?}", tx),
-                        Err(e) => error!("error in send tx {:?}", e),
-                    }
-                }
+                info!("start send dex sell trade, venue: {:?}, token_in {:?}, token_out {:?}", instruction.dex.venue, instruction.dex.base_token.token,
+                instruction.dex.quote_token.token);
+                swap_exact_in_single(
+                    swap_router_ptr,
+                    instruction.dex.base_token,
+                    instruction.dex.quote_token,
+                    V3_FEE,
+                    instruction.dex.amount.abs(),
+                    instruction.dex.recipient,
+                )
+                .await;
                 info!("end send dex sell trade");
             } else {
                 // buy
-                info!("start send dex buy trade, venue: {:?}, token_in {:?}, token_out {:?}, amount_in {:?}", instruction.dex.venue, instruction.dex.quote_token.token,
-                instruction.dex.base_token.token, amt);
-                let param_output = ExactOutputSingleParams {
-                    token_in: instruction.dex.quote_token.address,
-                    token_out: instruction.dex.base_token.address,
-                    fee: V3_FEE,
-                    recipient: instruction.dex.recipient,
-                    deadline: ddl.into(),
-                    amount_out: amt,
-                    amount_in_maximum: U256::MAX,
-                    sqrt_price_limit_x96: get_swap_price_limit(
-                        instruction.dex.base_token.address,
-                        instruction.dex.quote_token.address,
-                        instruction.dex.quote_token.address,
-                    ),
-                };
-                unsafe {
-                    // let ret: Result<PendingTransaction<'_, _>, ContractError<_>> =
-                    let call = (*swap_router_ptr).exact_output_single(param_output);
-                    let ret = call.send().await;
-                    match ret {
-                        Ok(ref tx) => info!("send v3 exact output transaction {:?}", tx),
-                        Err(e) => error!("error in send tx {:?}", e),
-                    }
-                }
+                info!("start send dex buy trade, venue: {:?}, token_in {:?}, token_out {:?}", instruction.dex.venue, instruction.dex.quote_token.token,
+                instruction.dex.base_token.token);
+                swap_exact_out_single(
+                    swap_router_ptr,
+                    instruction.dex.quote_token,
+                    instruction.dex.base_token,
+                    V3_FEE,
+                    instruction.dex.amount.abs(),
+                    instruction.dex.recipient,
+                )
+                .await;
                 info!("end send dex buy trade");
             }
         }
@@ -561,6 +538,10 @@ async fn main_impl() -> anyhow::Result<()> {
     if let Some(pk_path) = opts.private_key_path {
         app_config.account.private_key_path = Some(pk_path);
     }
+    app_config.log.file_name_prefix = format!(
+        "{:?}.{:?}.{:?}",
+        app_config.log.file_name_prefix, app_config.base_asset, app_config.quote_asset
+    );
     let guard = init_tracing(app_config.log.clone().into());
 
     debug!("venus config: {:?}", app_config);

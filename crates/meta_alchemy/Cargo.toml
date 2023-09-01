@@ -13,7 +13,7 @@ meta_dex = { path = "../meta_dex" }
 # ether
 ethers.workspace = true
 revm.workspace = true
-# foundry-evm = { git = "https://github.com/foundry-rs/foundry.git", rev = "7170f7223a0fd2c6980d1c36d359e38b580d3e02"}
+foundry-evm = { workspace = true }
 # Data
 serde.workspace = true
 serde_json.workspace = true

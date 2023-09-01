@@ -1,5 +1,14 @@
 use ethers::prelude::*;
 
+use lazy_static::lazy_static;
+
+lazy_static! {
+    // @dev The maximum value that can be returned from #getSqrtRatioAtTick. Equivalent to getSqrtRatioAtTick(MAX_TICK)
+    // uint160 internal constant MAX_SQRT_RATIO = 1461446703485210103287273052203988822378723970342;
+    pub static ref V3_POOL_MAX_SQRT_RATIO: U256 =
+        U256::from_str_radix("1461446703485210103287273052203988822378723970341", 10).unwrap();
+}
+
 pub fn get_token0_and_token1(token_a: Address, token_b: Address) -> (Address, Address) {
     if token_a.lt(&token_b) {
         (token_a, token_b)
@@ -8,12 +17,12 @@ pub fn get_token0_and_token1(token_a: Address, token_b: Address) -> (Address, Ad
     }
 }
 
-pub fn get_swap_price_limit(token_1: Address, token_2: Address, token_in: Address) -> U256 {
-    let (token_0, token_1) = get_token0_and_token1(token_1, token_2);
+pub fn get_swap_price_limit(token_a: Address, token_b: Address, token_in: Address) -> U256 {
+    let (token_0, token_1) = get_token0_and_token1(token_a, token_b);
     if token_in.eq(&token_0) {
         U256::zero()
     } else {
-        U256::MAX.checked_div(U256::from(100000)).unwrap()
+        *V3_POOL_MAX_SQRT_RATIO
     }
 }
 

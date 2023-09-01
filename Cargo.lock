@@ -3020,6 +3020,7 @@ dependencies = [
  "dashmap",
  "ethers 2.0.4",
  "eyre",
+ "foundry-evm",
  "futures",
  "futures-util",
  "gumdrop",
@@ -3149,6 +3150,7 @@ dependencies = [
  "meta_common",
  "meta_contracts",
  "meta_util",
+ "rust_decimal",
  "thiserror",
  "tokio",
  "tracing",
@@ -3199,6 +3201,7 @@ version = "0.1.0"
 dependencies = [
  "ethers 2.0.4",
  "hex",
+ "lazy_static",
  "meta_common",
  "revm 3.3.0 (git+https://github.com/bluealloy/revm/)",
  "rust_decimal",

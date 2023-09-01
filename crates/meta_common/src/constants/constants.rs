@@ -5,6 +5,11 @@ use std::{ops::Add, str::FromStr};
 pub const APEX_INIT_BLOCK_NUM: u64 = 9624480;
 pub const ZERO_ADDRESS: &'static str = "000000000000000000000000000000000000000000";
 
+pub const ARBITRUM_SENDER: H160 = H160([
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x0a, 0x4b, 0x05,
+]);
+
 pub fn address_from_str(addr: &str) -> Address {
     Address::from_str(addr).to_owned().expect("cannot convert string to address")
 }

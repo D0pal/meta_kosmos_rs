@@ -3,6 +3,10 @@ use ethers::{core::types::U256, prelude::*};
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 use std::{ops::Mul, str::FromStr};
 
+pub fn tx_hash_from_str(hash_str : &str) -> TxHash {
+    TxHash::from_str(hash_str).unwrap().to_owned()
+}
+
 /// Small helper function to convert [U256] into [H256].
 pub fn u256_to_h256_be(u: U256) -> H256 {
     let mut h = H256::default();

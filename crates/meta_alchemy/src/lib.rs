@@ -1,23 +1,24 @@
 pub mod storage;
-// pub mod evm;
+pub mod evm;
 pub mod flashbots;
 pub mod fork_db;
 pub mod inspectors;
 pub mod oracle;
 pub mod pool;
+pub mod errors;
 
 
 pub use flashbots::*;
 
 use dashmap::DashMap;
-// use error::SimulationError;
+use errors::SimulationError;
 use ethers::{core::types::Bytes, prelude::*, types::transaction::eip2718::TypedTransaction};
-// use evm::configure_tx_env;
+use evm::configure_tx_env;
 use fork_db::fork_factory::ForkFactory;
-// use foundry_evm::decode::decode_revert;
+use foundry_evm::decode::decode_revert;
 use futures::future::join_all;
 use lazy_static::lazy_static;
-// use meta_common::constants::ARBITRUM_SENDER;
+use meta_common::constants::ARBITRUM_SENDER;
 // use ethers::core::types::trace::geth::DiffMode;
 use bytes::Bytes as StdBytes;
 
@@ -222,114 +223,114 @@ impl EvmSimulator {
         }
     }
 
-    // pub async fn replay_transaction(
-    //     &self,
-    //     tx_hash: TxHash,
-    // ) -> Result<ReplayTransactionResult, SimulationError<Provider<Ws>>> {
-    //     let tx = self
-    //         .ws_provider
-    //         .get_transaction(tx_hash)
-    //         .await?
-    //         .ok_or(SimulationError::TransactionNotFound(tx_hash))?;
+    pub async fn replay_transaction(
+        &self,
+        tx_hash: TxHash,
+    ) -> Result<ReplayTransactionResult, SimulationError<Provider<Ws>>> {
+        let tx = self
+            .ws_provider
+            .get_transaction(tx_hash)
+            .await?
+            .ok_or(SimulationError::TransactionNotFound(tx_hash))?;
 
-    //     if tx.block_number.is_none() {
-    //         return Err(SimulationError::TransactionBlkNumberNotFound);
-    //     }
+        if tx.block_number.is_none() {
+            return Err(SimulationError::TransactionBlkNumberNotFound);
+        }
 
-    //     let tx_block_number = tx.block_number.unwrap().as_u64();
+        let tx_block_number = tx.block_number.unwrap().as_u64();
 
-    //     let cache_db = CacheDB::new(EmptyDB::default());
-    //     let fork_factory = ForkFactory::new_sandbox_factory(
-    //         self.ws_provider.clone(),
-    //         cache_db,
-    //         (tx_block_number - 1).into(),
-    //     );
+        let cache_db = CacheDB::new(EmptyDB::default());
+        let fork_factory = ForkFactory::new_sandbox_factory(
+            self.ws_provider.clone(),
+            cache_db,
+            (tx_block_number - 1).into(),
+        );
 
-    //     let mut evm = revm::EVM::new();
-    //     let fork_db = fork_factory.new_sandbox_fork();
-    //     evm.database(fork_db);
+        let mut evm = revm::EVM::new();
+        let fork_db = fork_factory.new_sandbox_fork();
+        evm.database(fork_db);
 
-    //     evm.env.block.number = rU256::from(tx_block_number);
-    //     let block = self.ws_provider.get_block_with_txs(tx_block_number).await?;
+        evm.env.block.number = rU256::from(tx_block_number);
+        let block = self.ws_provider.get_block_with_txs(tx_block_number).await?;
 
-    //     if let Some(ref block) = block {
-    //         evm.env.block.timestamp = block.timestamp.into();
-    //         evm.env.block.coinbase = block.author.unwrap_or_default().into();
-    //         evm.env.block.difficulty = block.difficulty.into();
-    //         evm.env.block.prevrandao = block.mix_hash.map(h256_to_b256);
-    //         evm.env.block.basefee = block.base_fee_per_gas.unwrap_or_default().into();
-    //         evm.env.block.gas_limit = block.gas_limit.into();
-    //     }
+        if let Some(ref block) = block {
+            evm.env.block.timestamp = block.timestamp.into();
+            evm.env.block.coinbase = block.author.unwrap_or_default().into();
+            evm.env.block.difficulty = block.difficulty.into();
+            evm.env.block.prevrandao = block.mix_hash.map(h256_to_b256);
+            evm.env.block.basefee = block.base_fee_per_gas.unwrap_or_default().into();
+            evm.env.block.gas_limit = block.gas_limit.into();
+        }
 
-    //     // execure front txs
-    //     if let Some(block) = block {
-    //         for (_, tx) in block.transactions.into_iter().enumerate() {
-    //             // arbitrum L1 transaction at the start of every block that has gas price 0
-    //             // and gas limit 0 which causes reverts, so we skip it
-    //             if tx.from == ARBITRUM_SENDER {
-    //                 continue;
-    //             }
-    //             if tx.hash().eq(&tx_hash) {
-    //                 break;
-    //             }
+        // execure front txs
+        if let Some(block) = block {
+            for (_, tx) in block.transactions.into_iter().enumerate() {
+                // arbitrum L1 transaction at the start of every block that has gas price 0
+                // and gas limit 0 which causes reverts, so we skip it
+                if tx.from == ARBITRUM_SENDER {
+                    continue;
+                }
+                if tx.hash().eq(&tx_hash) {
+                    break;
+                }
 
-    //             configure_tx_env(&mut evm.env, &tx);
-    //             let inspector = NoOpInspector {};
-    //             let _run_result = match evm.inspect_commit(inspector) {
-    //                 Ok(result) => result,
-    //                 Err(e) => {
-    //                     eprintln!("simulate error for other tx {:?},{:?}", tx.hash, e);
-    //                     return Err(SimulationError::SimulationEvmOtherTxError(format!(
-    //                         "{:?},{:?}",
-    //                         tx.hash, e
-    //                     )));
-    //                 }
-    //             };
-    //         }
-    //     }
+                configure_tx_env(&mut evm.env, &tx);
+                let inspector = NoOpInspector {};
+                let _run_result = match evm.inspect_commit(inspector) {
+                    Ok(result) => result,
+                    Err(e) => {
+                        eprintln!("simulate error for other tx {:?},{:?}", tx.hash, e);
+                        return Err(SimulationError::SimulationEvmOtherTxError(format!(
+                            "{:?},{:?}",
+                            tx.hash, e
+                        )));
+                    }
+                };
+            }
+        }
 
-    //     // execure target tx
-    //     configure_tx_env(&mut evm.env, &tx);
-    //     if let Some(_to) = tx.to {
-    //         // println!("executing call transaction");
-    //         let inspector = NoOpInspector {};
-    //         let run_result = match evm.inspect_commit(inspector) {
-    //             Ok(result) => result,
-    //             Err(e) => {
-    //                 eprintln!("simulate error for target tx {:?},{:?}", tx.hash, e);
-    //                 return Err(SimulationError::SimulationEvmError(format!(
-    //                     "{:?},{:?}",
-    //                     tx.hash, e
-    //                 )));
-    //             }
-    //         };
-    //         // println!("result: {:?}", run_result);
-    //         let replay_ret = match run_result {
-    //             ExecutionResult::Success { gas_used, gas_refunded, output, .. } => match output {
-    //                 Output::Call(o) => ReplayTransactionResult::Success {
-    //                     gas_used,
-    //                     gas_refunded,
-    //                     output: o.clone(),
-    //                 },
-    //                 Output::Create(_o, _) => unimplemented!(),
-    //             },
-    //             ExecutionResult::Revert { gas_used, output } => {
-    //                 // println!("reverted with output: {:?}", output);
-    //                 let ret = decode_revert(&output, None, None);
-    //                 match ret {
-    //                     Ok(r) => ReplayTransactionResult::Revert { gas_used, message: r },
-    //                     Err(e) => {
-    //                         eprintln!("error: {:?}", e);
-    //                         return Err(SimulationError::DecodeRevertMsgError);
-    //                     }
-    //                 }
-    //             }
-    //             ExecutionResult::Halt { reason: _, gas_used: _ } => unimplemented!(),
-    //         };
-    //         return Ok(replay_ret);
-    //     }
-    //     Err(SimulationError::UnableToReplay(tx_hash))
-    // }
+        // execure target tx
+        configure_tx_env(&mut evm.env, &tx);
+        if let Some(_to) = tx.to {
+            // println!("executing call transaction");
+            let inspector = NoOpInspector {};
+            let run_result = match evm.inspect_commit(inspector) {
+                Ok(result) => result,
+                Err(e) => {
+                    eprintln!("simulate error for target tx {:?},{:?}", tx.hash, e);
+                    return Err(SimulationError::SimulationEvmError(format!(
+                        "{:?},{:?}",
+                        tx.hash, e
+                    )));
+                }
+            };
+            // println!("result: {:?}", run_result);
+            let replay_ret = match run_result {
+                ExecutionResult::Success { gas_used, gas_refunded, output, .. } => match output {
+                    Output::Call(o) => ReplayTransactionResult::Success {
+                        gas_used,
+                        gas_refunded,
+                        output: o.clone(),
+                    },
+                    Output::Create(_o, _) => unimplemented!(),
+                },
+                ExecutionResult::Revert { gas_used, output } => {
+                    // println!("reverted with output: {:?}", output);
+                    let ret = decode_revert(&output, None, None);
+                    match ret {
+                        Ok(r) => ReplayTransactionResult::Revert { gas_used, message: r },
+                        Err(e) => {
+                            eprintln!("error: {:?}", e);
+                            return Err(SimulationError::DecodeRevertMsgError);
+                        }
+                    }
+                }
+                ExecutionResult::Halt { reason: _, gas_used: _ } => unimplemented!(),
+            };
+            return Ok(replay_ret);
+        }
+        Err(SimulationError::UnableToReplay(tx_hash))
+    }
 
     /// check whether target tx interatcted with watched pools
     /// # Args
