@@ -6,7 +6,7 @@ use gumdrop::Options;
 use meta_address::enums::Asset;
 use meta_address::{get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info, Token};
 use meta_bots::{AppConfig, VenusConfig};
-use meta_cefi::cefi_service::{CefiService, CexConfig, AccessKey};
+use meta_cefi::cefi_service::{AccessKey, CefiService, CexConfig};
 use meta_common::{
     enums::{BotType, CexExchange, ContractType, DexExchange, Network},
     models::{CurrentSpread, MarcketChange},
@@ -29,7 +29,7 @@ use meta_contracts::{
 };
 use meta_dex::enums::TokenInfo;
 use meta_tracing::init_tracing;
-use meta_util::defi::{get_swap_price_limit,get_token0_and_token1};
+use meta_util::defi::{get_swap_price_limit, get_token0_and_token1};
 use meta_util::ether::{address_from_str, decimal_from_wei, decimal_to_wei};
 use meta_util::get_price_delta_in_bp;
 use meta_util::time::get_current_ts;
@@ -84,7 +84,7 @@ struct Opts {
 pub const V3_FEE: u32 = 500u32;
 
 async fn run(config: VenusConfig) -> anyhow::Result<()> {
-    info!("run venus app with config: {:?}", config);
+    debug!("run venus app with config: {:?}", config);
     let rpc_info = get_rpc_info(config.network).unwrap();
 
     let rpc_provider = config.provider.provider.expect("need rpc provider");
@@ -344,8 +344,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                         "found a cross, cex bid {:?}, dex ask {:?}, price change {:?}",
                                         cex_bid, dex_ask, change
                                     );
-                                    let mut amount =
-                                        config.base_asset_quote_amt.clone();
+                                    let mut amount = config.base_asset_quote_amt.clone();
                                     amount.set_sign_negative(true);
                                     let instraction = ArbitrageInstruction {
                                         cex: CexInstruction {
@@ -379,13 +378,13 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
 
                             if dex_bid > cex_ask {
                                 let change = get_price_delta_in_bp(dex_bid, cex_ask);
-                                if change > Decimal::from_f32(20f32).unwrap() { // sell dex, buy cex
+                                if change > Decimal::from_f32(20f32).unwrap() {
+                                    // sell dex, buy cex
                                     info!(
                                         "found a cross, dex bid {:?}, cex ask {:?}, price change {:?}",
                                         dex_bid, cex_ask, change
                                     );
-                                    let mut amount =
-                                        config.base_asset_quote_amt.clone();
+                                    let mut amount = config.base_asset_quote_amt.clone();
                                     amount.set_sign_negative(true);
                                     let instraction = ArbitrageInstruction {
                                         cex: CexInstruction {
@@ -456,6 +455,7 @@ async fn try_arbitrage<'a, M: Middleware>(
     swap_router_ptr: *const SwapRouter<M>,
 ) {
     info!("start arbitrage with instruction {:?}", instruction);
+    info!("start send cex trade, venue {:?}, base_asset {:?}, quote_asset {:?}, amount {:?}", instruction.cex.venue,instruction.cex.base_asset, instruction.cex.quote_asset,instruction.cex.amount);
     match instruction.cex.venue {
         CexExchange::BITFINEX => unsafe {
             (*cefi_service_ptr).submit_order(
@@ -467,6 +467,7 @@ async fn try_arbitrage<'a, M: Middleware>(
         },
         _ => unimplemented!(),
     }
+    info!("end send cex trade");
 
     match instruction.dex.venue {
         DexExchange::UniswapV3 => {
@@ -477,6 +478,8 @@ async fn try_arbitrage<'a, M: Middleware>(
             );
             if instruction.dex.amount.is_sign_negative() {
                 // sell
+                info!("start send dex sell trade, venue: {:?}, token_in {:?}, token_out {:?}, amount_in {:?}", instruction.dex.venue, instruction.dex.base_token.token,
+                instruction.dex.quote_token.token, amt);
                 let param_input = ExactInputSingleParams {
                     token_in: instruction.dex.base_token.address,
                     token_out: instruction.dex.quote_token.address,
@@ -499,8 +502,11 @@ async fn try_arbitrage<'a, M: Middleware>(
                         Err(e) => error!("error in send tx {:?}", e),
                     }
                 }
+                info!("end send dex sell trade");
             } else {
                 // buy
+                info!("start send dex buy trade, venue: {:?}, token_in {:?}, token_out {:?}, amount_in {:?}", instruction.dex.venue, instruction.dex.quote_token.token,
+                instruction.dex.base_token.token, amt);
                 let param_output = ExactOutputSingleParams {
                     token_in: instruction.dex.quote_token.address,
                     token_out: instruction.dex.base_token.address,
@@ -524,13 +530,12 @@ async fn try_arbitrage<'a, M: Middleware>(
                         Err(e) => error!("error in send tx {:?}", e),
                     }
                 }
+                info!("end send dex buy trade");
             }
         }
         _ => unimplemented!(),
     }
 }
-
-
 
 async fn main_impl() -> anyhow::Result<()> {
     let opts = Opts::parse_args_default_or_exit();

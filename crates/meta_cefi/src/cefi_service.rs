@@ -134,8 +134,8 @@ impl EventHandler for BitfinexEventHandler {
         } else if let DataEvent::BookTradingSnapshotEvent(channel, book_snapshot, seq) = event {
             debug!("handle ob snapshot event sequence {:?}", { seq });
             info!(
-                "bitfinex order book snapshot channel({}) sequence({}) {:?}",
-                channel, seq, book_snapshot
+                "bitfinex order book snapshot channel({}) sequence({})",
+                channel, seq
             );
             self.check_sequence(seq);
             self.order_book = Some(construct_order_book(book_snapshot));
