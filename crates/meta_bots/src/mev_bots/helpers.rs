@@ -9,7 +9,7 @@ use meta_common::{
     traits::ContractCode,
 };
 use meta_dex::prelude::BlockInfo;
-use revm::primitives::{ExecutionResult, Output, TransactTo};
+use revm::primitives::{ExecutionResult, Output, TransactTo, B256};
 use revm::{
     primitives::{Address as rAddress, Bytecode, U256 as rU256},
     EVM,
@@ -69,7 +69,7 @@ pub fn inject_sando(
     // give searcher some balance to pay for gas fees
     let searcher = searcher_address;
     let gas_money = parse_ether(100).unwrap();
-    let account = revm::primitives::AccountInfo::new(gas_money.into(), 0, Bytecode::default());
+    let account = revm::primitives::AccountInfo::new(gas_money.into(), 0, B256::default(), Bytecode::default());
     fork_factory.insert_account_info(searcher.0.into(), account);
 
     // setup sandwich contract
@@ -77,6 +77,7 @@ pub fn inject_sando(
     let account = revm::primitives::AccountInfo::new(
         rU256::from(0),
         0,
+        B256::default(),
         Bytecode::new_raw(
             get_bot_contract_info(BotType::SANDWIDTH_HUFF, network)
                 .unwrap()
@@ -115,6 +116,7 @@ fn inject_braindance_code(network: Network, fork_factory: &mut ForkFactory) {
     let account = revm::primitives::AccountInfo::new(
         rU256::from(0),
         0,
+        B256::default(),
         Bytecode::new_raw(
             get_bot_contract_info(BotType::BRAIN_DANCE_SOL, network).unwrap().get_byte_code_and_hash().0.0,
         ),
@@ -123,7 +125,7 @@ fn inject_braindance_code(network: Network, fork_factory: &mut ForkFactory) {
 
     // setup braindance contract controller
     let account =
-        revm::primitives::AccountInfo::new(parse_ether(69).unwrap().into(), 0, Bytecode::default());
+        revm::primitives::AccountInfo::new(parse_ether(69).unwrap().into(), 0,B256::default(), Bytecode::default());
     fork_factory.insert_account_info((*DEV_BRAINDANCE_CONTRAOLLER_ADDRESS).0.into(), account);
 }
 

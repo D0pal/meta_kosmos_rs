@@ -8,6 +8,15 @@ pub fn get_token0_and_token1(token_a: Address, token_b: Address) -> (Address, Ad
     }
 }
 
+pub fn get_swap_price_limit(token_1: Address, token_2: Address, token_in: Address) -> U256 {
+    let (token_0, token_1) = get_token0_and_token1(token_1, token_2);
+    if token_in.eq(&token_0) {
+        U256::zero()
+    } else {
+        U256::MAX.checked_div(U256::from(100000)).unwrap()
+    }
+}
+
 pub fn get_tick_from_slot_value(hash: H256) -> i32 {
     let bytes = hash.0;
     let u8_array = &bytes[9..12];
@@ -63,4 +72,3 @@ mod test {
         assert_eq!(tick, -202154);
     }
 }
-

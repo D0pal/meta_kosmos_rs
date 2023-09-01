@@ -76,7 +76,7 @@ impl<DB: Database> Inspector<DB> for SalmonellaInspectoooor {
         &mut self,
         _interp: &mut Interpreter,
         _data: &mut EVMData<'_, DB>,
-        _is_static: bool,
+        // _is_static: bool,
     ) -> InstructionResult {
         InstructionResult::Continue
     }
@@ -87,7 +87,7 @@ impl<DB: Database> Inspector<DB> for SalmonellaInspectoooor {
         &mut self,
         interp: &mut Interpreter,
         _data: &mut EVMData<'_, DB>,
-        _is_static: bool,
+        // _is_static: bool,
     ) -> InstructionResult {
         let executed_opcode = interp.current_opcode();
 
@@ -131,7 +131,7 @@ impl<DB: Database> Inspector<DB> for SalmonellaInspectoooor {
         &mut self,
         _interp: &mut Interpreter,
         _data: &mut EVMData<'_, DB>,
-        _is_static: bool,
+        // _is_static: bool,
         _eval: InstructionResult,
     ) -> InstructionResult {
         InstructionResult::Continue
@@ -141,7 +141,7 @@ impl<DB: Database> Inspector<DB> for SalmonellaInspectoooor {
         &mut self,
         _data: &mut EVMData<'_, DB>,
         _inputs: &mut CallInputs,
-        _is_static: bool,
+        // _is_static: bool,
     ) -> (InstructionResult, Gas, Bytes) {
         (InstructionResult::Continue, Gas::new(0), Bytes::new())
     }
@@ -153,7 +153,7 @@ impl<DB: Database> Inspector<DB> for SalmonellaInspectoooor {
         remaining_gas: Gas,
         ret: InstructionResult,
         out: Bytes,
-        _is_static: bool,
+        // _is_static: bool,
     ) -> (InstructionResult, Gas, Bytes) {
         (ret, remaining_gas, out)
     }

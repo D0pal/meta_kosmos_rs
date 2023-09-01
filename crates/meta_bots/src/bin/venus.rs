@@ -29,7 +29,7 @@ use meta_contracts::{
 };
 use meta_dex::enums::TokenInfo;
 use meta_tracing::init_tracing;
-use meta_util::defi::get_token0_and_token1;
+use meta_util::defi::{get_swap_price_limit,get_token0_and_token1};
 use meta_util::ether::{address_from_str, decimal_from_wei, decimal_to_wei};
 use meta_util::get_price_delta_in_bp;
 use meta_util::time::get_current_ts;
@@ -500,14 +500,7 @@ async fn try_arbitrage<'a, M: Middleware>(
     }
 }
 
-fn get_swap_price_limit(token_1: Address, token_2: Address, token_in: Address) -> U256 {
-    let (token_0, token_1) = get_token0_and_token1(token_1, token_2);
-    if token_in.eq(&token_0) {
-        U256::zero()
-    } else {
-        U256::MAX
-    }
-}
+
 
 async fn main_impl() -> anyhow::Result<()> {
     let opts = Opts::parse_args_default_or_exit();

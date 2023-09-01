@@ -17,5 +17,6 @@ cargo build -p meta_bots --release
 cp ./target/release/venus ./venus
 export ENV=prod 
 cargo run -p meta_bots --bin venus --release -- -b ARB -q USD --network ARBI -d UniswapV3 -c BITFINEX
+rm venus.log
 nohup ./venus -b ARB -q USD --network ARBI -d UniswapV3 -c BITFINEX >venus.log 2>&1 &
 ```

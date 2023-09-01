@@ -41,8 +41,9 @@ strum = { version = "0.24", features = ["derive"] }
 strum_macros = "0.24"
 convert_case = "0.6"
 # blockchain
-ethers = { version = "2.0.0" }
-revm = { version = "3.0.0", features = ["ethersdb", "serde", "std"] }
+ethers = { version = "2.0.0" , features = ["ws"]}
+revm = { git = "https://github.com/bluealloy/revm/" }
+foundry-evm = { git = "https://github.com/foundry-rs/foundry.git", default-features = false }
 # web
 http = { version = "0.2.9" }
 # async
@@ -70,3 +71,7 @@ colored = "2.0.0"
 indicatif = "0.17.1"
 # CLI
 gumdrop = "0.8.0"
+
+
+[patch.crates-io]
+revm = { git = "https://github.com/bluealloy/revm/", rev = "6b55b9c0ab264c000e087c2f54f2d8dc24b869aa" }

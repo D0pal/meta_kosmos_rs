@@ -105,54 +105,54 @@ pub fn start_add_new_pools<M: Middleware + 'static>(
     });
 }
 
-pub fn start_mega_sandwich_oracle(
-    client: Arc<Provider<Ws>>,
-    new_block_delay_milli: u64,
-    bundle_sender: Arc<RwLock<BundleSender>>,
-    sandwich_state: Arc<BotState>,
-    sandwich_maker: Arc<SandwichMaker>,
-    network: Network,
-    weth_address: Address,
-    sandwidth_contract_address: Address,
-    searcher_address: Address,
-) {
-    tokio::spawn(async move {
-        // loop so we can reconnect if the websocket connection is lost
-        loop {
-            let mut block_stream = if let Ok(stream) = client.subscribe_blocks().await {
-                stream
-            } else {
-                panic!("Failed to create new block stream");
-            };
+// pub fn start_mega_sandwich_oracle(
+//     client: Arc<Provider<Ws>>,
+//     new_block_delay_milli: u64,
+//     bundle_sender: Arc<RwLock<BundleSender>>,
+//     sandwich_state: Arc<BotState>,
+//     sandwich_maker: Arc<SandwichMaker>,
+//     network: Network,
+//     weth_address: Address,
+//     sandwidth_contract_address: Address,
+//     searcher_address: Address,
+// ) {
+//     tokio::spawn(async move {
+//         // loop so we can reconnect if the websocket connection is lost
+//         loop {
+//             let mut block_stream = if let Ok(stream) = client.subscribe_blocks().await {
+//                 stream
+//             } else {
+//                 panic!("Failed to create new block stream");
+//             };
 
-            while let Some(block) = block_stream.next().await {
-                // clear all recipes
-                // enchanement: don't do this step but keep recipes because they can be used in future
-                {
-                    let mut bundle_sender_guard = bundle_sender.write().await;
-                    bundle_sender_guard.pending_sandwiches.clear();
-                } // lock removed here
+//             while let Some(block) = block_stream.next().await {
+//                 // clear all recipes
+//                 // enchanement: don't do this step but keep recipes because they can be used in future
+//                 {
+//                     let mut bundle_sender_guard = bundle_sender.write().await;
+//                     bundle_sender_guard.pending_sandwiches.clear();
+//                 } // lock removed here
 
-                // 10.5 seconds from when new block was detected, caluclate mega sandwich
-                thread::sleep(Duration::from_millis(new_block_delay_milli)); // 10_500 FOR ETH
-                let next_block_info = BlockInfo::find_next_block_info(block);
-                {
-                    bundle_sender
-                        .write()
-                        .await
-                        .make_mega_sandwich(
-                            client.clone(),
-                            next_block_info,
-                            sandwich_state.clone(),
-                            sandwich_maker.clone(),
-                            network,
-                            weth_address,
-                            sandwidth_contract_address,
-                            searcher_address,
-                        )
-                        .await;
-                } // lock removed here
-            }
-        }
-    });
-}
+//                 // 10.5 seconds from when new block was detected, caluclate mega sandwich
+//                 thread::sleep(Duration::from_millis(new_block_delay_milli)); // 10_500 FOR ETH
+//                 let next_block_info = BlockInfo::find_next_block_info(block);
+//                 {
+//                     bundle_sender
+//                         .write()
+//                         .await
+//                         .make_mega_sandwich(
+//                             client.clone(),
+//                             next_block_info,
+//                             sandwich_state.clone(),
+//                             sandwich_maker.clone(),
+//                             network,
+//                             weth_address,
+//                             sandwidth_contract_address,
+//                             searcher_address,
+//                         )
+//                         .await;
+//                 } // lock removed here
+//             }
+//         }
+//     });
+// }
