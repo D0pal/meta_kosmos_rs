@@ -377,13 +377,43 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                 }
                             }
 
-                            if dex_bid > cex_bid {
+                            if dex_bid > cex_ask {
                                 let change = get_price_delta_in_bp(dex_bid, cex_ask);
-                                if change > Decimal::from_f32(20f32).unwrap() {
+                                if change > Decimal::from_f32(20f32).unwrap() { // sell dex, buy cex
                                     info!(
                                         "found a cross, dex bid {:?}, cex ask {:?}, price change {:?}",
                                         dex_bid, cex_ask, change
                                     );
+                                    let mut amount =
+                                        config.base_asset_quote_amt.clone();
+                                    amount.set_sign_negative(true);
+                                    let instraction = ArbitrageInstruction {
+                                        cex: CexInstruction {
+                                            venue: CexExchange::BITFINEX,
+                                            amount: config.base_asset_quote_amt,
+                                            base_asset: config.base_asset,
+                                            quote_asset: config.quote_asset,
+                                        },
+                                        dex: DexInstruction {
+                                            venue: DexExchange::UniswapV3,
+                                            amount: amount,
+                                            base_token: base_token.clone(),
+                                            quote_token: quote_token.clone(),
+                                            recipient: wallet_address,
+                                        },
+                                    };
+                                    let dex_ptr = &swap_router
+                                        as *const SwapRouter<
+                                            NonceManagerMiddleware<
+                                                SignerMiddleware<Arc<Provider<Ws>>, LocalWallet>,
+                                            >,
+                                        >;
+                                    try_arbitrage(
+                                        instraction,
+                                        cefi_service.clone().load(Ordering::Relaxed),
+                                        dex_ptr,
+                                    )
+                                    .await;
                                 }
                             }
                         }
