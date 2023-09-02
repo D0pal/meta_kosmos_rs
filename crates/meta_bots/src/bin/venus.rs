@@ -542,6 +542,7 @@ async fn main_impl() -> anyhow::Result<()> {
     //     "{:?}_{:?}_{:?}",
     //     &app_config.log.file_name_prefix, app_config.base_asset, app_config.quote_asset
     // );
+    app_config.log.file_name_prefix.push_str("_");
     app_config.log.file_name_prefix.push_str(&app_config.base_asset.to_string());
     app_config.log.file_name_prefix.push_str(&app_config.quote_asset.to_string());
     let guard = init_tracing(app_config.log.clone().into());

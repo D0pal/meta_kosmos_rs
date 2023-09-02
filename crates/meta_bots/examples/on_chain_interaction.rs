@@ -71,7 +71,7 @@ async fn main() {
     let arb_token_info = get_token_info(arb, network).unwrap();
     let weth_token_info = get_token_info(weth, network).unwrap();
 
-    let reeiver = ContractType::UniV3SwapRouterV2;
+    let swap_router_v2 = ContractType::UniV3SwapRouterV2;
 
     let rpc_info = get_rpc_info(network).unwrap();
 
@@ -97,15 +97,15 @@ async fn main() {
     let wallet = NonceManagerMiddleware::new(wallet, wallet_address);
     let wallet = Arc::new(wallet);
 
-    let router = get_dex_address(dex, network, reeiver).unwrap();
-    println!("router_address {:?}", router.address);
+    let swap_router_contract_info = get_dex_address(dex, network, swap_router_v2).unwrap();
+    println!("router_address {:?}", swap_router_contract_info.address);
 
     // let start = tokio::time::Instant::now();
     // let elapsed = tokio::time::Instant::now().duration_since(start).as_millis();
     // println!("tx {:?}, total spent {:?} ms", tx, elapsed);
 
-    let swap_router_contract_info =
-        get_dex_address(DexExchange::UniswapV3, network, ContractType::UniV3SwapRouterV2).unwrap();
+    approve_token(usdc_token_info, wallet.clone(), swap_router_contract_info.address, Decimal::from_f64(10_000_000_000f64).unwrap()).await;
+
 
     // swap_exact_in_single(
     //     swap_router_contract_info,
