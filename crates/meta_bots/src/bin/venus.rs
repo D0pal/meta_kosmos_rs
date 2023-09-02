@@ -539,7 +539,7 @@ async fn main_impl() -> anyhow::Result<()> {
         app_config.account.private_key_path = Some(pk_path);
     }
     app_config.log.file_name_prefix = format!(
-        "{:?}.{:?}.{:?}",
+        "{:?}_{:?}_{:?}",
         app_config.log.file_name_prefix, app_config.base_asset, app_config.quote_asset
     );
     let guard = init_tracing(app_config.log.clone().into());
