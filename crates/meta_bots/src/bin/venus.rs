@@ -538,10 +538,12 @@ async fn main_impl() -> anyhow::Result<()> {
     if let Some(pk_path) = opts.private_key_path {
         app_config.account.private_key_path = Some(pk_path);
     }
-    app_config.log.file_name_prefix = format!(
-        "{:?}_{:?}_{:?}",
-        app_config.log.file_name_prefix, app_config.base_asset, app_config.quote_asset
-    );
+    // app_config.log.file_name_prefix = format!(
+    //     "{:?}_{:?}_{:?}",
+    //     &app_config.log.file_name_prefix, app_config.base_asset, app_config.quote_asset
+    // );
+    app_config.log.file_name_prefix.push_str(&app_config.base_asset.to_string());
+    app_config.log.file_name_prefix.push_str(&app_config.quote_asset.to_string());
     let guard = init_tracing(app_config.log.clone().into());
 
     debug!("venus config: {:?}", app_config);
