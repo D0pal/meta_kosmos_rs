@@ -3,7 +3,6 @@ use crate::bitfinex::{
     common::*,
     errors::*,
     events::{DataEvent, NotificationEvent, SEQUENCE},
-    symbol::*,
     websockets::{EventHandler, EventType, WebSockets},
 };
 use meta_address::enums::Asset;
@@ -12,17 +11,13 @@ use meta_common::{
     models::{CurrentSpread, MarcketChange},
 };
 use rust_decimal::{
-    prelude::{FromPrimitive, ToPrimitive},
     Decimal,
 };
 use serde::Deserialize;
 use std::{
-    borrow::{Borrow, BorrowMut},
-    cell::RefCell,
-    collections::{BTreeMap, VecDeque},
+    collections::{BTreeMap},
     sync::{
-        mpsc::{Sender, SyncSender},
-        Arc,
+        mpsc::{SyncSender},
     },
 };
 use tracing::{debug, error, info};
@@ -57,7 +52,7 @@ impl BitfinexEventHandler {
             let asks_levels = if ob.asks.len() > 5 { 5 } else { ob.asks.len() };
             let mut iter = ob.bids.iter().rev().zip(ob.asks.iter());
 
-            for i in 0..asks_levels {
+            for _i in 0..asks_levels {
                 if let Some((bid_item, ask_item)) = iter.next() {
                     let (p, level) = bid_item;
                     let (ask_p, ask_level) = ask_item;
@@ -91,7 +86,7 @@ impl EventHandler for BitfinexEventHandler {
         }
     }
 
-    fn on_checksum(&mut self, event: i64) {
+    fn on_checksum(&mut self, _event: i64) {
         // debug!("received checksum event: {:?}", event);
         // match event {
         //     DataEvent::CheckSumEvent(_a, _b, _c, sequence) => self.check_sequence(sequence),
@@ -99,14 +94,14 @@ impl EventHandler for BitfinexEventHandler {
         // }
     }
 
-    fn on_heart_beat(&mut self, channel: i32, data: String, seq: SEQUENCE) {}
+    fn on_heart_beat(&mut self, _channel: i32, _data: String, _seq: SEQUENCE) {}
 
     fn on_data_event(&mut self, event: DataEvent) {
         if let DataEvent::HeartbeatEvent(a, b, seq) = event {
             debug!("handle heart beat event");
             self.check_sequence(seq);
             self.on_heart_beat(a, b, seq);
-        } else if let DataEvent::CheckSumEvent(a, b, data, seq) = event {
+        } else if let DataEvent::CheckSumEvent(_a, _b, data, seq) = event {
             debug!("handle checksum event");
             self.check_sequence(seq);
             self.on_checksum(data);
@@ -239,7 +234,7 @@ impl CefiService {
                 let ak = self.config.as_ref().unwrap().keys.as_ref().unwrap().get(&cex).unwrap();
                 if !self.btf_sockets.contains_key(&pair) {
                     let handler = BitfinexEventHandler::new(self.sender.clone());
-                    let mut web_socket = WebSockets::new();
+                    let web_socket = WebSockets::new();
                     self.btf_sockets.insert(pair.to_owned(), web_socket);
                     self.btf_sockets.entry(pair).and_modify(|web_socket| {
                         (*web_socket).add_event_handler(handler);
@@ -376,15 +371,13 @@ mod test_cefi {
 
     use crate::{
         bitfinex::{book::TradingOrderBookLevel, events::DataEvent},
-        cefi_service::KeyedOrderBook,
         util::to_decimal,
     };
 
     use super::*;
     use meta_address::enums::Asset;
     use rust_decimal::{
-        prelude::{FromPrimitive, ToPrimitive},
-        Decimal,
+        prelude::{ToPrimitive},
     };
     use serde_json::from_str;
     #[test]
@@ -403,7 +396,7 @@ mod test_cefi {
     fn should_construct_order_book() {
         let data_str: &'static str = r#"[1,[[1000.1,7,1.1],[1003.4,1,-2.1],[1004.4,4,-5.1],[1000.2,5,2.1],[1002.4,2,-3.1],[999.2,3,3.1]],1]"#;
         let event: DataEvent = from_str(data_str).unwrap();
-        if let DataEvent::BookTradingSnapshotEvent(channel, book_snapshot, seq) = event {
+        if let DataEvent::BookTradingSnapshotEvent(_channel, book_snapshot, _seq) = event {
             let ob = construct_order_book(book_snapshot);
             let bid_book = ob.bids;
             let ask_book = ob.asks;
@@ -435,7 +428,7 @@ mod test_cefi {
     fn should_update_order_book() {
         let data_str: &'static str = r#"[1,[[1000.1,7,1.1],[1003.4,1,-2.1],[1004.4,4,-5.1],[1000.2,5,2.1],[1002.4,2,-3.1],[999.2,3,3.1]],1]"#;
         let event: DataEvent = from_str(data_str).unwrap();
-        if let DataEvent::BookTradingSnapshotEvent(channel, book_snapshot, seq) = event {
+        if let DataEvent::BookTradingSnapshotEvent(_channel, book_snapshot, _seq) = event {
             let mut ob = construct_order_book(book_snapshot);
 
             // remove a bid

@@ -1,4 +1,4 @@
-use super::{Erc20Wrapper, MuteSwitchFactoryWrapper};
+use super::{Erc20Wrapper};
 use crate::bindings::{
     flash_bots_router::UniswapWethParams, mute_switch_factory::MuteSwitchFactory,
     uniswap_v2_factory::UniswapV2Factory, uniswap_v2_pair::UniswapV2Pair,
@@ -8,15 +8,14 @@ use crate::bindings::{
 use ethers::prelude::*;
 use futures::future::join_all;
 use meta_common::{
-    constants::ZERO_ADDRESS,
     enums::{DexExchange, Network},
 };
-use meta_util::ether::{address_from_str, address_to_str};
+use meta_util::ether::{address_to_str};
 
 use std::{
     borrow::BorrowMut,
     cell::RefCell,
-    ops::{Add, Div, Mul},
+    ops::{Div, Mul},
     rc::Rc,
     sync::Arc,
 };
@@ -59,7 +58,7 @@ impl<M: Middleware> UniswapV2<M> {
                 client.clone(),
             )),
         };
-        let swap_router_contract = UniswapV2Router02::new(swap_router_addr, client.clone());
+        let _swap_router_contract = UniswapV2Router02::new(swap_router_addr, client.clone());
         UniswapV2 {
             network,
             dex,
@@ -189,7 +188,7 @@ impl<M: Middleware> UniswapV2PairWrapper<M> {
     pub async fn get_price(&self, block_num: u64) -> Option<f64> {
         let ret = self.pair_contract.get_reserves().block(U64::from(block_num)).call().await;
         match ret {
-            Ok((reserve_0, reserve_1, ts)) => {
+            Ok((reserve_0, reserve_1, _ts)) => {
                 debug!(
                     "reserve0: {:?}, reserve1: {:?}, token0: {:?}, token1: {:?}",
                     reserve_0, reserve_1, self.state.token_0, self.state.token_1
@@ -471,7 +470,7 @@ mod test {
     use super::Erc20Info;
     use ethers::prelude::*;
     use meta_common::constants::ETHER;
-    use mockall::{automock, mock, predicate::*};
+    use mockall::{mock};
     mock!(UniswapV2Pair {});
 
     #[test]

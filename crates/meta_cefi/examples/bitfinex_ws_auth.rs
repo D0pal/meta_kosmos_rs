@@ -5,9 +5,8 @@ use meta_common::enums::CexExchange;
 use meta_tracing::{init_tracing, TraceConfig};
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 use std::{
-    borrow::BorrowMut,
     collections::BTreeMap,
-    sync::{atomic::AtomicPtr, mpsc, Arc, Mutex},
+    sync::{atomic::AtomicPtr, Arc},
     thread,
     time::Duration,
 };
@@ -21,7 +20,7 @@ fn main() {
         flame: false,
         console: true,
     };
-    let guard = init_tracing(config);
+    let _guard = init_tracing(config);
 
     // let (tx, rx) = mpsc::sync_channel(100);
     let mut map = BTreeMap::new();
@@ -38,8 +37,8 @@ fn main() {
     let cefi_service = &mut cefi_service as *mut CefiService;
     let cefi_service = Arc::new(AtomicPtr::new(cefi_service));
 
-    let handle = {
-        let mut cefi_service_clone = cefi_service.clone();
+    let _handle = {
+        let cefi_service_clone = cefi_service.clone();
         thread::spawn(move || {
             let a = cefi_service_clone.load(std::sync::atomic::Ordering::Relaxed);
             unsafe {

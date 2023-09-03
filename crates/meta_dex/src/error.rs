@@ -1,9 +1,8 @@
-use std::fmt;
+
 
 use ethers::{
     prelude::*,
     providers::{Provider, ProviderError, Ws},
-    signers::WalletError,
     types::H160,
 };
 use thiserror::Error;

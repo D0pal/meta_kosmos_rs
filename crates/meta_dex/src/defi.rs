@@ -115,7 +115,7 @@ impl<M: Middleware> Defi<M> {
                     let ret = unsafe { ret.as_ptr().as_ref().unwrap() };
                     return Ok(ret);
                 }
-                Err(e) => {
+                Err(_e) => {
                     todo!()
                 }
             }

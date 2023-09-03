@@ -10,10 +10,10 @@ pub mod prelude {
 
 use crate::enums::TokenInfo;
 use error::OrderError;
-use ethers::{prelude::*, utils::__serde_json::de};
+use ethers::{prelude::*};
 use eyre::Result;
-use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
-use meta_address::{get_dex_address, ContractInfo};
+
+use meta_address::{get_dex_address};
 use meta_common::enums::{ContractType, DexExchange, Network, PoolVariant};
 use meta_contracts::bindings::{
     swap_router::SwapRouter, uniswap_v2_factory::UniswapV2Factory, ExactInputSingleParams,
@@ -25,9 +25,9 @@ use rust_decimal::{
     Decimal,
 };
 use std::sync::Arc;
-use tracing::{debug, debug_span, error, info, instrument, trace, warn};
+use tracing::{debug, info};
 
-use crate::prelude::{PairSyncError, Pool};
+use crate::prelude::{Pool};
 
 #[derive(Clone, Debug)]
 pub struct DexService<M> {

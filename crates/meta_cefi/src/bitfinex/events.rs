@@ -137,7 +137,7 @@ mod test_events {
     fn should_deserilize_trading_book_event() {
         let data_str: &'static str = r#"[1,[[30367.1,7,1.1]]]"#;
         let event: DataEvent = from_str(data_str).unwrap();
-        if let DataEvent::BookTradingSnapshotEvent(channel_id, snapshots, seq) = event {
+        if let DataEvent::BookTradingSnapshotEvent(channel_id, snapshots, _seq) = event {
             assert_eq!(channel_id, 1);
             assert_eq!(snapshots.len(), 1);
             let snapshot = snapshots.get(0);

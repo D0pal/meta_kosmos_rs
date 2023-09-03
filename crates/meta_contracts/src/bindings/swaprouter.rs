@@ -7,16 +7,14 @@ pub use swap_router::*;
     clippy::upper_case_acronyms,
     clippy::type_complexity,
     dead_code,
-    non_camel_case_types
+    non_camel_case_types,
 )]
 pub mod swap_router {
     #[rustfmt::skip]
     const __ABI: &str = "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_factory\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"address\",\"name\":\"_WETH9\",\"type\":\"address\",\"components\":[]}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\",\"outputs\":[]},{\"inputs\":[],\"stateMutability\":\"view\",\"type\":\"function\",\"name\":\"WETH9\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\",\"components\":[]}]},{\"inputs\":[{\"internalType\":\"struct ISwapRouter.ExactInputParams\",\"name\":\"params\",\"type\":\"tuple\",\"components\":[{\"internalType\":\"bytes\",\"name\":\"path\",\"type\":\"bytes\",\"components\":[]},{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"deadline\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"amountIn\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"amountOutMinimum\",\"type\":\"uint256\",\"components\":[]}]}],\"stateMutability\":\"payable\",\"type\":\"function\",\"name\":\"exactInput\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"amountOut\",\"type\":\"uint256\",\"components\":[]}]},{\"inputs\":[{\"internalType\":\"struct ISwapRouter.ExactInputSingleParams\",\"name\":\"params\",\"type\":\"tuple\",\"components\":[{\"internalType\":\"address\",\"name\":\"tokenIn\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"address\",\"name\":\"tokenOut\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"uint24\",\"name\":\"fee\",\"type\":\"uint24\",\"components\":[]},{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"deadline\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"amountIn\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"amountOutMinimum\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint160\",\"name\":\"sqrtPriceLimitX96\",\"type\":\"uint160\",\"components\":[]}]}],\"stateMutability\":\"payable\",\"type\":\"function\",\"name\":\"exactInputSingle\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"amountOut\",\"type\":\"uint256\",\"components\":[]}]},{\"inputs\":[{\"internalType\":\"struct ISwapRouter.ExactOutputParams\",\"name\":\"params\",\"type\":\"tuple\",\"components\":[{\"internalType\":\"bytes\",\"name\":\"path\",\"type\":\"bytes\",\"components\":[]},{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"deadline\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"amountOut\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"amountInMaximum\",\"type\":\"uint256\",\"components\":[]}]}],\"stateMutability\":\"payable\",\"type\":\"function\",\"name\":\"exactOutput\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"amountIn\",\"type\":\"uint256\",\"components\":[]}]},{\"inputs\":[{\"internalType\":\"struct ISwapRouter.ExactOutputSingleParams\",\"name\":\"params\",\"type\":\"tuple\",\"components\":[{\"internalType\":\"address\",\"name\":\"tokenIn\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"address\",\"name\":\"tokenOut\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"uint24\",\"name\":\"fee\",\"type\":\"uint24\",\"components\":[]},{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"deadline\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"amountOut\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"amountInMaximum\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint160\",\"name\":\"sqrtPriceLimitX96\",\"type\":\"uint160\",\"components\":[]}]}],\"stateMutability\":\"payable\",\"type\":\"function\",\"name\":\"exactOutputSingle\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"amountIn\",\"type\":\"uint256\",\"components\":[]}]},{\"inputs\":[],\"stateMutability\":\"view\",\"type\":\"function\",\"name\":\"factory\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\",\"components\":[]}]},{\"inputs\":[{\"internalType\":\"bytes[]\",\"name\":\"data\",\"type\":\"bytes[]\",\"components\":[]}],\"stateMutability\":\"payable\",\"type\":\"function\",\"name\":\"multicall\",\"outputs\":[{\"internalType\":\"bytes[]\",\"name\":\"results\",\"type\":\"bytes[]\",\"components\":[]}]},{\"inputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\",\"name\":\"refundETH\",\"outputs\":[]},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"deadline\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\",\"components\":[]},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\",\"components\":[]},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\",\"components\":[]}],\"stateMutability\":\"payable\",\"type\":\"function\",\"name\":\"selfPermit\",\"outputs\":[]},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"expiry\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\",\"components\":[]},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\",\"components\":[]},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\",\"components\":[]}],\"stateMutability\":\"payable\",\"type\":\"function\",\"name\":\"selfPermitAllowed\",\"outputs\":[]},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"nonce\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"expiry\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\",\"components\":[]},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\",\"components\":[]},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\",\"components\":[]}],\"stateMutability\":\"payable\",\"type\":\"function\",\"name\":\"selfPermitAllowedIfNecessary\",\"outputs\":[]},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"deadline\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\",\"components\":[]},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\",\"components\":[]},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\",\"components\":[]}],\"stateMutability\":\"payable\",\"type\":\"function\",\"name\":\"selfPermitIfNecessary\",\"outputs\":[]},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"amountMinimum\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\",\"components\":[]}],\"stateMutability\":\"payable\",\"type\":\"function\",\"name\":\"sweepToken\",\"outputs\":[]},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"token\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"amountMinimum\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"feeBips\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"address\",\"name\":\"feeRecipient\",\"type\":\"address\",\"components\":[]}],\"stateMutability\":\"payable\",\"type\":\"function\",\"name\":\"sweepTokenWithFee\",\"outputs\":[]},{\"inputs\":[{\"internalType\":\"int256\",\"name\":\"amount0Delta\",\"type\":\"int256\",\"components\":[]},{\"internalType\":\"int256\",\"name\":\"amount1Delta\",\"type\":\"int256\",\"components\":[]},{\"internalType\":\"bytes\",\"name\":\"_data\",\"type\":\"bytes\",\"components\":[]}],\"stateMutability\":\"nonpayable\",\"type\":\"function\",\"name\":\"uniswapV3SwapCallback\",\"outputs\":[]},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amountMinimum\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\",\"components\":[]}],\"stateMutability\":\"payable\",\"type\":\"function\",\"name\":\"unwrapWETH9\",\"outputs\":[]},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amountMinimum\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"address\",\"name\":\"recipient\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"feeBips\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"address\",\"name\":\"feeRecipient\",\"type\":\"address\",\"components\":[]}],\"stateMutability\":\"payable\",\"type\":\"function\",\"name\":\"unwrapWETH9WithFee\",\"outputs\":[]},{\"inputs\":[],\"stateMutability\":\"payable\",\"type\":\"receive\",\"outputs\":[]}]";
     ///The parsed JSON ABI of the contract.
-    pub static SWAPROUTER_ABI: ::ethers::contract::Lazy<::ethers::core::abi::Abi> =
-        ::ethers::contract::Lazy::new(|| {
-            ::ethers::core::utils::__serde_json::from_str(__ABI).expect("ABI is always valid")
-        });
+    pub static SWAPROUTER_ABI: ::ethers::contract::Lazy<::ethers::core::abi::Abi> = ::ethers::contract::Lazy::new(||
+    ::ethers::core::utils::__serde_json::from_str(__ABI).expect("ABI is always valid"));
     #[rustfmt::skip]
     const __BYTECODE: &[u8] = &[
         96,
@@ -12356,8 +12354,9 @@ pub mod swap_router {
         10,
     ];
     ///The bytecode of the contract.
-    pub static SWAPROUTER_BYTECODE: ::ethers::core::types::Bytes =
-        ::ethers::core::types::Bytes::from_static(__BYTECODE);
+    pub static SWAPROUTER_BYTECODE: ::ethers::core::types::Bytes = ::ethers::core::types::Bytes::from_static(
+        __BYTECODE,
+    );
     #[rustfmt::skip]
     const __DEPLOYED_BYTECODE: &[u8] = &[
         96,
@@ -24432,8 +24431,9 @@ pub mod swap_router {
         10,
     ];
     ///The deployed bytecode of the contract.
-    pub static SWAPROUTER_DEPLOYED_BYTECODE: ::ethers::core::types::Bytes =
-        ::ethers::core::types::Bytes::from_static(__DEPLOYED_BYTECODE);
+    pub static SWAPROUTER_DEPLOYED_BYTECODE: ::ethers::core::types::Bytes = ::ethers::core::types::Bytes::from_static(
+        __DEPLOYED_BYTECODE,
+    );
     pub struct SwapRouter<M>(::ethers::contract::Contract<M>);
     impl<M> ::core::clone::Clone for SwapRouter<M> {
         fn clone(&self) -> Self {
@@ -24463,7 +24463,13 @@ pub mod swap_router {
             address: T,
             client: ::std::sync::Arc<M>,
         ) -> Self {
-            Self(::ethers::contract::Contract::new(address.into(), SWAPROUTER_ABI.clone(), client))
+            Self(
+                ::ethers::contract::Contract::new(
+                    address.into(),
+                    SWAPROUTER_ABI.clone(),
+                    client,
+                ),
+            )
         }
         /// Constructs the general purpose `Deployer` instance based on the provided constructor arguments and sends it.
         /// Returns a new instance of a deployer that returns an instance of this contract after sending the transaction
@@ -24507,7 +24513,10 @@ pub mod swap_router {
         ///Calls the contract's `WETH9` (0x4aa4a4fc) function
         pub fn weth9(
             &self,
-        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::Address> {
+        ) -> ::ethers::contract::builders::ContractCall<
+            M,
+            ::ethers::core::types::Address,
+        > {
             self.0
                 .method_hash([74, 164, 164, 252], ())
                 .expect("method not found (this should never happen)")
@@ -24551,7 +24560,10 @@ pub mod swap_router {
         ///Calls the contract's `factory` (0xc45a0155) function
         pub fn factory(
             &self,
-        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::Address> {
+        ) -> ::ethers::contract::builders::ContractCall<
+            M,
+            ::ethers::core::types::Address,
+        > {
             self.0
                 .method_hash([196, 90, 1, 85], ())
                 .expect("method not found (this should never happen)")
@@ -24694,7 +24706,8 @@ pub mod swap_router {
                 .expect("method not found (this should never happen)")
         }
     }
-    impl<M: ::ethers::providers::Middleware> From<::ethers::contract::Contract<M>> for SwapRouter<M> {
+    impl<M: ::ethers::providers::Middleware> From<::ethers::contract::Contract<M>>
+    for SwapRouter<M> {
         fn from(contract: ::ethers::contract::Contract<M>) -> Self {
             Self::new(contract.address(), contract.client())
         }
@@ -24708,7 +24721,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     #[ethcall(name = "WETH9", abi = "WETH9()")]
     pub struct Weth9Call;
@@ -24721,9 +24734,12 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
-    #[ethcall(name = "exactInput", abi = "exactInput((bytes,address,uint256,uint256,uint256))")]
+    #[ethcall(
+        name = "exactInput",
+        abi = "exactInput((bytes,address,uint256,uint256,uint256))"
+    )]
     pub struct ExactInputCall {
         pub params: ExactInputParams,
     }
@@ -24736,7 +24752,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     #[ethcall(
         name = "exactInputSingle",
@@ -24754,9 +24770,12 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
-    #[ethcall(name = "exactOutput", abi = "exactOutput((bytes,address,uint256,uint256,uint256))")]
+    #[ethcall(
+        name = "exactOutput",
+        abi = "exactOutput((bytes,address,uint256,uint256,uint256))"
+    )]
     pub struct ExactOutputCall {
         pub params: ExactOutputParams,
     }
@@ -24769,7 +24788,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     #[ethcall(
         name = "exactOutputSingle",
@@ -24787,7 +24806,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     #[ethcall(name = "factory", abi = "factory()")]
     pub struct FactoryCall;
@@ -24800,7 +24819,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     #[ethcall(name = "multicall", abi = "multicall(bytes[])")]
     pub struct MulticallCall {
@@ -24815,7 +24834,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     #[ethcall(name = "refundETH", abi = "refundETH()")]
     pub struct RefundETHCall;
@@ -24828,7 +24847,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     #[ethcall(
         name = "selfPermit",
@@ -24851,7 +24870,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     #[ethcall(
         name = "selfPermitAllowed",
@@ -24874,7 +24893,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     #[ethcall(
         name = "selfPermitAllowedIfNecessary",
@@ -24897,7 +24916,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     #[ethcall(
         name = "selfPermitIfNecessary",
@@ -24920,7 +24939,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     #[ethcall(name = "sweepToken", abi = "sweepToken(address,uint256,address)")]
     pub struct SweepTokenCall {
@@ -24937,7 +24956,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     #[ethcall(
         name = "sweepTokenWithFee",
@@ -24959,9 +24978,12 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
-    #[ethcall(name = "uniswapV3SwapCallback", abi = "uniswapV3SwapCallback(int256,int256,bytes)")]
+    #[ethcall(
+        name = "uniswapV3SwapCallback",
+        abi = "uniswapV3SwapCallback(int256,int256,bytes)"
+    )]
     pub struct UniswapV3SwapCallbackCall {
         pub amount_0_delta: ::ethers::core::types::I256,
         pub amount_1_delta: ::ethers::core::types::I256,
@@ -24976,7 +24998,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     #[ethcall(name = "unwrapWETH9", abi = "unwrapWETH9(uint256,address)")]
     pub struct UnwrapWETH9Call {
@@ -24992,7 +25014,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     #[ethcall(
         name = "unwrapWETH9WithFee",
@@ -25030,71 +25052,88 @@ pub mod swap_router {
             data: impl AsRef<[u8]>,
         ) -> ::core::result::Result<Self, ::ethers::core::abi::AbiError> {
             let data = data.as_ref();
-            if let Ok(decoded) = <Weth9Call as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded)
+                = <Weth9Call as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::Weth9(decoded));
             }
-            if let Ok(decoded) = <ExactInputCall as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded)
+                = <ExactInputCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::ExactInput(decoded));
             }
-            if let Ok(decoded) =
-                <ExactInputSingleCall as ::ethers::core::abi::AbiDecode>::decode(data)
-            {
+            if let Ok(decoded)
+                = <ExactInputSingleCall as ::ethers::core::abi::AbiDecode>::decode(
+                    data,
+                ) {
                 return Ok(Self::ExactInputSingle(decoded));
             }
-            if let Ok(decoded) = <ExactOutputCall as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded)
+                = <ExactOutputCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::ExactOutput(decoded));
             }
-            if let Ok(decoded) =
-                <ExactOutputSingleCall as ::ethers::core::abi::AbiDecode>::decode(data)
-            {
+            if let Ok(decoded)
+                = <ExactOutputSingleCall as ::ethers::core::abi::AbiDecode>::decode(
+                    data,
+                ) {
                 return Ok(Self::ExactOutputSingle(decoded));
             }
-            if let Ok(decoded) = <FactoryCall as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded)
+                = <FactoryCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::Factory(decoded));
             }
-            if let Ok(decoded) = <MulticallCall as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded)
+                = <MulticallCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::Multicall(decoded));
             }
-            if let Ok(decoded) = <RefundETHCall as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded)
+                = <RefundETHCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::RefundETH(decoded));
             }
-            if let Ok(decoded) = <SelfPermitCall as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded)
+                = <SelfPermitCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::SelfPermit(decoded));
             }
-            if let Ok(decoded) =
-                <SelfPermitAllowedCall as ::ethers::core::abi::AbiDecode>::decode(data)
-            {
+            if let Ok(decoded)
+                = <SelfPermitAllowedCall as ::ethers::core::abi::AbiDecode>::decode(
+                    data,
+                ) {
                 return Ok(Self::SelfPermitAllowed(decoded));
             }
-            if let Ok(decoded) =
-                <SelfPermitAllowedIfNecessaryCall as ::ethers::core::abi::AbiDecode>::decode(data)
-            {
+            if let Ok(decoded)
+                = <SelfPermitAllowedIfNecessaryCall as ::ethers::core::abi::AbiDecode>::decode(
+                    data,
+                ) {
                 return Ok(Self::SelfPermitAllowedIfNecessary(decoded));
             }
-            if let Ok(decoded) =
-                <SelfPermitIfNecessaryCall as ::ethers::core::abi::AbiDecode>::decode(data)
-            {
+            if let Ok(decoded)
+                = <SelfPermitIfNecessaryCall as ::ethers::core::abi::AbiDecode>::decode(
+                    data,
+                ) {
                 return Ok(Self::SelfPermitIfNecessary(decoded));
             }
-            if let Ok(decoded) = <SweepTokenCall as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded)
+                = <SweepTokenCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::SweepToken(decoded));
             }
-            if let Ok(decoded) =
-                <SweepTokenWithFeeCall as ::ethers::core::abi::AbiDecode>::decode(data)
-            {
+            if let Ok(decoded)
+                = <SweepTokenWithFeeCall as ::ethers::core::abi::AbiDecode>::decode(
+                    data,
+                ) {
                 return Ok(Self::SweepTokenWithFee(decoded));
             }
-            if let Ok(decoded) =
-                <UniswapV3SwapCallbackCall as ::ethers::core::abi::AbiDecode>::decode(data)
-            {
+            if let Ok(decoded)
+                = <UniswapV3SwapCallbackCall as ::ethers::core::abi::AbiDecode>::decode(
+                    data,
+                ) {
                 return Ok(Self::UniswapV3SwapCallback(decoded));
             }
-            if let Ok(decoded) = <UnwrapWETH9Call as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded)
+                = <UnwrapWETH9Call as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::UnwrapWETH9(decoded));
             }
-            if let Ok(decoded) =
-                <UnwrapWETH9WithFeeCall as ::ethers::core::abi::AbiDecode>::decode(data)
-            {
+            if let Ok(decoded)
+                = <UnwrapWETH9WithFeeCall as ::ethers::core::abi::AbiDecode>::decode(
+                    data,
+                ) {
                 return Ok(Self::UnwrapWETH9WithFee(decoded));
             }
             Err(::ethers::core::abi::Error::InvalidData.into())
@@ -25104,27 +25143,49 @@ pub mod swap_router {
         fn encode(self) -> Vec<u8> {
             match self {
                 Self::Weth9(element) => ::ethers::core::abi::AbiEncode::encode(element),
-                Self::ExactInput(element) => ::ethers::core::abi::AbiEncode::encode(element),
-                Self::ExactInputSingle(element) => ::ethers::core::abi::AbiEncode::encode(element),
-                Self::ExactOutput(element) => ::ethers::core::abi::AbiEncode::encode(element),
-                Self::ExactOutputSingle(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::ExactInput(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
+                Self::ExactInputSingle(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
+                Self::ExactOutput(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
+                Self::ExactOutputSingle(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
                 Self::Factory(element) => ::ethers::core::abi::AbiEncode::encode(element),
-                Self::Multicall(element) => ::ethers::core::abi::AbiEncode::encode(element),
-                Self::RefundETH(element) => ::ethers::core::abi::AbiEncode::encode(element),
-                Self::SelfPermit(element) => ::ethers::core::abi::AbiEncode::encode(element),
-                Self::SelfPermitAllowed(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::Multicall(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
+                Self::RefundETH(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
+                Self::SelfPermit(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
+                Self::SelfPermitAllowed(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
                 Self::SelfPermitAllowedIfNecessary(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
                 Self::SelfPermitIfNecessary(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::SweepToken(element) => ::ethers::core::abi::AbiEncode::encode(element),
-                Self::SweepTokenWithFee(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::SweepToken(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
+                Self::SweepTokenWithFee(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
                 Self::UniswapV3SwapCallback(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::UnwrapWETH9(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::UnwrapWETH9(element) => {
+                    ::ethers::core::abi::AbiEncode::encode(element)
+                }
                 Self::UnwrapWETH9WithFee(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -25147,12 +25208,18 @@ pub mod swap_router {
                 Self::SelfPermitAllowedIfNecessary(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
-                Self::SelfPermitIfNecessary(element) => ::core::fmt::Display::fmt(element, f),
+                Self::SelfPermitIfNecessary(element) => {
+                    ::core::fmt::Display::fmt(element, f)
+                }
                 Self::SweepToken(element) => ::core::fmt::Display::fmt(element, f),
                 Self::SweepTokenWithFee(element) => ::core::fmt::Display::fmt(element, f),
-                Self::UniswapV3SwapCallback(element) => ::core::fmt::Display::fmt(element, f),
+                Self::UniswapV3SwapCallback(element) => {
+                    ::core::fmt::Display::fmt(element, f)
+                }
                 Self::UnwrapWETH9(element) => ::core::fmt::Display::fmt(element, f),
-                Self::UnwrapWETH9WithFee(element) => ::core::fmt::Display::fmt(element, f),
+                Self::UnwrapWETH9WithFee(element) => {
+                    ::core::fmt::Display::fmt(element, f)
+                }
             }
         }
     }
@@ -25250,7 +25317,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     pub struct Weth9Return(pub ::ethers::core::types::Address);
     ///Container type for all return fields from the `exactInput` function with signature `exactInput((bytes,address,uint256,uint256,uint256))` and selector `0xc04b8d59`
@@ -25262,7 +25329,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     pub struct ExactInputReturn {
         pub amount_out: ::ethers::core::types::U256,
@@ -25276,7 +25343,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     pub struct ExactInputSingleReturn {
         pub amount_out: ::ethers::core::types::U256,
@@ -25290,7 +25357,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     pub struct ExactOutputReturn {
         pub amount_in: ::ethers::core::types::U256,
@@ -25304,7 +25371,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     pub struct ExactOutputSingleReturn {
         pub amount_in: ::ethers::core::types::U256,
@@ -25318,7 +25385,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     pub struct FactoryReturn(pub ::ethers::core::types::Address);
     ///Container type for all return fields from the `multicall` function with signature `multicall(bytes[])` and selector `0xac9650d8`
@@ -25330,7 +25397,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     pub struct MulticallReturn {
         pub results: ::std::vec::Vec<::ethers::core::types::Bytes>,
@@ -25344,7 +25411,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     pub struct ExactInputParams {
         pub path: ::ethers::core::types::Bytes,
@@ -25362,7 +25429,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     pub struct ExactInputSingleParams {
         pub token_in: ::ethers::core::types::Address,
@@ -25383,7 +25450,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     pub struct ExactOutputParams {
         pub path: ::ethers::core::types::Bytes,
@@ -25401,7 +25468,7 @@ pub mod swap_router {
         Debug,
         PartialEq,
         Eq,
-        Hash,
+        Hash
     )]
     pub struct ExactOutputSingleParams {
         pub token_in: ::ethers::core::types::Address,

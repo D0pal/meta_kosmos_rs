@@ -1,8 +1,8 @@
 use crate::bindings::{
-    uniswap_v2_factory::UniswapV2Factory, uniswap_v2_pair::UniswapV2Pair, ERC20,
+    ERC20,
 };
 use ethers::prelude::*;
-use futures::future::join_all;
+
 use meta_common::enums::Network;
 use std::sync::Arc;
 
@@ -28,7 +28,7 @@ impl<M: Middleware> Erc20Wrapper<M> {
     }
 
     pub async fn get_or_fetch_decimals(&mut self) -> u8 {
-        match (self.decimals) {
+        match self.decimals {
             Some(num) => num,
             None => {
                 let decimal_num = self.token_contract.decimals().call().await.unwrap();

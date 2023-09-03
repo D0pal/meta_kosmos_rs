@@ -1,10 +1,7 @@
 use std::{
-    hint,
     sync::{
         atomic::{AtomicUsize, Ordering},
-        Arc,
     },
-    thread,
 };
 
 fn main() {

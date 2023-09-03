@@ -38,10 +38,10 @@ impl MevClient {
                 let info = res.json::<FlashbotsResult>().await;
                 match info {
                     Ok(ret) => Ok(ret),
-                    Err(e) => todo!(),
+                    Err(_e) => todo!(),
                 }
             }
-            Err(e) => todo!(),
+            Err(_e) => todo!(),
         }
     }
 }

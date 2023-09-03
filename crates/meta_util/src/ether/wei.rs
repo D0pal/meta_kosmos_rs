@@ -3,7 +3,7 @@ use rust_decimal::{prelude::FromPrimitive, Decimal};
 use std::ops::Mul;
 
 pub fn decimal_to_wei(input: Decimal, decimals: u32) -> U256 {
-    if (input.is_sign_negative()) {
+    if input.is_sign_negative() {
         panic!("should not convert negative to u256");
     }
     let rounded = input.round_dp(6);

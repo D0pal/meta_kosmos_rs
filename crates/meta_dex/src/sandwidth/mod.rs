@@ -4,7 +4,6 @@ pub mod v2;
 use std::sync::Arc;
 
 use ethers::prelude::{
-    k256::{ecdsa::SigningKey, Secp256k1},
     *,
 };
 use lazy_static::lazy_static;

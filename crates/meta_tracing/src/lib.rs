@@ -1,4 +1,4 @@
-use std::fmt::format;
+
 
 use opentelemetry::sdk::export::trace::stdout;
 use tracing::Level;
@@ -42,7 +42,7 @@ pub fn init_tracing(config: TraceConfig) -> Vec<WorkerGuard> {
         .finish()
         .with(OpenTelemetryLayer::new(tracer));
 
-    if (flame) {
+    if flame {
         let (folded_writter, folded_guard) = tracing_appender::non_blocking(rolling::daily(
             &dir,
             format!("{}.folded", file_name_prefix),

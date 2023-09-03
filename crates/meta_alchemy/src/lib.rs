@@ -33,7 +33,7 @@ use revm::{
     primitives::{bytes, ExecutionResult, Output, TransactTo, U256 as rU256},
 };
 use std::{
-    collections::{btree_map::Entry, BTreeMap},
+    collections::{BTreeMap},
     sync::Arc,
     time::Duration,
 };

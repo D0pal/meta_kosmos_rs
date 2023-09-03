@@ -18,7 +18,7 @@ pub fn get_token0_and_token1(token_a: Address, token_b: Address) -> (Address, Ad
 }
 
 pub fn get_swap_price_limit(token_a: Address, token_b: Address, token_in: Address) -> U256 {
-    let (token_0, token_1) = get_token0_and_token1(token_a, token_b);
+    let (token_0, _token_1) = get_token0_and_token1(token_a, token_b);
     if token_in.eq(&token_0) {
         U256::zero()
     } else {

@@ -1,6 +1,6 @@
 use ethers::prelude::*;
 use lazy_static::lazy_static;
-use std::{ops::Add, str::FromStr};
+use std::{str::FromStr};
 
 pub const APEX_INIT_BLOCK_NUM: u64 = 9624480;
 pub const ZERO_ADDRESS: &'static str = "000000000000000000000000000000000000000000";

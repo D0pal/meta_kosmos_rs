@@ -1,7 +1,7 @@
 use ethers::{core::types::U256, prelude::*};
 
-use rust_decimal::{prelude::FromPrimitive, Decimal};
-use std::{ops::Mul, str::FromStr};
+
+use std::{str::FromStr};
 
 pub fn tx_hash_from_str(hash_str: &str) -> TxHash {
     TxHash::from_str(hash_str).unwrap().to_owned()
@@ -41,7 +41,7 @@ pub fn u256_to_ru256(u: ethers::types::U256) -> revm::primitives::U256 {
 
 #[cfg(test)]
 mod test_hash {
-    use std::str::FromStr;
+    
 
     use super::u256_to_h256_be;
     use ethers::prelude::*;

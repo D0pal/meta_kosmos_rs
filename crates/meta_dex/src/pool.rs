@@ -1,6 +1,5 @@
 use std::{
     hash::{Hash, Hasher},
-    str::FromStr,
 };
 
 use ethers::prelude::*;
