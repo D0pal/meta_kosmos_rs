@@ -189,6 +189,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                             loop {
                                 match new_block_stream.next().await {
                                     Some(block) => {
+                                    
                                         if let Some(block_number) = block.number {
                                             if block_number.as_u64() > last_block {
                                                 last_block = block_number.as_u64();
