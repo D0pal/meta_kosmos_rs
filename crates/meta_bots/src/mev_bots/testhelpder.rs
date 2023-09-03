@@ -4,11 +4,12 @@ use ethers::{
     prelude::*,
     utils::{Anvil, AnvilInstance},
 };
+use meta_common::enums::PoolVariant;
 use meta_contracts::{
     bindings::{
+        erc20::ERC20,
         flash_bots_router::{FlashBotsRouter, UniswapWethParams},
         uniswap_v2_pair::{SwapFilter, UniswapV2Pair, UniswapV2PairEvents},
-        erc20::ERC20
     },
     wrappers::{
         calculate_price_diff, get_atomic_arb_call_params, Erc20Wrapper, UniswapV2,
@@ -16,7 +17,6 @@ use meta_contracts::{
     },
 };
 use meta_dex::prelude::{BlockInfo, Pool};
-use meta_common::enums::{PoolVariant};
 use meta_util::ether::hash::u256_to_h256_be;
 
 // use crate::{

@@ -1,5 +1,4 @@
-use crate::bitfinex::book::*;
-use crate::bitfinex::orders::*;
+use crate::bitfinex::{book::*, orders::*};
 
 #[derive(Clone)]
 pub struct Bitfinex {

@@ -7,14 +7,16 @@ pub use flash_bots_router::*;
     clippy::upper_case_acronyms,
     clippy::type_complexity,
     dead_code,
-    non_camel_case_types,
+    non_camel_case_types
 )]
 pub mod flash_bots_router {
     #[rustfmt::skip]
     const __ABI: &str = "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_executor\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"address\",\"name\":\"wethAddress\",\"type\":\"address\",\"components\":[]}],\"stateMutability\":\"payable\",\"type\":\"constructor\",\"outputs\":[]},{\"inputs\":[],\"stateMutability\":\"payable\",\"type\":\"fallback\",\"outputs\":[]},{\"inputs\":[{\"internalType\":\"address payable\",\"name\":\"_to\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"_value\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"bytes\",\"name\":\"_data\",\"type\":\"bytes\",\"components\":[]}],\"stateMutability\":\"payable\",\"type\":\"function\",\"name\":\"call\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\",\"components\":[]}]},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\",\"components\":[]}],\"stateMutability\":\"nonpayable\",\"type\":\"function\",\"name\":\"claimETH\",\"outputs\":[]},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\",\"components\":[]}],\"stateMutability\":\"nonpayable\",\"type\":\"function\",\"name\":\"claimWETH\",\"outputs\":[]},{\"inputs\":[{\"internalType\":\"struct IFlashBotsRouter.UniswapWethParams\",\"name\":\"params\",\"type\":\"tuple\",\"components\":[{\"internalType\":\"uint256\",\"name\":\"wethAmountToFirstMarket\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"ethAmountToCoinbase\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"address[]\",\"name\":\"targets\",\"type\":\"address[]\",\"components\":[]},{\"internalType\":\"bytes[]\",\"name\":\"payloads\",\"type\":\"bytes[]\",\"components\":[]}]},{\"internalType\":\"bool\",\"name\":\"returnProfit\",\"type\":\"bool\",\"components\":[]}],\"stateMutability\":\"payable\",\"type\":\"function\",\"name\":\"uniswapWeth\",\"outputs\":[]},{\"inputs\":[],\"stateMutability\":\"payable\",\"type\":\"receive\",\"outputs\":[]}]";
     ///The parsed JSON ABI of the contract.
-    pub static FLASHBOTSROUTER_ABI: ::ethers::contract::Lazy<::ethers::core::abi::Abi> = ::ethers::contract::Lazy::new(||
-    ::ethers::core::utils::__serde_json::from_str(__ABI).expect("ABI is always valid"));
+    pub static FLASHBOTSROUTER_ABI: ::ethers::contract::Lazy<::ethers::core::abi::Abi> =
+        ::ethers::contract::Lazy::new(|| {
+            ::ethers::core::utils::__serde_json::from_str(__ABI).expect("ABI is always valid")
+        });
     #[rustfmt::skip]
     const __BYTECODE: &[u8] = &[
         96,
@@ -4703,9 +4705,8 @@ pub mod flash_bots_router {
         51,
     ];
     ///The bytecode of the contract.
-    pub static FLASHBOTSROUTER_BYTECODE: ::ethers::core::types::Bytes = ::ethers::core::types::Bytes::from_static(
-        __BYTECODE,
-    );
+    pub static FLASHBOTSROUTER_BYTECODE: ::ethers::core::types::Bytes =
+        ::ethers::core::types::Bytes::from_static(__BYTECODE);
     #[rustfmt::skip]
     const __DEPLOYED_BYTECODE: &[u8] = &[
         96,
@@ -9060,9 +9061,8 @@ pub mod flash_bots_router {
         51,
     ];
     ///The deployed bytecode of the contract.
-    pub static FLASHBOTSROUTER_DEPLOYED_BYTECODE: ::ethers::core::types::Bytes = ::ethers::core::types::Bytes::from_static(
-        __DEPLOYED_BYTECODE,
-    );
+    pub static FLASHBOTSROUTER_DEPLOYED_BYTECODE: ::ethers::core::types::Bytes =
+        ::ethers::core::types::Bytes::from_static(__DEPLOYED_BYTECODE);
     pub struct FlashBotsRouter<M>(::ethers::contract::Contract<M>);
     impl<M> ::core::clone::Clone for FlashBotsRouter<M> {
         fn clone(&self) -> Self {
@@ -9092,13 +9092,11 @@ pub mod flash_bots_router {
             address: T,
             client: ::std::sync::Arc<M>,
         ) -> Self {
-            Self(
-                ::ethers::contract::Contract::new(
-                    address.into(),
-                    FLASHBOTSROUTER_ABI.clone(),
-                    client,
-                ),
-            )
+            Self(::ethers::contract::Contract::new(
+                address.into(),
+                FLASHBOTSROUTER_ABI.clone(),
+                client,
+            ))
         }
         /// Constructs the general purpose `Deployer` instance based on the provided constructor arguments and sends it.
         /// Returns a new instance of a deployer that returns an instance of this contract after sending the transaction
@@ -9145,10 +9143,7 @@ pub mod flash_bots_router {
             to: ::ethers::core::types::Address,
             value: ::ethers::core::types::U256,
             data: ::ethers::core::types::Bytes,
-        ) -> ::ethers::contract::builders::ContractCall<
-            M,
-            ::ethers::core::types::Bytes,
-        > {
+        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::Bytes> {
             self.0
                 .method_hash([109, 191, 47, 160], (to, value, data))
                 .expect("method not found (this should never happen)")
@@ -9183,7 +9178,8 @@ pub mod flash_bots_router {
         }
     }
     impl<M: ::ethers::providers::Middleware> From<::ethers::contract::Contract<M>>
-    for FlashBotsRouter<M> {
+        for FlashBotsRouter<M>
+    {
         fn from(contract: ::ethers::contract::Contract<M>) -> Self {
             Self::new(contract.address(), contract.client())
         }
@@ -9197,7 +9193,7 @@ pub mod flash_bots_router {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "call", abi = "call(address,uint256,bytes)")]
     pub struct CallCall {
@@ -9214,7 +9210,7 @@ pub mod flash_bots_router {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "claimETH", abi = "claimETH(uint256)")]
     pub struct ClaimETHCall {
@@ -9229,7 +9225,7 @@ pub mod flash_bots_router {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "claimWETH", abi = "claimWETH(uint256)")]
     pub struct ClaimWETHCall {
@@ -9244,12 +9240,9 @@ pub mod flash_bots_router {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
-    #[ethcall(
-        name = "uniswapWeth",
-        abi = "uniswapWeth((uint256,uint256,address[],bytes[]),bool)"
-    )]
+    #[ethcall(name = "uniswapWeth", abi = "uniswapWeth((uint256,uint256,address[],bytes[]),bool)")]
     pub struct UniswapWethCall {
         pub params: UniswapWethParams,
         pub return_profit: bool,
@@ -9267,20 +9260,16 @@ pub mod flash_bots_router {
             data: impl AsRef<[u8]>,
         ) -> ::core::result::Result<Self, ::ethers::core::abi::AbiError> {
             let data = data.as_ref();
-            if let Ok(decoded)
-                = <CallCall as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded) = <CallCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::Call(decoded));
             }
-            if let Ok(decoded)
-                = <ClaimETHCall as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded) = <ClaimETHCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::ClaimETH(decoded));
             }
-            if let Ok(decoded)
-                = <ClaimWETHCall as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded) = <ClaimWETHCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::ClaimWETH(decoded));
             }
-            if let Ok(decoded)
-                = <UniswapWethCall as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded) = <UniswapWethCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::UniswapWeth(decoded));
             }
             Err(::ethers::core::abi::Error::InvalidData.into())
@@ -9290,15 +9279,9 @@ pub mod flash_bots_router {
         fn encode(self) -> Vec<u8> {
             match self {
                 Self::Call(element) => ::ethers::core::abi::AbiEncode::encode(element),
-                Self::ClaimETH(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::ClaimWETH(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::UniswapWeth(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::ClaimETH(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::ClaimWETH(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::UniswapWeth(element) => ::ethers::core::abi::AbiEncode::encode(element),
             }
         }
     }
@@ -9341,7 +9324,7 @@ pub mod flash_bots_router {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct CallReturn(pub ::ethers::core::types::Bytes);
     ///`UniswapWethParams(uint256,uint256,address[],bytes[])`
@@ -9353,7 +9336,7 @@ pub mod flash_bots_router {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct UniswapWethParams {
         pub weth_amount_to_first_market: ::ethers::core::types::U256,

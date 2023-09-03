@@ -20,7 +20,6 @@ pub struct OptimalRecipe {
     pub state_diffs: BTreeMap<H160, AccountDiff>,
 }
 
-
 impl OptimalRecipe {
     // Create a new `OptimalRecipe` instance
     pub fn new(

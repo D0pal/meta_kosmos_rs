@@ -1,15 +1,19 @@
-use crate::bitfinex::auth;
-use crate::bitfinex::common::{CONF_FLAG_SEQ_ALL, CONF_OB_CHECKSUM};
-use crate::bitfinex::errors::*;
-use crate::bitfinex::events::*;
-use crate::bitfinex::orders::OrderType;
+use crate::bitfinex::{
+    auth,
+    common::{CONF_FLAG_SEQ_ALL, CONF_OB_CHECKSUM},
+    errors::*,
+    events::*,
+    orders::OrderType,
+};
 use error_chain::bail;
 use meta_util::time::get_current_ts;
 use serde_json::{from_str, json};
-use std::collections::HashMap;
-use std::net::TcpStream;
-use std::sync::mpsc::{self, channel};
-use std::time::Instant;
+use std::{
+    collections::HashMap,
+    net::TcpStream,
+    sync::mpsc::{self, channel},
+    time::Instant,
+};
 use tracing::{debug, info};
 use tungstenite::{
     connect, handshake::client::Response, protocol::WebSocket, stream::MaybeTlsStream, Message,

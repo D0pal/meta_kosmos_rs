@@ -116,11 +116,7 @@ impl GlobalBackend {
                 }
             }
             BackendFetchRequest::Storage(addr, idx, sender) => {
-                let value = self
-                    .db
-                    .accounts
-                    .get(&addr)
-                    .and_then(|acc| acc.storage.get(&idx));
+                let value = self.db.accounts.get(&addr).and_then(|acc| acc.storage.get(&idx));
                 if let Some(value) = value {
                     let _ = sender.send(Ok(*value));
                 } else {
@@ -181,9 +177,8 @@ impl GlobalBackend {
                     let idx_ethers = H256::from_uint(&U256::from(idx));
                     let address_ethers: Address = address.0.into();
 
-                    let storage = provider
-                        .get_storage_at(address_ethers, idx_ethers, block_num)
-                        .await;
+                    let storage =
+                        provider.get_storage_at(address_ethers, idx_ethers, block_num).await;
                     let storage = storage.map(|storage| storage.into_uint());
 
                     // convert ethers types to revm types
@@ -226,8 +221,7 @@ impl GlobalBackend {
                     let revm_block_hash = block_hash.map(|bh| bh.0.into());
                     (revm_block_hash, number)
                 });
-                self.pending_requests
-                    .push(FetchRequestFuture::BlockHash(fut));
+                self.pending_requests.push(FetchRequestFuture::BlockHash(fut));
             }
         }
     }

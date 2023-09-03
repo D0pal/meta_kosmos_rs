@@ -54,7 +54,6 @@ fn pack<'a>(data_type: &'a PackedToken) -> Vec<u8> {
     res
 }
 
-
 pub fn encode_packed(items: &[PackedToken]) -> (Vec<u8>, String) {
     let res = items.iter().fold(Vec::new(), |mut acc, i| {
         let pack = pack(i);

@@ -14,14 +14,17 @@ fn main() {
     bindgen("UniswapV3Pool", "./static/abis/uniswap_v3/UniswapV3Pool.json");
     bindgen("SwapRouter", "./static/abis/uniswap_v3/SwapRouter.json");
     bindgen("QuoterV2", "./static/abis/uniswap_v3/QuoterV2.json");
-    bindgen("NonfungibleTokenPositionDescriptor", "./static/abis/uniswap_v3/NonfungibleTokenPositionDescriptor.json");
-    
+    bindgen(
+        "NonfungibleTokenPositionDescriptor",
+        "./static/abis/uniswap_v3/NonfungibleTokenPositionDescriptor.json",
+    );
+
     bindgen("MuteSwitchFactory", "./static/abis/mute_switch/factory.json");
     bindgen("Migration", "./out/Migration.sol/Migration.json");
     bindgen("FlashBotsRouter", "./out/FlashBotsRouter.sol/FlashBotsRouter.json");
 }
 
-fn bindgen(contract_name: &str, path:&str) {
+fn bindgen(contract_name: &str, path: &str) {
     let bindings = Abigen::new(contract_name, path)
         .expect("could not instantiate Abigen")
         .generate()

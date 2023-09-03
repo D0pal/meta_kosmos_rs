@@ -1,6 +1,5 @@
 use ethers::prelude::*;
 
-
 /// Calculate the next block base fee
 // based on math provided here: https://ethereum.stackexchange.com/questions/107173/how-is-the-base-fee-per-gas-computed-for-a-new-block
 pub fn calculate_next_block_base_fee(block: Block<TxHash>) -> U256 {
@@ -29,14 +28,13 @@ pub fn calculate_next_block_base_fee(block: Block<TxHash>) -> U256 {
     }
 }
 
-
 // #[cfg(test)]
 // mod test_protocol {
 //     use ethers::prelude::*;
 //     #[test]
 //     fn should_calculate_next_block_base_fee() {
 //         let block: Block<TxHash> = Block {
-//             base_fee_per_gas: 
+//             base_fee_per_gas:
 //         };
 
 //     }

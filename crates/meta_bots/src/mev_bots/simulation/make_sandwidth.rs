@@ -670,7 +670,7 @@ mod test {
     };
     use ethers::prelude::*;
     use meta_address::{get_bot_contract_info, get_rpc_info, get_token_address};
-    use meta_common::{enums::Network, constants::address_from_str};
+    use meta_common::{constants::address_from_str, enums::Network};
     use meta_dex::sandwidth::SandwichMaker;
     use std::{fmt::format, str::FromStr, sync::Arc};
     use tokio::{runtime::Runtime, time::Instant};
@@ -688,10 +688,11 @@ mod test {
             get_bot_contract_info(meta_common::enums::BotType::SANDWIDTH_HUFF, network).unwrap();
         let weth_address = get_token_address(meta_common::enums::Token::WETH, network).unwrap();
         let ws_provider = testhelpder::create_ws().await;
-        let private_key = std::fs::read_to_string(format!("/tmp/pk/sandwidth_searcher_{}", network))
-            .unwrap()
-            .trim()
-            .to_string();
+        let private_key =
+            std::fs::read_to_string(format!("/tmp/pk/sandwidth_searcher_{}", network))
+                .unwrap()
+                .trim()
+                .to_string();
         let wallet_local: Arc<LocalWallet> =
             Arc::new(private_key.parse::<LocalWallet>().unwrap().with_chain_id(rpc_info.chainId));
 

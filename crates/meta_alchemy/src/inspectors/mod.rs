@@ -25,4 +25,3 @@ impl OpCode {
         OpCode { code, name }
     }
 }
-

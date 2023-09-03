@@ -16,9 +16,9 @@ use std::{
 };
 use tracing::{debug, info, instrument::WithSubscriber, warn, Level};
 
-use meta_address::{get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info,Token};
+use meta_address::{get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info, Token};
 use meta_bots::AppConfig;
-use meta_common::enums::{BotType, ContractType, DexExchange, Network, RpcProvider, };
+use meta_common::enums::{BotType, ContractType, DexExchange, Network, RpcProvider};
 use meta_contracts::{
     bindings::{
         flash_bots_router::{FlashBotsRouter, UniswapWethParams},
@@ -42,10 +42,10 @@ struct Opts {
     #[options(help = "blockchain network, such as ETH, BSC")]
     provider: RpcProvider,
 
-    #[options(help = "base token, such as USDT", default="WETH")]
+    #[options(help = "base token, such as USDT", default = "WETH")]
     base_token: Token,
 
-    #[options(help = "quote token, tokenIn, such as WBNB, BUSD", default="USDC")]
+    #[options(help = "quote token, tokenIn, such as WBNB, BUSD", default = "USDC")]
     quote_token: Token,
 
     #[options(help = "dex a, such as PANCAKE")]
@@ -78,8 +78,9 @@ async fn run(opts: Opts) -> anyhow::Result<()> {
         opts.network, opts.base_token, opts.quote_token, provider
     );
 
-    let provider =
-        Provider::<Ws>::connect(rpc_info.ws_urls.get(&provider).unwrap().clone()).await.expect("ws connect error");
+    let provider = Provider::<Ws>::connect(rpc_info.ws_urls.get(&provider).unwrap().clone())
+        .await
+        .expect("ws connect error");
     let provider = provider.interval(Duration::from_millis(opts.interval));
 
     info!("privatekey path {:?}", opts.private_key_path); // {:?} is explained in https://doc.rust-lang.org/std/fmt/index.html
@@ -101,7 +102,8 @@ async fn run(opts: Opts) -> anyhow::Result<()> {
     let quote_asset = Erc20Wrapper::new(opts.network, quote_addr, client.clone()).await;
     let base_asset = Erc20Wrapper::new(opts.network, base_addr, client.clone()).await;
 
-    let bot_address = get_bot_contract_info(BotType::ATOMIC_SWAP_ROUTER, opts.network).unwrap().address;
+    let bot_address =
+        get_bot_contract_info(BotType::ATOMIC_SWAP_ROUTER, opts.network).unwrap().address;
     let flashbots_router = FlashBotsRouter::new(bot_address, client.clone());
 
     let market_a_factory_addr =

@@ -3,13 +3,12 @@ pub mod mev_bots;
 
 use async_trait::async_trait;
 use config::{Config, ConfigError, File};
-use meta_cefi::cefi_service::AccessKey;
-use meta_common::enums::{CexExchange, DexExchange, Network,  RpcProvider};
 use meta_address::enums::Asset;
+use meta_cefi::cefi_service::AccessKey;
+use meta_common::enums::{CexExchange, DexExchange, Network, RpcProvider};
 use rust_decimal::Decimal;
 use serde::Deserialize;
-use std::env;
-use std::{path::PathBuf, result::Result, str::FromStr};
+use std::{env, path::PathBuf, result::Result, str::FromStr};
 use tracing::Level;
 
 use meta_tracing::TraceConfig;
@@ -33,7 +32,7 @@ pub struct ConfigChain {
 #[derive(Debug, Clone, Deserialize)]
 pub struct ConfigProvider {
     pub ws_interval_milli: Option<u64>,
-    pub provider: Option<RpcProvider>
+    pub provider: Option<RpcProvider>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -118,7 +117,7 @@ pub struct VenusConfig {
     pub log: ConfigLog,
     pub provider: ConfigProvider,
     pub account: ConfigAccount,
-    pub bitfinex: Option<AccessKey>
+    pub bitfinex: Option<AccessKey>,
 }
 
 impl VenusConfig {

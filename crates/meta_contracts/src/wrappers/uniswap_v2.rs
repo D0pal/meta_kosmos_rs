@@ -1,9 +1,8 @@
-use super::Erc20Wrapper;
-use super::MuteSwitchFactoryWrapper;
+use super::{Erc20Wrapper, MuteSwitchFactoryWrapper};
 use crate::bindings::{
-    flash_bots_router::UniswapWethParams, uniswap_v2_factory::UniswapV2Factory,
-    uniswap_v2_pair::UniswapV2Pair, uniswap_v2_router_02::UniswapV2Router02, ERC20,
-    mute_switch_factory::MuteSwitchFactory
+    flash_bots_router::UniswapWethParams, mute_switch_factory::MuteSwitchFactory,
+    uniswap_v2_factory::UniswapV2Factory, uniswap_v2_pair::UniswapV2Pair,
+    uniswap_v2_router_02::UniswapV2Router02, ERC20,
 };
 // use core::num;
 use ethers::prelude::*;
@@ -12,7 +11,7 @@ use meta_common::{
     constants::ZERO_ADDRESS,
     enums::{DexExchange, Network},
 };
-use meta_util::ether::{address_from_str,address_to_str};
+use meta_util::ether::{address_from_str, address_to_str};
 
 use std::{
     borrow::BorrowMut,
@@ -25,7 +24,7 @@ use tracing::{debug, error, info};
 
 pub enum UniswapV2FactoryEnum<M> {
     UNISWAP_V2(UniswapV2Factory<M>),
-    MUTE_SWITCH(MuteSwitchFactory<M>)
+    MUTE_SWITCH(MuteSwitchFactory<M>),
 }
 
 pub struct UniswapV2<M> {
@@ -46,10 +45,19 @@ impl<M: Middleware> UniswapV2<M> {
         client: Arc<M>,
     ) -> Self {
         // let config_contract = Config::new(config_address, client.clone());
-        debug!("init UniswapV2 with network {} dex {} factory_address {}",network, dex, factory_address);
+        debug!(
+            "init UniswapV2 with network {} dex {} factory_address {}",
+            network, dex, factory_address
+        );
         let factory_contract = match dex {
-            DexExchange::MuteSwitch => UniswapV2FactoryEnum::MUTE_SWITCH(MuteSwitchFactory::new(factory_address, client.clone())),
-            _ => UniswapV2FactoryEnum::UNISWAP_V2(UniswapV2Factory::new(factory_address, client.clone()))
+            DexExchange::MuteSwitch => UniswapV2FactoryEnum::MUTE_SWITCH(MuteSwitchFactory::new(
+                factory_address,
+                client.clone(),
+            )),
+            _ => UniswapV2FactoryEnum::UNISWAP_V2(UniswapV2Factory::new(
+                factory_address,
+                client.clone(),
+            )),
         };
         let swap_router_contract = UniswapV2Router02::new(swap_router_addr, client.clone());
         UniswapV2 {
@@ -73,12 +81,11 @@ impl<M: Middleware> UniswapV2<M> {
         match &self.factory_contract {
             UniswapV2FactoryEnum::MUTE_SWITCH(factory) => {
                 (factory).get_pair(token0, token1, false).call().await.unwrap()
-            },
+            }
             UniswapV2FactoryEnum::UNISWAP_V2(factory) => {
                 (factory).get_pair(token0, token1).call().await.unwrap()
-            },
+            }
         }
-
     }
 
     pub async fn get_pair_contract_wrapper(
@@ -86,10 +93,14 @@ impl<M: Middleware> UniswapV2<M> {
         token_a: Address,
         token_b: Address,
     ) -> UniswapV2PairWrapper<M> {
-        debug!("get_pair_contract_wrapper, dex {}, factory_address {} token_a {}, token_b: {} ", self.dex, self.get_factory_address(), address_to_str(&token_a), address_to_str(&token_b));
-        let contract_addr = self
-            .get_pair_addr(token_a, token_b)
-            .await;
+        debug!(
+            "get_pair_contract_wrapper, dex {}, factory_address {} token_a {}, token_b: {} ",
+            self.dex,
+            self.get_factory_address(),
+            address_to_str(&token_a),
+            address_to_str(&token_b)
+        );
+        let contract_addr = self.get_pair_addr(token_a, token_b).await;
         debug!("got pair address: {:?}", contract_addr);
         let pair_contract = UniswapV2Pair::new(contract_addr, self.client.clone());
         // let (token_0, token_1) = get_token_0_and_token_1(token_a, token_b);
@@ -101,11 +112,7 @@ impl<M: Middleware> UniswapV2<M> {
         &self,
         pair_contract: &UniswapV2Pair<M>,
     ) -> (Address, Address) {
-        let rets = join_all([
-            pair_contract.token_0().call(),
-            pair_contract.token_1().call(),
-        ])
-        .await;
+        let rets = join_all([pair_contract.token_0().call(), pair_contract.token_1().call()]).await;
 
         let token_0 = rets[0].as_ref().unwrap().to_owned();
         let token_1 = rets[1].as_ref().unwrap().to_owned();
@@ -145,29 +152,20 @@ pub struct UniswapV2PairWrapper<M> {
 
 impl<M: Middleware> UniswapV2PairWrapper<M> {
     async fn new(network: Network, dex: DexExchange, pair_contract: UniswapV2Pair<M>) -> Self {
-        let tokens_rets = join_all([
-            pair_contract.token_0().call(),
-            pair_contract.token_1().call(),
-        ])
-        .await;
+        let tokens_rets =
+            join_all([pair_contract.token_0().call(), pair_contract.token_1().call()]).await;
         let token_0_addr = tokens_rets[0].as_ref().unwrap().to_owned();
         let token_1_addr = tokens_rets[1].as_ref().unwrap().to_owned();
         let token_0_erc20 = ERC20::new(token_0_addr, pair_contract.client());
         let token_1_erc20 = ERC20::new(token_1_addr, pair_contract.client());
 
-        let (reserve_0, reserve_1, block_ts_last) = pair_contract
-            .get_reserves()
-            .call()
-            .await
-            .expect("unable to fetch reserves");
+        let (reserve_0, reserve_1, block_ts_last) =
+            pair_contract.get_reserves().call().await.expect("unable to fetch reserves");
 
         let name_rets = join_all([token_0_erc20.name().call(), token_1_erc20.name().call()]).await;
 
-        let decimals_rets = join_all([
-            token_0_erc20.decimals().call(),
-            token_1_erc20.decimals().call(),
-        ])
-        .await;
+        let decimals_rets =
+            join_all([token_0_erc20.decimals().call(), token_1_erc20.decimals().call()]).await;
         let state = UniswapV2PairState {
             token_0: Erc20Info {
                 address: token_0_addr,
@@ -185,21 +183,11 @@ impl<M: Middleware> UniswapV2PairWrapper<M> {
                 block_ts_last,
             },
         };
-        UniswapV2PairWrapper {
-            network,
-            dex,
-            state,
-            pair_contract,
-        }
+        UniswapV2PairWrapper { network, dex, state, pair_contract }
     }
 
     pub async fn get_price(&self, block_num: u64) -> Option<f64> {
-        let ret = self
-            .pair_contract
-            .get_reserves()
-            .block(U64::from(block_num))
-            .call()
-            .await;
+        let ret = self.pair_contract.get_reserves().block(U64::from(block_num)).call().await;
         match ret {
             Ok((reserve_0, reserve_1, ts)) => {
                 debug!(
@@ -247,12 +235,8 @@ impl<M: Middleware> UniswapV2PairWrapper<M> {
     }
 
     pub async fn update_reserves(&mut self) {
-        let (reserve_0, reserve_1, block_ts_last) = self
-            .pair_contract
-            .get_reserves()
-            .call()
-            .await
-            .expect("unable to fetch reserves");
+        let (reserve_0, reserve_1, block_ts_last) =
+            self.pair_contract.get_reserves().call().await.expect("unable to fetch reserves");
         let new_reserves: UniswapV2Reserves = UniswapV2Reserves {
             reserve_0: U128::from(reserve_0),
             reserve_1: U128::from(reserve_1),
@@ -276,8 +260,7 @@ impl<M: Middleware> UniswapV2PairWrapper<M> {
     ) -> Bytes {
         let amt_out = get_uni_v2_amt_out(&self.state, &token_in, amount_in);
         let mut call =
-            self.pair_contract
-                .swap(U256::from(0), U256::from(amt_out), recipient, vec![].into());
+            self.pair_contract.swap(U256::from(0), U256::from(amt_out), recipient, vec![].into());
 
         if token_in.eq(&self.state.token_1.address) {
             call = self.pair_contract.swap(
@@ -325,23 +308,14 @@ pub async fn calculate_price_diff<M: Middleware, T: Into<BlockId> + Clone>(
     // diff in BP
     let block_id: BlockId = block_num.to_owned().into();
     let rets = join_all([
-        market_a_contract_wrapper
-            .as_ref()
-            .borrow_mut()
-            .update_state_and_return_price(&block_id),
-        market_b_contract_wrapper
-            .as_ref()
-            .borrow_mut()
-            .update_state_and_return_price(&block_id),
+        market_a_contract_wrapper.as_ref().borrow_mut().update_state_and_return_price(&block_id),
+        market_b_contract_wrapper.as_ref().borrow_mut().update_state_and_return_price(&block_id),
     ])
     .await;
 
     let market_a_price = rets[0].as_ref();
     let market_b_price = rets[1].as_ref();
-    debug!(
-        "market_a_price {:?}, market_b_price {:?}",
-        market_a_price, market_b_price
-    );
+    debug!("market_a_price {:?}, market_b_price {:?}", market_a_price, market_b_price);
 
     if let (Some(cake_p), Some(swap_p)) = (market_a_price, market_b_price) {
         let price_diff_in_bp = (cake_p - swap_p) / swap_p * 10000f64;
@@ -418,18 +392,12 @@ pub async fn get_atomic_arb_call_params<M: Middleware>(
     let mut amt_1_out = U256::from(market_first_base_amt_out);
 
     // base asset is token 0
-    if base_asset
-        .token_contract
-        .address()
-        .eq(&market_first.as_ref().borrow().state.token_0.address)
+    if base_asset.token_contract.address().eq(&market_first.as_ref().borrow().state.token_0.address)
     {
         amt_0_out = U256::from(market_first_base_amt_out);
         amt_1_out = U256::from(0);
     }
-    debug!(
-        "market_first amt_0_out {:?}, amt_1_out {:?} ",
-        amt_0_out, amt_1_out
-    );
+    debug!("market_first amt_0_out {:?}, amt_1_out {:?} ", amt_0_out, amt_1_out);
     let market_first_swap_call = market_first
         .as_ref()
         .borrow()
@@ -482,12 +450,7 @@ pub async fn get_atomic_arb_call_params<M: Middleware>(
         .as_ref()
         .borrow()
         .pair_contract
-        .swap(
-            market_second_amt_0_out,
-            market_second_amt_1_out,
-            receiver,
-            vec![].into(),
-        )
+        .swap(market_second_amt_0_out, market_second_amt_1_out, receiver, vec![].into())
         .tx
         .data()
         .clone()
@@ -508,7 +471,6 @@ mod test {
     use super::Erc20Info;
     use ethers::prelude::*;
     use meta_common::constants::ETHER;
-    use mockall::mock;
     use mockall::{automock, mock, predicate::*};
     mock!(UniswapV2Pair {});
 

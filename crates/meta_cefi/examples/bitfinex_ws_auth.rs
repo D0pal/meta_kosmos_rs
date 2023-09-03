@@ -4,14 +4,12 @@ use meta_cefi::cefi_service::{AccessKey, CefiService, CexConfig};
 use meta_common::enums::CexExchange;
 use meta_tracing::{init_tracing, TraceConfig};
 use rust_decimal::{prelude::FromPrimitive, Decimal};
-use std::borrow::BorrowMut;
-use std::sync::atomic::AtomicPtr;
-use std::sync::Arc;
-use std::thread;
-use std::time::Duration;
 use std::{
+    borrow::BorrowMut,
     collections::BTreeMap,
-    sync::{mpsc, Mutex},
+    sync::{atomic::AtomicPtr, mpsc, Arc, Mutex},
+    thread,
+    time::Duration,
 };
 use tracing::Level;
 

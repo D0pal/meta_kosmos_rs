@@ -9,9 +9,9 @@ use revm::{
 };
 use std::sync::mpsc::channel as oneshot_channel;
 
-use crate::{
-   fork_db::database_error::{DatabaseError, DatabaseResult},
-   fork_db::global_backend::BackendFetchRequest,
+use crate::fork_db::{
+    database_error::{DatabaseError, DatabaseResult},
+    global_backend::BackendFetchRequest,
 };
 
 #[derive(Clone, Debug)]
@@ -200,4 +200,3 @@ impl DatabaseCommit for ForkDB {
         self.db.commit(changes)
     }
 }
-

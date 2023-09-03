@@ -1,12 +1,11 @@
-pub mod storage;
+pub mod errors;
 pub mod evm;
 pub mod flashbots;
 pub mod fork_db;
 pub mod inspectors;
 pub mod oracle;
 pub mod pool;
-pub mod errors;
-
+pub mod storage;
 
 pub use flashbots::*;
 
@@ -648,4 +647,3 @@ fn extract_pools(
 
     Some(sandwichable_pools)
 }
-

@@ -34,7 +34,7 @@ fn market_websocket() {
                     "order book, last_update_id: {}, Bids: {:?}, Ask: {:?}",
                     order_book.last_update_id, order_book.bids, order_book.asks
                 );
-            },
+            }
             WebsocketEvent::DiffOrderBook(order_book) => {
                 println!(
                     "diff order book, final_update_id: {}, Bids: {:?}, Ask: {:?}",

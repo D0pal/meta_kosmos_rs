@@ -1,5 +1,5 @@
-use strum::{AsRefStr, EnumCount, EnumIter, EnumString, EnumVariantNames, Display};
-use serde::{Deserialize};
+use serde::Deserialize;
+use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString, EnumVariantNames};
 #[derive(
     Clone,
     Copy,
@@ -20,7 +20,6 @@ use serde::{Deserialize};
 )]
 // #[serde(rename_all = "snake_case")]
 pub enum Network {
-
     #[strum(ascii_case_insensitive, serialize = "ETH")]
     ETH,
 
@@ -32,7 +31,6 @@ pub enum Network {
 
     #[strum(ascii_case_insensitive, serialize = "BSC")]
     BSC,
-
 
     #[strum(ascii_case_insensitive, serialize = "MANTLE")]
     MANTLE,

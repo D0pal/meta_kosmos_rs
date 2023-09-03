@@ -1,7 +1,4 @@
-use meta_cefi::binance::api::*;
-use meta_cefi::binance::config::*;
-use meta_cefi::binance::errors::ErrorKind as BinanceLibErrorKind;
-use meta_cefi::binance::market::*;
+use meta_cefi::binance::{api::*, config::*, errors::ErrorKind as BinanceLibErrorKind, market::*};
 
 fn main() {
     // The general spot API endpoints; shown with

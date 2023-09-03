@@ -11,7 +11,7 @@ pub fn decimal_to_wei(input: Decimal, decimals: u32) -> U256 {
     let rounded_f64 = rounded.to_string().parse::<f64>().unwrap();
     let rounded_u128 = unsafe { rounded_f64.mul(1e6).to_int_unchecked::<u128>() };
 
-    U256::from(rounded_u128.mul(u128::pow(10, decimals-6)))
+    U256::from(rounded_u128.mul(u128::pow(10, decimals - 6)))
 }
 
 pub fn decimal_from_wei(input: U256, decimals: u32) -> Decimal {
@@ -44,10 +44,16 @@ mod test_wei {
         );
 
         let input = Decimal::from_f64(0.012f64).unwrap();
-        assert_eq!(decimal_to_wei(input, 18), U256::from_str_radix("12000000000000000", 10).unwrap());
+        assert_eq!(
+            decimal_to_wei(input, 18),
+            U256::from_str_radix("12000000000000000", 10).unwrap()
+        );
 
         let input = Decimal::from_f64(0.1234567f64).unwrap();
-        assert_eq!(decimal_to_wei(input, 18), U256::from_str_radix("123457000000000000", 10).unwrap());
+        assert_eq!(
+            decimal_to_wei(input, 18),
+            U256::from_str_radix("123457000000000000", 10).unwrap()
+        );
     }
 
     #[test]

@@ -1,7 +1,8 @@
-use revm::interpreter::{opcode, Interpreter};
-use revm::interpreter::{CallInputs, CreateInputs, Gas, InstructionResult};
-use revm::primitives::{Bytes, B160};
-use revm::{Database, EVMData, Inspector};
+use revm::{
+    interpreter::{opcode, CallInputs, CreateInputs, Gas, InstructionResult, Interpreter},
+    primitives::{Bytes, B160},
+    Database, EVMData, Inspector,
+};
 
 #[derive(Debug)]
 pub enum IsSandoSafu {
@@ -42,11 +43,7 @@ pub struct SalmonellaInspectoooor {
 impl SalmonellaInspectoooor {
     // create new salmonella inspector
     pub fn new() -> Self {
-        Self {
-            suspicious_opcodes: Vec::new(),
-            gas_opcode_counter: 0,
-            call_opcode_counter: 0,
-        }
+        Self { suspicious_opcodes: Vec::new(), gas_opcode_counter: 0, call_opcode_counter: 0 }
     }
 
     // checks if opportunity is safu

@@ -1,13 +1,11 @@
-use std::sync::mpsc::channel as oneshot_channel;
-use std::sync::Arc;
+use std::sync::{mpsc::channel as oneshot_channel, Arc};
 
 use super::{
     database_error::DatabaseResult,
     fork_db::ForkDB,
     global_backend::{BackendFetchRequest, GlobalBackend},
 };
-use ethers::prelude::*;
-use ethers::types::BlockId;
+use ethers::{prelude::*, types::BlockId};
 use futures::channel::mpsc::{channel, Sender};
 use revm::{
     db::{CacheDB, EmptyDB},
@@ -40,13 +38,7 @@ impl ForkFactory {
     ) -> (Self, GlobalBackend) {
         let (backend, backend_rx) = channel(1);
         let handler = GlobalBackend::new(backend_rx, fork_block, provider, initial_db.clone());
-        (
-            Self {
-                backend,
-                initial_db,
-            },
-            handler,
-        )
+        (Self { backend, initial_db }, handler)
     }
 
     // Used locally in `insert_account_storage` to fetch accoutn info if account does not exist
@@ -108,9 +100,7 @@ impl ForkFactory {
                 self.initial_db.insert_account_info(address, info.unwrap());
             }
         }
-        self.initial_db
-            .insert_account_storage(address, slot, value)
-            .unwrap();
+        self.initial_db.insert_account_storage(address, slot, value).unwrap();
 
         Ok(())
     }

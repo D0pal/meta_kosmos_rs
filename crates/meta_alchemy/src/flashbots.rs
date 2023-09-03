@@ -2,7 +2,6 @@ use ethers::prelude::*;
 use reqwest::{header, Client};
 use serde::{Deserialize, Serialize};
 
-
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FlashbotsResult {
@@ -46,4 +45,3 @@ impl MevClient {
         }
     }
 }
-

@@ -169,7 +169,12 @@ pub async fn to_cache_db(
     println!("start while loop");
     while let Some(result) = futures.next().await {
         let (acc_diff, address, nonce, balance, code) = result?;
-        let info = AccountInfo::new(balance.into(), nonce.as_u64(), B256::default(), Bytecode::new_raw(code.0));
+        let info = AccountInfo::new(
+            balance.into(),
+            nonce.as_u64(),
+            B256::default(),
+            Bytecode::new_raw(code.0),
+        );
         println!("start insert account info");
         cache_db.insert_account_info(address.0.into(), info);
         println!("end insert account info");

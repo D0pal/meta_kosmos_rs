@@ -3,7 +3,10 @@ use crate::bitfinex::book::{
 };
 use serde::Deserialize;
 
-use super::wallet::{FundingCreditSnapshot, NewOrderOnReq, PositionSnapshot, WalletSnapshot, BU, TeEvent, OrderUpdateEvent, TuEvent};
+use super::wallet::{
+    FundingCreditSnapshot, NewOrderOnReq, OrderUpdateEvent, PositionSnapshot, TeEvent, TuEvent,
+    WalletSnapshot, BU,
+};
 
 pub type SEQUENCE = u32;
 
@@ -29,9 +32,9 @@ pub enum DataEvent {
     PositionSnapshotEvent(i32, String, Vec<PositionSnapshot>, SEQUENCE, i32), // "ps"
     FundingCreditSnapshotEvent(i32, String, Vec<FundingCreditSnapshot>, SEQUENCE, i32), // fcs
     BuEvent(i32, String, BU, SEQUENCE, i32),   // bu
-    TeEvent(i32, String, TeEvent, SEQUENCE,i32),
+    TeEvent(i32, String, TeEvent, SEQUENCE, i32),
     OrderUpdateEvent(i32, String, OrderUpdateEvent, SEQUENCE, i32),
-    TuEvent(i32,String, TuEvent, SEQUENCE, i32),
+    TuEvent(i32, String, TuEvent, SEQUENCE, i32),
     NewOrderOnReq(i32, String, NewOrderOnReq, SEQUENCE),
 
     // TickerTradingEvent (i32, TradingPair),
@@ -178,11 +181,9 @@ mod test_events {
 
     #[test]
     fn test_oc_event() {
-     let data =    "[0,\"oc\",[125271920288,0,1693153165935,\"tARBUSD\",1693153166200,1693153166202,0,1,\"EXCHANGE MARKET\",null,null,null,0,\"EXECUTED @ 0.95902(1.0)\",null,null,0.9591,0.95902,0,0,null,null,null,0,0,null,null,null,\"API>BFX\",null,null,{}],197,3459]";
-     let event: DataEvent = from_str(data).unwrap();
-     println!("event {:?}", event);
-
-
+        let data =    "[0,\"oc\",[125271920288,0,1693153165935,\"tARBUSD\",1693153166200,1693153166202,0,1,\"EXCHANGE MARKET\",null,null,null,0,\"EXECUTED @ 0.95902(1.0)\",null,null,0.9591,0.95902,0,0,null,null,null,0,0,null,null,null,\"API>BFX\",null,null,{}],197,3459]";
+        let event: DataEvent = from_str(data).unwrap();
+        println!("event {:?}", event);
     }
 
     #[test]

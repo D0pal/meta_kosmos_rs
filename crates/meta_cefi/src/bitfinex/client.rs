@@ -1,10 +1,11 @@
-use crate::bitfinex::auth;
-use crate::bitfinex::errors::*;
+use crate::bitfinex::{auth, errors::*};
 use error_chain::bail;
-use reqwest::{header, blocking::Client as HttpClient};
-use reqwest::blocking::Response;
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE, USER_AGENT};
-use reqwest::StatusCode;
+use reqwest::{
+    blocking::{Client as HttpClient, Response},
+    header,
+    header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE, USER_AGENT},
+    StatusCode,
+};
 use serde::Serialize;
 use std::io::Read;
 use tracing::debug;
@@ -23,23 +24,18 @@ pub struct Client {
 
 impl Client {
     pub fn new(api_key: Option<String>, secret_key: Option<String>) -> Self {
-
         let mut default_header = header::HeaderMap::new();
-        default_header.insert(
-            "Content-Type",
-            header::HeaderValue::from_static("application/json"),
-        );
+        default_header.insert("Content-Type", header::HeaderValue::from_static("application/json"));
         let client = reqwest::blocking::ClientBuilder::new()
             // .http2_keep_alive_while_idle(true)
             .default_headers(default_header)
             .build()
             .expect("unable to build http client");
-  
 
         Client {
             api_key: api_key.unwrap_or("".into()),
             secret_key: secret_key.unwrap_or("".into()),
-            http_client: client
+            http_client: client,
         }
     }
 
@@ -79,7 +75,8 @@ impl Client {
 
         debug!("{} {} {}", url, api_signature_path, payload);
         // let client = reqwest::blocking::Client::new();
-        let response = self.http_client
+        let response = self
+            .http_client
             .post(url.as_str())
             .headers(self.build_headers(
                 request,
@@ -93,17 +90,30 @@ impl Client {
         self.handler(response)
     }
 
-    fn build_headers(&self, request: String, payload: String, api_signature_path: String) -> Result<HeaderMap> {
+    fn build_headers(
+        &self,
+        request: String,
+        payload: String,
+        api_signature_path: String,
+    ) -> Result<HeaderMap> {
         let nonce: String = auth::generate_nonce()?;
-        let signature_path: String = format!("{}{}{}{}", api_signature_path, request, nonce, payload);
+        let signature_path: String =
+            format!("{}{}{}{}", api_signature_path, request, nonce, payload);
 
         let signature = auth::sign_payload(self.secret_key.as_bytes(), signature_path.as_bytes())?;
 
         let mut headers = HeaderMap::new();
         headers.insert(USER_AGENT, HeaderValue::from_static("bitfinex-rs"));
-        headers.insert(HeaderName::from_static("bfx-nonce"), HeaderValue::from_str(nonce.as_str())?);
-        headers.insert(HeaderName::from_static("bfx-apikey"), HeaderValue::from_str(self.api_key.as_str())?);
-        headers.insert(HeaderName::from_static("bfx-signature"), HeaderValue::from_str(signature.as_str())?);
+        headers
+            .insert(HeaderName::from_static("bfx-nonce"), HeaderValue::from_str(nonce.as_str())?);
+        headers.insert(
+            HeaderName::from_static("bfx-apikey"),
+            HeaderValue::from_str(self.api_key.as_str())?,
+        );
+        headers.insert(
+            HeaderName::from_static("bfx-signature"),
+            HeaderValue::from_str(signature.as_str())?,
+        );
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
 
         Ok(headers)

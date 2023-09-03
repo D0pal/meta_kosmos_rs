@@ -390,4 +390,3 @@ impl Future for GlobalBackend {
         }
     }
 }
-

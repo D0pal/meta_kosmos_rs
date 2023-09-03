@@ -119,4 +119,3 @@ impl ForkFactory {
         self.initial_db.insert_account_info(address, info);
     }
 }
-

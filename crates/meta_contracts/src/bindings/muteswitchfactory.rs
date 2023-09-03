@@ -7,18 +7,16 @@ pub use mute_switch_factory::*;
     clippy::upper_case_acronyms,
     clippy::type_complexity,
     dead_code,
-    non_camel_case_types,
+    non_camel_case_types
 )]
 pub mod mute_switch_factory {
     #[rustfmt::skip]
     const __ABI: &str = "[  {    \"inputs\": [],    \"stateMutability\": \"nonpayable\",    \"type\": \"constructor\"  },  {    \"anonymous\": false,    \"inputs\": [      {        \"indexed\": true,        \"internalType\": \"address\",        \"name\": \"token0\",        \"type\": \"address\"      },      {        \"indexed\": true,        \"internalType\": \"address\",        \"name\": \"token1\",        \"type\": \"address\"      },      {        \"indexed\": false,        \"internalType\": \"bool\",        \"name\": \"stable\",        \"type\": \"bool\"      },      {        \"indexed\": false,        \"internalType\": \"address\",        \"name\": \"pair\",        \"type\": \"address\"      },      {        \"indexed\": false,        \"internalType\": \"uint256\",        \"name\": \"\",        \"type\": \"uint256\"      },      {        \"indexed\": false,        \"internalType\": \"uint256\",        \"name\": \"fee\",        \"type\": \"uint256\"      }    ],    \"name\": \"PairCreated\",    \"type\": \"event\"  },  {    \"anonymous\": false,    \"inputs\": [      {        \"indexed\": false,        \"internalType\": \"uint256\",        \"name\": \"_protocolFeeDynamic\",        \"type\": \"uint256\"      }    ],    \"name\": \"ProtocolFeeDynamicChange\",    \"type\": \"event\"  },  {    \"anonymous\": false,    \"inputs\": [      {        \"indexed\": false,        \"internalType\": \"uint256\",        \"name\": \"_protocolFeeFixed\",        \"type\": \"uint256\"      }    ],    \"name\": \"ProtocolFeeFixedChange\",    \"type\": \"event\"  },  {    \"anonymous\": false,    \"inputs\": [      {        \"indexed\": false,        \"internalType\": \"address\",        \"name\": \"_feeTo\",        \"type\": \"address\"      }    ],    \"name\": \"ProtocolFeeToChange\",    \"type\": \"event\"  },  {    \"inputs\": [      {        \"internalType\": \"uint256\",        \"name\": \"\",        \"type\": \"uint256\"      }    ],    \"name\": \"allPairs\",    \"outputs\": [      {        \"internalType\": \"address\",        \"name\": \"\",        \"type\": \"address\"      }    ],    \"stateMutability\": \"view\",    \"type\": \"function\"  },  {    \"inputs\": [],    \"name\": \"allPairsLength\",    \"outputs\": [      {        \"internalType\": \"uint256\",        \"name\": \"\",        \"type\": \"uint256\"      }    ],    \"stateMutability\": \"view\",    \"type\": \"function\"  },  {    \"inputs\": [      {        \"internalType\": \"address\",        \"name\": \"tokenA\",        \"type\": \"address\"      },      {        \"internalType\": \"address\",        \"name\": \"tokenB\",        \"type\": \"address\"      },      {        \"internalType\": \"uint256\",        \"name\": \"feeType\",        \"type\": \"uint256\"      },      {        \"internalType\": \"bool\",        \"name\": \"stable\",        \"type\": \"bool\"      }    ],    \"name\": \"createPair\",    \"outputs\": [      {        \"internalType\": \"address\",        \"name\": \"pair\",        \"type\": \"address\"      }    ],    \"stateMutability\": \"nonpayable\",    \"type\": \"function\"  },  {    \"inputs\": [],    \"name\": \"feeTo\",    \"outputs\": [      {        \"internalType\": \"address\",        \"name\": \"\",        \"type\": \"address\"      }    ],    \"stateMutability\": \"view\",    \"type\": \"function\"  },  {    \"inputs\": [      {        \"internalType\": \"address\",        \"name\": \"\",        \"type\": \"address\"      },      {        \"internalType\": \"address\",        \"name\": \"\",        \"type\": \"address\"      },      {        \"internalType\": \"bool\",        \"name\": \"\",        \"type\": \"bool\"      }    ],    \"name\": \"getPair\",    \"outputs\": [      {        \"internalType\": \"address\",        \"name\": \"\",        \"type\": \"address\"      }    ],    \"stateMutability\": \"view\",    \"type\": \"function\"  },  {    \"inputs\": [],    \"name\": \"protocolFeeDynamic\",    \"outputs\": [      {        \"internalType\": \"uint256\",        \"name\": \"\",        \"type\": \"uint256\"      }    ],    \"stateMutability\": \"view\",    \"type\": \"function\"  },  {    \"inputs\": [],    \"name\": \"protocolFeeFixed\",    \"outputs\": [      {        \"internalType\": \"uint256\",        \"name\": \"\",        \"type\": \"uint256\"      }    ],    \"stateMutability\": \"view\",    \"type\": \"function\"  },  {    \"inputs\": [      {        \"internalType\": \"address\",        \"name\": \"_feeTo\",        \"type\": \"address\"      }    ],    \"name\": \"setFeeTo\",    \"outputs\": [],    \"stateMutability\": \"nonpayable\",    \"type\": \"function\"  },  {    \"inputs\": [      {        \"internalType\": \"uint256\",        \"name\": \"_protocolFeeDynamic\",        \"type\": \"uint256\"      }    ],    \"name\": \"setProtocolFeeDynamic\",    \"outputs\": [],    \"stateMutability\": \"nonpayable\",    \"type\": \"function\"  },  {    \"inputs\": [      {        \"internalType\": \"uint256\",        \"name\": \"_protocolFeeFixed\",        \"type\": \"uint256\"      }    ],    \"name\": \"setProtocolFeeFixed\",    \"outputs\": [],    \"stateMutability\": \"nonpayable\",    \"type\": \"function\"  }]";
     ///The parsed JSON ABI of the contract.
-    pub static MUTESWITCHFACTORY_ABI: ::ethers::contract::Lazy<
-        ::ethers::core::abi::Abi,
-    > = ::ethers::contract::Lazy::new(|| {
-        ::ethers::core::utils::__serde_json::from_str(__ABI)
-            .expect("ABI is always valid")
-    });
+    pub static MUTESWITCHFACTORY_ABI: ::ethers::contract::Lazy<::ethers::core::abi::Abi> =
+        ::ethers::contract::Lazy::new(|| {
+            ::ethers::core::utils::__serde_json::from_str(__ABI).expect("ABI is always valid")
+        });
     pub struct MuteSwitchFactory<M>(::ethers::contract::Contract<M>);
     impl<M> ::core::clone::Clone for MuteSwitchFactory<M> {
         fn clone(&self) -> Self {
@@ -48,22 +46,17 @@ pub mod mute_switch_factory {
             address: T,
             client: ::std::sync::Arc<M>,
         ) -> Self {
-            Self(
-                ::ethers::contract::Contract::new(
-                    address.into(),
-                    MUTESWITCHFACTORY_ABI.clone(),
-                    client,
-                ),
-            )
+            Self(::ethers::contract::Contract::new(
+                address.into(),
+                MUTESWITCHFACTORY_ABI.clone(),
+                client,
+            ))
         }
         ///Calls the contract's `allPairs` (0x1e3dd18b) function
         pub fn all_pairs(
             &self,
             p0: ::ethers::core::types::U256,
-        ) -> ::ethers::contract::builders::ContractCall<
-            M,
-            ::ethers::core::types::Address,
-        > {
+        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::Address> {
             self.0
                 .method_hash([30, 61, 209, 139], p0)
                 .expect("method not found (this should never happen)")
@@ -83,10 +76,7 @@ pub mod mute_switch_factory {
             token_b: ::ethers::core::types::Address,
             fee_type: ::ethers::core::types::U256,
             stable: bool,
-        ) -> ::ethers::contract::builders::ContractCall<
-            M,
-            ::ethers::core::types::Address,
-        > {
+        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::Address> {
             self.0
                 .method_hash([178, 233, 22, 214], (token_a, token_b, fee_type, stable))
                 .expect("method not found (this should never happen)")
@@ -94,10 +84,7 @@ pub mod mute_switch_factory {
         ///Calls the contract's `feeTo` (0x017e7e58) function
         pub fn fee_to(
             &self,
-        ) -> ::ethers::contract::builders::ContractCall<
-            M,
-            ::ethers::core::types::Address,
-        > {
+        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::Address> {
             self.0
                 .method_hash([1, 126, 126, 88], ())
                 .expect("method not found (this should never happen)")
@@ -108,10 +95,7 @@ pub mod mute_switch_factory {
             p0: ::ethers::core::types::Address,
             p1: ::ethers::core::types::Address,
             p2: bool,
-        ) -> ::ethers::contract::builders::ContractCall<
-            M,
-            ::ethers::core::types::Address,
-        > {
+        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::Address> {
             self.0
                 .method_hash([104, 1, 204, 48], (p0, p1, p2))
                 .expect("method not found (this should never happen)")
@@ -162,11 +146,8 @@ pub mod mute_switch_factory {
         ///Gets the contract's `PairCreated` event
         pub fn pair_created_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            PairCreatedFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, PairCreatedFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `ProtocolFeeDynamicChange` event
@@ -182,36 +163,28 @@ pub mod mute_switch_factory {
         ///Gets the contract's `ProtocolFeeFixedChange` event
         pub fn protocol_fee_fixed_change_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            ProtocolFeeFixedChangeFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, ProtocolFeeFixedChangeFilter>
+        {
             self.0.event()
         }
         ///Gets the contract's `ProtocolFeeToChange` event
         pub fn protocol_fee_to_change_filter(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            ProtocolFeeToChangeFilter,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, ProtocolFeeToChangeFilter>
+        {
             self.0.event()
         }
         /// Returns an `Event` builder for all the events of this contract.
         pub fn events(
             &self,
-        ) -> ::ethers::contract::builders::Event<
-            ::std::sync::Arc<M>,
-            M,
-            MuteSwitchFactoryEvents,
-        > {
+        ) -> ::ethers::contract::builders::Event<::std::sync::Arc<M>, M, MuteSwitchFactoryEvents>
+        {
             self.0.event_with_filter(::core::default::Default::default())
         }
     }
     impl<M: ::ethers::providers::Middleware> From<::ethers::contract::Contract<M>>
-    for MuteSwitchFactory<M> {
+        for MuteSwitchFactory<M>
+    {
         fn from(contract: ::ethers::contract::Contract<M>) -> Self {
             Self::new(contract.address(), contract.client())
         }
@@ -224,7 +197,7 @@ pub mod mute_switch_factory {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(
         name = "PairCreated",
@@ -248,12 +221,9 @@ pub mod mute_switch_factory {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
-    #[ethevent(
-        name = "ProtocolFeeDynamicChange",
-        abi = "ProtocolFeeDynamicChange(uint256)"
-    )]
+    #[ethevent(name = "ProtocolFeeDynamicChange", abi = "ProtocolFeeDynamicChange(uint256)")]
     pub struct ProtocolFeeDynamicChangeFilter {
         pub protocol_fee_dynamic: ::ethers::core::types::U256,
     }
@@ -265,7 +235,7 @@ pub mod mute_switch_factory {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(name = "ProtocolFeeFixedChange", abi = "ProtocolFeeFixedChange(uint256)")]
     pub struct ProtocolFeeFixedChangeFilter {
@@ -279,7 +249,7 @@ pub mod mute_switch_factory {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethevent(name = "ProtocolFeeToChange", abi = "ProtocolFeeToChange(address)")]
     pub struct ProtocolFeeToChangeFilter {
@@ -301,14 +271,10 @@ pub mod mute_switch_factory {
                 return Ok(MuteSwitchFactoryEvents::PairCreatedFilter(decoded));
             }
             if let Ok(decoded) = ProtocolFeeDynamicChangeFilter::decode_log(log) {
-                return Ok(
-                    MuteSwitchFactoryEvents::ProtocolFeeDynamicChangeFilter(decoded),
-                );
+                return Ok(MuteSwitchFactoryEvents::ProtocolFeeDynamicChangeFilter(decoded));
             }
             if let Ok(decoded) = ProtocolFeeFixedChangeFilter::decode_log(log) {
-                return Ok(
-                    MuteSwitchFactoryEvents::ProtocolFeeFixedChangeFilter(decoded),
-                );
+                return Ok(MuteSwitchFactoryEvents::ProtocolFeeFixedChangeFilter(decoded));
             }
             if let Ok(decoded) = ProtocolFeeToChangeFilter::decode_log(log) {
                 return Ok(MuteSwitchFactoryEvents::ProtocolFeeToChangeFilter(decoded));
@@ -326,9 +292,7 @@ pub mod mute_switch_factory {
                 Self::ProtocolFeeFixedChangeFilter(element) => {
                     ::core::fmt::Display::fmt(element, f)
                 }
-                Self::ProtocolFeeToChangeFilter(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::ProtocolFeeToChangeFilter(element) => ::core::fmt::Display::fmt(element, f),
             }
         }
     }
@@ -337,14 +301,12 @@ pub mod mute_switch_factory {
             Self::PairCreatedFilter(value)
         }
     }
-    impl ::core::convert::From<ProtocolFeeDynamicChangeFilter>
-    for MuteSwitchFactoryEvents {
+    impl ::core::convert::From<ProtocolFeeDynamicChangeFilter> for MuteSwitchFactoryEvents {
         fn from(value: ProtocolFeeDynamicChangeFilter) -> Self {
             Self::ProtocolFeeDynamicChangeFilter(value)
         }
     }
-    impl ::core::convert::From<ProtocolFeeFixedChangeFilter>
-    for MuteSwitchFactoryEvents {
+    impl ::core::convert::From<ProtocolFeeFixedChangeFilter> for MuteSwitchFactoryEvents {
         fn from(value: ProtocolFeeFixedChangeFilter) -> Self {
             Self::ProtocolFeeFixedChangeFilter(value)
         }
@@ -363,7 +325,7 @@ pub mod mute_switch_factory {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "allPairs", abi = "allPairs(uint256)")]
     pub struct AllPairsCall(pub ::ethers::core::types::U256);
@@ -376,7 +338,7 @@ pub mod mute_switch_factory {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "allPairsLength", abi = "allPairsLength()")]
     pub struct AllPairsLengthCall;
@@ -389,7 +351,7 @@ pub mod mute_switch_factory {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "createPair", abi = "createPair(address,address,uint256,bool)")]
     pub struct CreatePairCall {
@@ -407,7 +369,7 @@ pub mod mute_switch_factory {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "feeTo", abi = "feeTo()")]
     pub struct FeeToCall;
@@ -420,7 +382,7 @@ pub mod mute_switch_factory {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "getPair", abi = "getPair(address,address,bool)")]
     pub struct GetPairCall(
@@ -437,7 +399,7 @@ pub mod mute_switch_factory {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "protocolFeeDynamic", abi = "protocolFeeDynamic()")]
     pub struct ProtocolFeeDynamicCall;
@@ -450,7 +412,7 @@ pub mod mute_switch_factory {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "protocolFeeFixed", abi = "protocolFeeFixed()")]
     pub struct ProtocolFeeFixedCall;
@@ -463,7 +425,7 @@ pub mod mute_switch_factory {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "setFeeTo", abi = "setFeeTo(address)")]
     pub struct SetFeeToCall {
@@ -478,7 +440,7 @@ pub mod mute_switch_factory {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "setProtocolFeeDynamic", abi = "setProtocolFeeDynamic(uint256)")]
     pub struct SetProtocolFeeDynamicCall {
@@ -493,7 +455,7 @@ pub mod mute_switch_factory {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "setProtocolFeeFixed", abi = "setProtocolFeeFixed(uint256)")]
     pub struct SetProtocolFeeFixedCall {
@@ -518,52 +480,44 @@ pub mod mute_switch_factory {
             data: impl AsRef<[u8]>,
         ) -> ::core::result::Result<Self, ::ethers::core::abi::AbiError> {
             let data = data.as_ref();
-            if let Ok(decoded)
-                = <AllPairsCall as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded) = <AllPairsCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::AllPairs(decoded));
             }
-            if let Ok(decoded)
-                = <AllPairsLengthCall as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded) =
+                <AllPairsLengthCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::AllPairsLength(decoded));
             }
-            if let Ok(decoded)
-                = <CreatePairCall as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded) = <CreatePairCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::CreatePair(decoded));
             }
-            if let Ok(decoded)
-                = <FeeToCall as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded) = <FeeToCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::FeeTo(decoded));
             }
-            if let Ok(decoded)
-                = <GetPairCall as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded) = <GetPairCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::GetPair(decoded));
             }
-            if let Ok(decoded)
-                = <ProtocolFeeDynamicCall as ::ethers::core::abi::AbiDecode>::decode(
-                    data,
-                ) {
+            if let Ok(decoded) =
+                <ProtocolFeeDynamicCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::ProtocolFeeDynamic(decoded));
             }
-            if let Ok(decoded)
-                = <ProtocolFeeFixedCall as ::ethers::core::abi::AbiDecode>::decode(
-                    data,
-                ) {
+            if let Ok(decoded) =
+                <ProtocolFeeFixedCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::ProtocolFeeFixed(decoded));
             }
-            if let Ok(decoded)
-                = <SetFeeToCall as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded) = <SetFeeToCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::SetFeeTo(decoded));
             }
-            if let Ok(decoded)
-                = <SetProtocolFeeDynamicCall as ::ethers::core::abi::AbiDecode>::decode(
-                    data,
-                ) {
+            if let Ok(decoded) =
+                <SetProtocolFeeDynamicCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SetProtocolFeeDynamic(decoded));
             }
-            if let Ok(decoded)
-                = <SetProtocolFeeFixedCall as ::ethers::core::abi::AbiDecode>::decode(
-                    data,
-                ) {
+            if let Ok(decoded) =
+                <SetProtocolFeeFixedCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::SetProtocolFeeFixed(decoded));
             }
             Err(::ethers::core::abi::Error::InvalidData.into())
@@ -572,26 +526,16 @@ pub mod mute_switch_factory {
     impl ::ethers::core::abi::AbiEncode for MuteSwitchFactoryCalls {
         fn encode(self) -> Vec<u8> {
             match self {
-                Self::AllPairs(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::AllPairsLength(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::CreatePair(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::AllPairs(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::AllPairsLength(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::CreatePair(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::FeeTo(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::GetPair(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::ProtocolFeeDynamic(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::ProtocolFeeFixed(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
-                Self::SetFeeTo(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::ProtocolFeeFixed(element) => ::ethers::core::abi::AbiEncode::encode(element),
+                Self::SetFeeTo(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::SetProtocolFeeDynamic(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -609,17 +553,11 @@ pub mod mute_switch_factory {
                 Self::CreatePair(element) => ::core::fmt::Display::fmt(element, f),
                 Self::FeeTo(element) => ::core::fmt::Display::fmt(element, f),
                 Self::GetPair(element) => ::core::fmt::Display::fmt(element, f),
-                Self::ProtocolFeeDynamic(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::ProtocolFeeDynamic(element) => ::core::fmt::Display::fmt(element, f),
                 Self::ProtocolFeeFixed(element) => ::core::fmt::Display::fmt(element, f),
                 Self::SetFeeTo(element) => ::core::fmt::Display::fmt(element, f),
-                Self::SetProtocolFeeDynamic(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::SetProtocolFeeFixed(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::SetProtocolFeeDynamic(element) => ::core::fmt::Display::fmt(element, f),
+                Self::SetProtocolFeeFixed(element) => ::core::fmt::Display::fmt(element, f),
             }
         }
     }
@@ -682,7 +620,7 @@ pub mod mute_switch_factory {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct AllPairsReturn(pub ::ethers::core::types::Address);
     ///Container type for all return fields from the `allPairsLength` function with signature `allPairsLength()` and selector `0x574f2ba3`
@@ -694,7 +632,7 @@ pub mod mute_switch_factory {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct AllPairsLengthReturn(pub ::ethers::core::types::U256);
     ///Container type for all return fields from the `createPair` function with signature `createPair(address,address,uint256,bool)` and selector `0xb2e916d6`
@@ -706,7 +644,7 @@ pub mod mute_switch_factory {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct CreatePairReturn {
         pub pair: ::ethers::core::types::Address,
@@ -720,7 +658,7 @@ pub mod mute_switch_factory {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct FeeToReturn(pub ::ethers::core::types::Address);
     ///Container type for all return fields from the `getPair` function with signature `getPair(address,address,bool)` and selector `0x6801cc30`
@@ -732,7 +670,7 @@ pub mod mute_switch_factory {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct GetPairReturn(pub ::ethers::core::types::Address);
     ///Container type for all return fields from the `protocolFeeDynamic` function with signature `protocolFeeDynamic()` and selector `0xc348d898`
@@ -744,7 +682,7 @@ pub mod mute_switch_factory {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct ProtocolFeeDynamicReturn(pub ::ethers::core::types::U256);
     ///Container type for all return fields from the `protocolFeeFixed` function with signature `protocolFeeFixed()` and selector `0xa1f177d5`
@@ -756,7 +694,7 @@ pub mod mute_switch_factory {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct ProtocolFeeFixedReturn(pub ::ethers::core::types::U256);
 }

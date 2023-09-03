@@ -51,4 +51,3 @@ pub enum FlashbotsError {
     #[error("reqwest error {0}")]
     FlashbotsReqwestResponseError(#[from] reqwest::Error),
 }
-

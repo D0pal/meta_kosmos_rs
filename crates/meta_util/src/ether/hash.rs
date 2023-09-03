@@ -3,7 +3,7 @@ use ethers::{core::types::U256, prelude::*};
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 use std::{ops::Mul, str::FromStr};
 
-pub fn tx_hash_from_str(hash_str : &str) -> TxHash {
+pub fn tx_hash_from_str(hash_str: &str) -> TxHash {
     TxHash::from_str(hash_str).unwrap().to_owned()
 }
 

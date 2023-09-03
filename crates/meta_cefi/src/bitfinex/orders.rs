@@ -1,8 +1,6 @@
 #![allow(non_camel_case_types)]
 
-use crate::bitfinex::client::*;
-use crate::bitfinex::errors::*;
-use crate::bitfinex::model::*;
+use crate::bitfinex::{client::*, errors::*, model::*};
 use serde::{Deserialize, Serialize};
 use serde_json::{from_str, to_string};
 use std::collections::BTreeMap;

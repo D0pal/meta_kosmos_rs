@@ -1,9 +1,11 @@
 use std::fmt;
 
-use ethers::prelude::*;
-use ethers::providers::{Provider, ProviderError, Ws};
-use ethers::signers::WalletError;
-use ethers::types::H160;
+use ethers::{
+    prelude::*,
+    providers::{Provider, ProviderError, Ws},
+    signers::WalletError,
+    types::H160,
+};
 use thiserror::Error;
 use tokio::task::JoinError;
 
@@ -30,5 +32,4 @@ pub enum OrderError<M: Middleware> {
 
     #[error(transparent)]
     ContractError(#[from] ContractError<M>),
-
 }

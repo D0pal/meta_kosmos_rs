@@ -50,13 +50,12 @@ async fn main() -> Result<()> {
     match ret {
         Ok(ReplayTransactionResult::Success { gas_used, gas_refunded: _, output: _ }) => {
             println!("succuss gas_used {:?}", gas_used);
-        },
+        }
         Ok(ReplayTransactionResult::Revert { gas_used, message }) => {
             println!("reverted msg {:?}", message);
-        },
+        }
         Err(e) => eprintln!("e {:?}", e),
     }
 
     Ok(())
 }
-

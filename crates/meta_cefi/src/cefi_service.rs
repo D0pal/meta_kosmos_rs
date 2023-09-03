@@ -17,14 +17,14 @@ use rust_decimal::{
 };
 use serde::Deserialize;
 use std::{
-    borrow::Borrow,
+    borrow::{Borrow, BorrowMut},
+    cell::RefCell,
     collections::{BTreeMap, VecDeque},
+    sync::{
+        mpsc::{Sender, SyncSender},
+        Arc,
+    },
 };
-use std::{
-    borrow::BorrowMut,
-    sync::mpsc::{Sender, SyncSender},
-};
-use std::{cell::RefCell, sync::Arc};
 use tracing::{debug, error, info};
 
 #[derive(Clone, Debug)]
@@ -128,15 +128,12 @@ impl EventHandler for BitfinexEventHandler {
         } else if let DataEvent::OrderUpdateEvent(_, _, _, seq, _) = event {
             debug!("handle on oc event {:?}", event);
             self.check_sequence(seq);
-        }else if let DataEvent::TuEvent(_, _, _, seq, _) = event {
+        } else if let DataEvent::TuEvent(_, _, _, seq, _) = event {
             debug!("handle on tu event {:?}", event);
             self.check_sequence(seq);
         } else if let DataEvent::BookTradingSnapshotEvent(channel, book_snapshot, seq) = event {
             debug!("handle ob snapshot event sequence {:?}", { seq });
-            info!(
-                "bitfinex order book snapshot channel({}) sequence({})",
-                channel, seq
-            );
+            info!("bitfinex order book snapshot channel({}) sequence({})", channel, seq);
             self.check_sequence(seq);
             self.order_book = Some(construct_order_book(book_snapshot));
         } else if let DataEvent::BookTradingUpdateEvent(channel, book_update, seq) = event {

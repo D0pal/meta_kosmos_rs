@@ -1,11 +1,10 @@
 use ethers::prelude::*;
 use std::{cell::RefCell, collections::HashMap, sync::Arc};
 
-
 use meta_address::get_dex_address;
 use meta_common::enums::{ContractType, DexExchange, Network, PoolVariant};
 use meta_contracts::bindings::{
-    quoter_v2::QuoterV2, uniswap_v3_pool::UniswapV3Pool, uniswap_v3_factory::UniswapV3Factory,
+    quoter_v2::QuoterV2, uniswap_v3_factory::UniswapV3Factory, uniswap_v3_pool::UniswapV3Pool,
 };
 
 #[derive(Debug, Clone)]

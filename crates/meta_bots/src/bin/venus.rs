@@ -3,17 +3,17 @@ use ethers::prelude::*;
 use futures::future::join_all;
 use futures_util::future::try_join_all;
 use gumdrop::Options;
-use meta_address::enums::Asset;
-use meta_address::{get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info, Token};
+use meta_address::{
+    enums::Asset, get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info, Token,
+};
 use meta_bots::{AppConfig, VenusConfig};
-use meta_cefi::bitfinex::model::OrderMeta;
-use meta_cefi::cefi_service::{AccessKey, CefiService, CexConfig};
+use meta_cefi::{
+    bitfinex::model::OrderMeta,
+    cefi_service::{AccessKey, CefiService, CexConfig},
+};
 use meta_common::{
     enums::{BotType, CexExchange, ContractType, DexExchange, Network},
     models::{CurrentSpread, MarcketChange},
-};
-use meta_contracts::bindings::{
-    ExactInputSingleParams, ExactOutputParams, ExactOutputSingleParams,
 };
 use meta_contracts::{
     bindings::{
@@ -21,6 +21,7 @@ use meta_contracts::{
         quoter_v2::QuoterV2,
         swap_router::SwapRouter,
         uniswap_v2_pair::{SwapFilter, UniswapV2PairEvents},
+        ExactInputSingleParams, ExactOutputParams, ExactOutputSingleParams,
         QuoteExactInputSingleParams, QuoteExactOutputSingleParams,
     },
     wrappers::{
@@ -28,25 +29,25 @@ use meta_contracts::{
         UniswapV2PairWrapper,
     },
 };
-use meta_dex::enums::TokenInfo;
-use meta_dex::{swap_exact_in_single, swap_exact_out_single, DexService};
+use meta_dex::{enums::TokenInfo, swap_exact_in_single, swap_exact_out_single, DexService};
 use meta_tracing::init_tracing;
-use meta_util::defi::{get_swap_price_limit, get_token0_and_token1};
-use meta_util::ether::{address_from_str, decimal_from_wei, decimal_to_wei};
-use meta_util::get_price_delta_in_bp;
-use meta_util::time::get_current_ts;
+use meta_util::{
+    defi::{get_swap_price_limit, get_token0_and_token1},
+    ether::{address_from_str, decimal_from_wei, decimal_to_wei},
+    get_price_delta_in_bp,
+    time::get_current_ts,
+};
 use rust_decimal::{
     prelude::{FromPrimitive, Signed},
     Decimal,
 };
 use serde::Deserialize;
-use std::collections::BTreeMap;
-use std::ops::Sub;
 use std::{
     borrow::{Borrow, BorrowMut},
     cell::RefCell,
-    collections::{BinaryHeap, HashMap},
+    collections::{BTreeMap, BinaryHeap, HashMap},
     io::BufReader,
+    ops::Sub,
     path::PathBuf,
     rc::Rc,
     str::FromStr,
@@ -138,8 +139,6 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
             .unwrap();
 
             let quoter = QuoterV2::new(quoter_address.address, provider_ws.clone());
-
-
 
             match config.cex {
                 CexExchange::BITFINEX => {

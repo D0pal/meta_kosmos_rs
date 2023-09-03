@@ -27,4 +27,3 @@ pub fn configure_tx_env(env: &mut revm::primitives::Env, tx: &Transaction) {
     env.tx.transact_to =
         tx.to.map(h160_to_b160).map(TransactTo::Call).unwrap_or_else(TransactTo::create)
 }
-

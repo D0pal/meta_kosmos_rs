@@ -7,13 +7,12 @@ use ethers::prelude::{
     k256::{ecdsa::SigningKey, Secp256k1},
     *,
 };
-use tokio::sync::RwLock;
 use lazy_static::lazy_static;
+use tokio::sync::RwLock;
 
 lazy_static! {
     pub static ref WETH_ENCODE_DIVISOR: U256 = U256::from(100_000);
 }
-
 
 #[derive(Debug, Clone)]
 pub struct SandwichMaker {
@@ -50,4 +49,3 @@ impl SandwichMaker {
         }
     }
 }
-

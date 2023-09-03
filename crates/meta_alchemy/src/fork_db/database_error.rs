@@ -37,4 +37,3 @@ impl DatabaseError {
 
 // Result alias with `DatabaseError` as error
 pub type DatabaseResult<T> = Result<T, DatabaseError>;
-

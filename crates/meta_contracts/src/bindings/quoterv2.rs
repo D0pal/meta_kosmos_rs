@@ -7,14 +7,16 @@ pub use quoter_v2::*;
     clippy::upper_case_acronyms,
     clippy::type_complexity,
     dead_code,
-    non_camel_case_types,
+    non_camel_case_types
 )]
 pub mod quoter_v2 {
     #[rustfmt::skip]
     const __ABI: &str = "[{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_factory\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"address\",\"name\":\"_WETH9\",\"type\":\"address\",\"components\":[]}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\",\"outputs\":[]},{\"inputs\":[],\"stateMutability\":\"view\",\"type\":\"function\",\"name\":\"WETH9\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\",\"components\":[]}]},{\"inputs\":[],\"stateMutability\":\"view\",\"type\":\"function\",\"name\":\"factory\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\",\"components\":[]}]},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"path\",\"type\":\"bytes\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"amountIn\",\"type\":\"uint256\",\"components\":[]}],\"stateMutability\":\"nonpayable\",\"type\":\"function\",\"name\":\"quoteExactInput\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"amountOut\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint160[]\",\"name\":\"sqrtPriceX96AfterList\",\"type\":\"uint160[]\",\"components\":[]},{\"internalType\":\"uint32[]\",\"name\":\"initializedTicksCrossedList\",\"type\":\"uint32[]\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"gasEstimate\",\"type\":\"uint256\",\"components\":[]}]},{\"inputs\":[{\"internalType\":\"struct IQuoterV2.QuoteExactInputSingleParams\",\"name\":\"params\",\"type\":\"tuple\",\"components\":[{\"internalType\":\"address\",\"name\":\"tokenIn\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"address\",\"name\":\"tokenOut\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"amountIn\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint24\",\"name\":\"fee\",\"type\":\"uint24\",\"components\":[]},{\"internalType\":\"uint160\",\"name\":\"sqrtPriceLimitX96\",\"type\":\"uint160\",\"components\":[]}]}],\"stateMutability\":\"nonpayable\",\"type\":\"function\",\"name\":\"quoteExactInputSingle\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"amountOut\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint160\",\"name\":\"sqrtPriceX96After\",\"type\":\"uint160\",\"components\":[]},{\"internalType\":\"uint32\",\"name\":\"initializedTicksCrossed\",\"type\":\"uint32\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"gasEstimate\",\"type\":\"uint256\",\"components\":[]}]},{\"inputs\":[{\"internalType\":\"bytes\",\"name\":\"path\",\"type\":\"bytes\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"amountOut\",\"type\":\"uint256\",\"components\":[]}],\"stateMutability\":\"nonpayable\",\"type\":\"function\",\"name\":\"quoteExactOutput\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"amountIn\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint160[]\",\"name\":\"sqrtPriceX96AfterList\",\"type\":\"uint160[]\",\"components\":[]},{\"internalType\":\"uint32[]\",\"name\":\"initializedTicksCrossedList\",\"type\":\"uint32[]\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"gasEstimate\",\"type\":\"uint256\",\"components\":[]}]},{\"inputs\":[{\"internalType\":\"struct IQuoterV2.QuoteExactOutputSingleParams\",\"name\":\"params\",\"type\":\"tuple\",\"components\":[{\"internalType\":\"address\",\"name\":\"tokenIn\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"address\",\"name\":\"tokenOut\",\"type\":\"address\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint24\",\"name\":\"fee\",\"type\":\"uint24\",\"components\":[]},{\"internalType\":\"uint160\",\"name\":\"sqrtPriceLimitX96\",\"type\":\"uint160\",\"components\":[]}]}],\"stateMutability\":\"nonpayable\",\"type\":\"function\",\"name\":\"quoteExactOutputSingle\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"amountIn\",\"type\":\"uint256\",\"components\":[]},{\"internalType\":\"uint160\",\"name\":\"sqrtPriceX96After\",\"type\":\"uint160\",\"components\":[]},{\"internalType\":\"uint32\",\"name\":\"initializedTicksCrossed\",\"type\":\"uint32\",\"components\":[]},{\"internalType\":\"uint256\",\"name\":\"gasEstimate\",\"type\":\"uint256\",\"components\":[]}]},{\"inputs\":[{\"internalType\":\"int256\",\"name\":\"amount0Delta\",\"type\":\"int256\",\"components\":[]},{\"internalType\":\"int256\",\"name\":\"amount1Delta\",\"type\":\"int256\",\"components\":[]},{\"internalType\":\"bytes\",\"name\":\"path\",\"type\":\"bytes\",\"components\":[]}],\"stateMutability\":\"view\",\"type\":\"function\",\"name\":\"uniswapV3SwapCallback\",\"outputs\":[]}]";
     ///The parsed JSON ABI of the contract.
-    pub static QUOTERV2_ABI: ::ethers::contract::Lazy<::ethers::core::abi::Abi> = ::ethers::contract::Lazy::new(||
-    ::ethers::core::utils::__serde_json::from_str(__ABI).expect("ABI is always valid"));
+    pub static QUOTERV2_ABI: ::ethers::contract::Lazy<::ethers::core::abi::Abi> =
+        ::ethers::contract::Lazy::new(|| {
+            ::ethers::core::utils::__serde_json::from_str(__ABI).expect("ABI is always valid")
+        });
     #[rustfmt::skip]
     const __BYTECODE: &[u8] = &[
         96,
@@ -8511,9 +8513,8 @@ pub mod quoter_v2 {
         10,
     ];
     ///The bytecode of the contract.
-    pub static QUOTERV2_BYTECODE: ::ethers::core::types::Bytes = ::ethers::core::types::Bytes::from_static(
-        __BYTECODE,
-    );
+    pub static QUOTERV2_BYTECODE: ::ethers::core::types::Bytes =
+        ::ethers::core::types::Bytes::from_static(__BYTECODE);
     #[rustfmt::skip]
     const __DEPLOYED_BYTECODE: &[u8] = &[
         96,
@@ -16791,9 +16792,8 @@ pub mod quoter_v2 {
         10,
     ];
     ///The deployed bytecode of the contract.
-    pub static QUOTERV2_DEPLOYED_BYTECODE: ::ethers::core::types::Bytes = ::ethers::core::types::Bytes::from_static(
-        __DEPLOYED_BYTECODE,
-    );
+    pub static QUOTERV2_DEPLOYED_BYTECODE: ::ethers::core::types::Bytes =
+        ::ethers::core::types::Bytes::from_static(__DEPLOYED_BYTECODE);
     pub struct QuoterV2<M>(::ethers::contract::Contract<M>);
     impl<M> ::core::clone::Clone for QuoterV2<M> {
         fn clone(&self) -> Self {
@@ -16823,13 +16823,7 @@ pub mod quoter_v2 {
             address: T,
             client: ::std::sync::Arc<M>,
         ) -> Self {
-            Self(
-                ::ethers::contract::Contract::new(
-                    address.into(),
-                    QUOTERV2_ABI.clone(),
-                    client,
-                ),
-            )
+            Self(::ethers::contract::Contract::new(address.into(), QUOTERV2_ABI.clone(), client))
         }
         /// Constructs the general purpose `Deployer` instance based on the provided constructor arguments and sends it.
         /// Returns a new instance of a deployer that returns an instance of this contract after sending the transaction
@@ -16873,10 +16867,7 @@ pub mod quoter_v2 {
         ///Calls the contract's `WETH9` (0x4aa4a4fc) function
         pub fn weth9(
             &self,
-        ) -> ::ethers::contract::builders::ContractCall<
-            M,
-            ::ethers::core::types::Address,
-        > {
+        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::Address> {
             self.0
                 .method_hash([74, 164, 164, 252], ())
                 .expect("method not found (this should never happen)")
@@ -16884,10 +16875,7 @@ pub mod quoter_v2 {
         ///Calls the contract's `factory` (0xc45a0155) function
         pub fn factory(
             &self,
-        ) -> ::ethers::contract::builders::ContractCall<
-            M,
-            ::ethers::core::types::Address,
-        > {
+        ) -> ::ethers::contract::builders::ContractCall<M, ::ethers::core::types::Address> {
             self.0
                 .method_hash([196, 90, 1, 85], ())
                 .expect("method not found (this should never happen)")
@@ -16974,8 +16962,7 @@ pub mod quoter_v2 {
                 .expect("method not found (this should never happen)")
         }
     }
-    impl<M: ::ethers::providers::Middleware> From<::ethers::contract::Contract<M>>
-    for QuoterV2<M> {
+    impl<M: ::ethers::providers::Middleware> From<::ethers::contract::Contract<M>> for QuoterV2<M> {
         fn from(contract: ::ethers::contract::Contract<M>) -> Self {
             Self::new(contract.address(), contract.client())
         }
@@ -16989,7 +16976,7 @@ pub mod quoter_v2 {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "WETH9", abi = "WETH9()")]
     pub struct Weth9Call;
@@ -17002,7 +16989,7 @@ pub mod quoter_v2 {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "factory", abi = "factory()")]
     pub struct FactoryCall;
@@ -17015,7 +17002,7 @@ pub mod quoter_v2 {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "quoteExactInput", abi = "quoteExactInput(bytes,uint256)")]
     pub struct QuoteExactInputCall {
@@ -17031,7 +17018,7 @@ pub mod quoter_v2 {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "quoteExactInputSingle",
@@ -17049,7 +17036,7 @@ pub mod quoter_v2 {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(name = "quoteExactOutput", abi = "quoteExactOutput(bytes,uint256)")]
     pub struct QuoteExactOutputCall {
@@ -17065,7 +17052,7 @@ pub mod quoter_v2 {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     #[ethcall(
         name = "quoteExactOutputSingle",
@@ -17083,12 +17070,9 @@ pub mod quoter_v2 {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
-    #[ethcall(
-        name = "uniswapV3SwapCallback",
-        abi = "uniswapV3SwapCallback(int256,int256,bytes)"
-    )]
+    #[ethcall(name = "uniswapV3SwapCallback", abi = "uniswapV3SwapCallback(int256,int256,bytes)")]
     pub struct UniswapV3SwapCallbackCall {
         pub amount_0_delta: ::ethers::core::types::I256,
         pub amount_1_delta: ::ethers::core::types::I256,
@@ -17110,40 +17094,35 @@ pub mod quoter_v2 {
             data: impl AsRef<[u8]>,
         ) -> ::core::result::Result<Self, ::ethers::core::abi::AbiError> {
             let data = data.as_ref();
-            if let Ok(decoded)
-                = <Weth9Call as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded) = <Weth9Call as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::Weth9(decoded));
             }
-            if let Ok(decoded)
-                = <FactoryCall as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded) = <FactoryCall as ::ethers::core::abi::AbiDecode>::decode(data) {
                 return Ok(Self::Factory(decoded));
             }
-            if let Ok(decoded)
-                = <QuoteExactInputCall as ::ethers::core::abi::AbiDecode>::decode(data) {
+            if let Ok(decoded) =
+                <QuoteExactInputCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::QuoteExactInput(decoded));
             }
-            if let Ok(decoded)
-                = <QuoteExactInputSingleCall as ::ethers::core::abi::AbiDecode>::decode(
-                    data,
-                ) {
+            if let Ok(decoded) =
+                <QuoteExactInputSingleCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::QuoteExactInputSingle(decoded));
             }
-            if let Ok(decoded)
-                = <QuoteExactOutputCall as ::ethers::core::abi::AbiDecode>::decode(
-                    data,
-                ) {
+            if let Ok(decoded) =
+                <QuoteExactOutputCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::QuoteExactOutput(decoded));
             }
-            if let Ok(decoded)
-                = <QuoteExactOutputSingleCall as ::ethers::core::abi::AbiDecode>::decode(
-                    data,
-                ) {
+            if let Ok(decoded) =
+                <QuoteExactOutputSingleCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::QuoteExactOutputSingle(decoded));
             }
-            if let Ok(decoded)
-                = <UniswapV3SwapCallbackCall as ::ethers::core::abi::AbiDecode>::decode(
-                    data,
-                ) {
+            if let Ok(decoded) =
+                <UniswapV3SwapCallbackCall as ::ethers::core::abi::AbiDecode>::decode(data)
+            {
                 return Ok(Self::UniswapV3SwapCallback(decoded));
             }
             Err(::ethers::core::abi::Error::InvalidData.into())
@@ -17154,15 +17133,11 @@ pub mod quoter_v2 {
             match self {
                 Self::Weth9(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::Factory(element) => ::ethers::core::abi::AbiEncode::encode(element),
-                Self::QuoteExactInput(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::QuoteExactInput(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::QuoteExactInputSingle(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
-                Self::QuoteExactOutput(element) => {
-                    ::ethers::core::abi::AbiEncode::encode(element)
-                }
+                Self::QuoteExactOutput(element) => ::ethers::core::abi::AbiEncode::encode(element),
                 Self::QuoteExactOutputSingle(element) => {
                     ::ethers::core::abi::AbiEncode::encode(element)
                 }
@@ -17178,16 +17153,10 @@ pub mod quoter_v2 {
                 Self::Weth9(element) => ::core::fmt::Display::fmt(element, f),
                 Self::Factory(element) => ::core::fmt::Display::fmt(element, f),
                 Self::QuoteExactInput(element) => ::core::fmt::Display::fmt(element, f),
-                Self::QuoteExactInputSingle(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::QuoteExactInputSingle(element) => ::core::fmt::Display::fmt(element, f),
                 Self::QuoteExactOutput(element) => ::core::fmt::Display::fmt(element, f),
-                Self::QuoteExactOutputSingle(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
-                Self::UniswapV3SwapCallback(element) => {
-                    ::core::fmt::Display::fmt(element, f)
-                }
+                Self::QuoteExactOutputSingle(element) => ::core::fmt::Display::fmt(element, f),
+                Self::UniswapV3SwapCallback(element) => ::core::fmt::Display::fmt(element, f),
             }
         }
     }
@@ -17235,7 +17204,7 @@ pub mod quoter_v2 {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct Weth9Return(pub ::ethers::core::types::Address);
     ///Container type for all return fields from the `factory` function with signature `factory()` and selector `0xc45a0155`
@@ -17247,7 +17216,7 @@ pub mod quoter_v2 {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct FactoryReturn(pub ::ethers::core::types::Address);
     ///Container type for all return fields from the `quoteExactInput` function with signature `quoteExactInput(bytes,uint256)` and selector `0xcdca1753`
@@ -17259,7 +17228,7 @@ pub mod quoter_v2 {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct QuoteExactInputReturn {
         pub amount_out: ::ethers::core::types::U256,
@@ -17276,7 +17245,7 @@ pub mod quoter_v2 {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct QuoteExactInputSingleReturn {
         pub amount_out: ::ethers::core::types::U256,
@@ -17293,7 +17262,7 @@ pub mod quoter_v2 {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct QuoteExactOutputReturn {
         pub amount_in: ::ethers::core::types::U256,
@@ -17310,7 +17279,7 @@ pub mod quoter_v2 {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct QuoteExactOutputSingleReturn {
         pub amount_in: ::ethers::core::types::U256,
@@ -17327,7 +17296,7 @@ pub mod quoter_v2 {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct QuoteExactInputSingleParams {
         pub token_in: ::ethers::core::types::Address,
@@ -17345,7 +17314,7 @@ pub mod quoter_v2 {
         Debug,
         PartialEq,
         Eq,
-        Hash
+        Hash,
     )]
     pub struct QuoteExactOutputSingleParams {
         pub token_in: ::ethers::core::types::Address,

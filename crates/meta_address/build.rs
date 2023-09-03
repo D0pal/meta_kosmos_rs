@@ -44,7 +44,8 @@ fn main() -> anyhow::Result<()> {
 fn build_enums() -> anyhow::Result<TokenStream> {
     let cargo_manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
 
-    let path: PathBuf = PathBuf::from_str(&cargo_manifest_dir).unwrap().join("static/token_address.json");
+    let path: PathBuf =
+        PathBuf::from_str(&cargo_manifest_dir).unwrap().join("static/token_address.json");
 
     let token_json_file = read_to_string(path).unwrap();
     let v: Value = serde_json::from_str(&token_json_file).unwrap();
@@ -91,6 +92,6 @@ fn build_enums() -> anyhow::Result<TokenStream> {
             }
         }
 
-        
+
     })
 }

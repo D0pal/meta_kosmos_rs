@@ -15,13 +15,11 @@ use eyre::Result;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
 use meta_address::{get_dex_address, ContractInfo};
 use meta_common::enums::{ContractType, DexExchange, Network, PoolVariant};
-use meta_contracts::bindings::uniswap_v2_factory::UniswapV2Factory;
-use meta_contracts::bindings::UniswapV3Factory;
 use meta_contracts::bindings::{
-    swap_router::SwapRouter, ExactInputSingleParams, ExactOutputSingleParams,
+    swap_router::SwapRouter, uniswap_v2_factory::UniswapV2Factory, ExactInputSingleParams,
+    ExactOutputSingleParams, UniswapV3Factory,
 };
-use meta_util::time::get_current_ts;
-use meta_util::{defi::get_swap_price_limit, ether::decimal_to_wei};
+use meta_util::{defi::get_swap_price_limit, ether::decimal_to_wei, time::get_current_ts};
 use rust_decimal::{
     prelude::{FromPrimitive, Signed},
     Decimal,
@@ -178,7 +176,7 @@ impl<M: Middleware> DexService<M> {
                         Ok(ref tx) => {
                             info!("send v3 exact out single transaction {:?}", tx);
                             return Ok(tx.tx_hash());
-                        },
+                        }
                         Err(e) => Err(OrderError::ContractError(e)),
                     }
                 }

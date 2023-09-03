@@ -1,16 +1,16 @@
-use std;
-use reqwest;
-use url;
-use serde_json;
-use tungstenite;
 use error_chain::error_chain;
+use reqwest;
+use serde_json;
+use std;
+use tungstenite;
+use url;
 
 error_chain! {
     types {
         Error, ErrorKind, ResultExt, Result;
     }
 
-    errors {         
+    errors {
         Internal(t: String) {
             description("invalid toolchain name")
             display("invalid toolchain name: '{}'", t)

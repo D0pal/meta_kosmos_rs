@@ -41,11 +41,7 @@ impl AccessListInspector {
 
         AccessListInspector {
             // exclude precomiples, from, and to addresses
-            excluded: vec![from, to]
-                .iter()
-                .chain(precompiles.iter())
-                .copied()
-                .collect(),
+            excluded: vec![from, to].iter().chain(precompiles.iter()).copied().collect(),
             access_list: HashMap::default(),
         }
     }
@@ -62,13 +58,7 @@ impl AccessListInspector {
         self.access_list
             .into_iter()
             .map(|(address, slots)| {
-                (
-                    address,
-                    slots
-                        .into_iter()
-                        .map(|s| rU256::from_be_bytes(s.0))
-                        .collect(),
-                )
+                (address, slots.into_iter().map(|s| rU256::from_be_bytes(s.0)).collect())
             })
             .collect()
     }

@@ -1,13 +1,17 @@
+use crate::binance::{
+    api::API,
+    errors::{BinanceContentError, ErrorKind, Result},
+};
 use error_chain::bail;
 use hex::encode as hex_encode;
 use hmac::{Hmac, Mac};
-use crate::binance::errors::{BinanceContentError, ErrorKind, Result};
-use reqwest::StatusCode;
-use reqwest::blocking::Response;
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue, USER_AGENT, CONTENT_TYPE};
-use sha2::Sha256;
+use reqwest::{
+    blocking::Response,
+    header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE, USER_AGENT},
+    StatusCode,
+};
 use serde::de::DeserializeOwned;
-use crate::binance::api::API;
+use sha2::Sha256;
 
 #[derive(Clone)]
 pub struct Client {
@@ -31,14 +35,13 @@ impl Client {
     }
 
     pub fn get_signed<T: DeserializeOwned>(
-        &self, endpoint: API, request: Option<String>,
+        &self,
+        endpoint: API,
+        request: Option<String>,
     ) -> Result<T> {
         let url = self.sign_request(endpoint, request);
         let client = &self.inner_client;
-        let response = client
-            .get(url.as_str())
-            .headers(self.build_headers(true)?)
-            .send()?;
+        let response = client.get(url.as_str()).headers(self.build_headers(true)?).send()?;
 
         self.handler(response)
     }
@@ -46,23 +49,19 @@ impl Client {
     pub fn post_signed<T: DeserializeOwned>(&self, endpoint: API, request: String) -> Result<T> {
         let url = self.sign_request(endpoint, Some(request));
         let client = &self.inner_client;
-        let response = client
-            .post(url.as_str())
-            .headers(self.build_headers(true)?)
-            .send()?;
+        let response = client.post(url.as_str()).headers(self.build_headers(true)?).send()?;
 
         self.handler(response)
     }
 
     pub fn delete_signed<T: DeserializeOwned>(
-        &self, endpoint: API, request: Option<String>,
+        &self,
+        endpoint: API,
+        request: Option<String>,
     ) -> Result<T> {
         let url = self.sign_request(endpoint, request);
         let client = &self.inner_client;
-        let response = client
-            .delete(url.as_str())
-            .headers(self.build_headers(true)?)
-            .send()?;
+        let response = client.delete(url.as_str()).headers(self.build_headers(true)?).send()?;
 
         self.handler(response)
     }
@@ -85,10 +84,7 @@ impl Client {
         let url: String = format!("{}{}", self.host, String::from(endpoint));
 
         let client = &self.inner_client;
-        let response = client
-            .post(url.as_str())
-            .headers(self.build_headers(false)?)
-            .send()?;
+        let response = client.post(url.as_str()).headers(self.build_headers(false)?).send()?;
 
         self.handler(response)
     }
@@ -98,11 +94,8 @@ impl Client {
         let data: String = format!("listenKey={}", listen_key);
 
         let client = &self.inner_client;
-        let response = client
-            .put(url.as_str())
-            .headers(self.build_headers(false)?)
-            .body(data)
-            .send()?;
+        let response =
+            client.put(url.as_str()).headers(self.build_headers(false)?).body(data).send()?;
 
         self.handler(response)
     }
@@ -112,11 +105,8 @@ impl Client {
         let data: String = format!("listenKey={}", listen_key);
 
         let client = &self.inner_client;
-        let response = client
-            .delete(url.as_str())
-            .headers(self.build_headers(false)?)
-            .body(data)
-            .send()?;
+        let response =
+            client.delete(url.as_str()).headers(self.build_headers(false)?).body(data).send()?;
 
         self.handler(response)
     }

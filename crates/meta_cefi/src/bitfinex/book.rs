@@ -1,8 +1,7 @@
-use crate::bitfinex::client::*;
-use crate::bitfinex::errors::*;
+use crate::bitfinex::{client::*, errors::*};
+use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use serde_json::from_str;
-use rust_decimal::Decimal;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TradingOrderBookLevel {
@@ -61,4 +60,3 @@ impl Book {
         Ok(book)
     }
 }
-

@@ -2,7 +2,7 @@ pub mod enums;
 
 use ethers::core::types::Address;
 use meta_common::{
-    enums::{ContractType, DexExchange, Network, RpcProvider, BotType},
+    enums::{BotType, ContractType, DexExchange, Network, RpcProvider},
     traits::ContractCode,
 };
 use meta_macro::impl_contract_code;
@@ -97,7 +97,6 @@ pub fn get_addressed_token_info(network: Network, address: Address) -> Option<To
 pub fn get_bot_contract_info(name: BotType, network: Network) -> Option<ContractInfo> {
     BOT_ADDRESS_BOOK.get(&name.into()).map_or(None, |v| v.get(&network).cloned())
 }
-
 
 pub fn get_dex_address(
     dex_name: DexExchange,
@@ -196,6 +195,12 @@ mod tests {
         let rpc_info = get_rpc_info(Network::ETH).unwrap();
         println!("rpc {:?}", rpc_info);
         assert_eq!(rpc_info.chain_id, 1);
-        assert_eq!(rpc_info.ws_urls.get(&RpcProvider::Quick), Some(&"wss://lively-bold-sunset.quiknode.pro/a44820da0711822c6e00da793df8695e60e027a2/".to_string()));
+        assert_eq!(
+            rpc_info.ws_urls.get(&RpcProvider::Quick),
+            Some(
+                &"wss://lively-bold-sunset.quiknode.pro/a44820da0711822c6e00da793df8695e60e027a2/"
+                    .to_string()
+            )
+        );
     }
 }

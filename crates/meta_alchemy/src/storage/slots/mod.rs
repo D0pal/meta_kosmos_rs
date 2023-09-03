@@ -22,4 +22,3 @@ pub fn storage_mapping_address_of_mapping_address(
         abi::Token::FixedBytes(slot.0.into()),
     ])))
 }
-

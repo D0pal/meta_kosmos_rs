@@ -3,18 +3,15 @@ use foundry_evm::decode::decode_revert;
 use futures::future::join_all;
 use futures_util::future::try_join_all;
 use gumdrop::Options;
-use meta_address::{enums::Asset, TokenInfo};
-use meta_address::{get_bot_contract_info, get_dex_address, get_token_info, Token};
-use meta_address::{get_rpc_info, ContractInfo};
+use meta_address::{
+    enums::Asset, get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info,
+    ContractInfo, Token, TokenInfo,
+};
 use meta_bots::{AppConfig, VenusConfig};
 use meta_cefi::cefi_service::CefiService;
-use meta_common::enums::{Network, RpcProvider};
 use meta_common::{
-    enums::{BotType, CexExchange, ContractType, DexExchange},
+    enums::{BotType, CexExchange, ContractType, DexExchange, Network, RpcProvider},
     models::{CurrentSpread, MarcketChange},
-};
-use meta_contracts::bindings::{
-    ExactInputSingleParams, ExactOutputParams, ExactOutputSingleParams,
 };
 use meta_contracts::{
     bindings::{
@@ -23,6 +20,7 @@ use meta_contracts::{
         quoter_v2::QuoterV2,
         swap_router::SwapRouter,
         uniswap_v2_pair::{SwapFilter, UniswapV2PairEvents},
+        ExactInputSingleParams, ExactOutputParams, ExactOutputSingleParams,
         QuoteExactInputSingleParams, QuoteExactOutputSingleParams, WETH9,
     },
     wrappers::{
@@ -31,21 +29,23 @@ use meta_contracts::{
     },
 };
 use meta_tracing::init_tracing;
-use meta_util::defi::{get_swap_price_limit, get_token0_and_token1};
-use meta_util::ether::{address_from_str, decimal_from_wei, decimal_to_wei};
-use meta_util::get_price_delta_in_bp;
-use meta_util::time::get_current_ts;
+use meta_util::{
+    defi::{get_swap_price_limit, get_token0_and_token1},
+    ether::{address_from_str, decimal_from_wei, decimal_to_wei},
+    get_price_delta_in_bp,
+    time::get_current_ts,
+};
 use rust_decimal::{
     prelude::{FromPrimitive, Signed},
     Decimal,
 };
 use serde::Deserialize;
-use std::ops::Sub;
 use std::{
     borrow::{Borrow, BorrowMut},
     cell::RefCell,
     collections::{BinaryHeap, HashMap},
     io::BufReader,
+    ops::Sub,
     path::PathBuf,
     rc::Rc,
     str::FromStr,
@@ -104,8 +104,13 @@ async fn main() {
     // let elapsed = tokio::time::Instant::now().duration_since(start).as_millis();
     // println!("tx {:?}, total spent {:?} ms", tx, elapsed);
 
-    approve_token(usdc_token_info, wallet.clone(), swap_router_contract_info.address, Decimal::from_f64(10_000_000_000f64).unwrap()).await;
-
+    approve_token(
+        usdc_token_info,
+        wallet.clone(),
+        swap_router_contract_info.address,
+        Decimal::from_f64(10_000_000_000f64).unwrap(),
+    )
+    .await;
 
     // swap_exact_in_single(
     //     swap_router_contract_info,

@@ -1,27 +1,31 @@
-use ethers::abi::{self, parse_abi, ParamType};
-use ethers::prelude::BaseContract;
-use ethers::types::transaction::eip2930::{AccessList, AccessListItem};
-use ethers::types::{Address, BigEndianHash, Bytes, H256, U256};
-use ethers::utils::parse_ether;
+use ethers::{
+    abi::{self, parse_abi, ParamType},
+    prelude::BaseContract,
+    types::{
+        transaction::eip2930::{AccessList, AccessListItem},
+        Address, BigEndianHash, Bytes, H256, U256,
+    },
+    utils::parse_ether,
+};
 use meta_address::get_bot_contract_info;
 use meta_common::{
     enums::{BotType, Network},
     traits::ContractCode,
 };
 use meta_dex::prelude::BlockInfo;
-use revm::primitives::{ExecutionResult, Output, TransactTo, B256};
 use revm::{
-    primitives::{Address as rAddress, Bytecode, U256 as rU256},
+    primitives::{
+        Address as rAddress, Bytecode, ExecutionResult, Output, TransactTo, B256, U256 as rU256,
+    },
     EVM,
 };
 use std::str::FromStr;
 
 use crate::forked_db::{ForkDB, ForkFactory};
 
-use super::simulation::SimulationError;
 use super::{
-    BRAINDANCE_STARTING_BALANCE, DEV_BRAINDANCE_ADDRESS, DEV_BRAINDANCE_CONTRAOLLER_ADDRESS,
-    DEV_CALLER_ADDRESS,
+    simulation::SimulationError, BRAINDANCE_STARTING_BALANCE, DEV_BRAINDANCE_ADDRESS,
+    DEV_BRAINDANCE_CONTRAOLLER_ADDRESS, DEV_CALLER_ADDRESS,
 };
 
 // Setup braindance for current fork factory by injecting braindance
@@ -69,7 +73,12 @@ pub fn inject_sando(
     // give searcher some balance to pay for gas fees
     let searcher = searcher_address;
     let gas_money = parse_ether(100).unwrap();
-    let account = revm::primitives::AccountInfo::new(gas_money.into(), 0, B256::default(), Bytecode::default());
+    let account = revm::primitives::AccountInfo::new(
+        gas_money.into(),
+        0,
+        B256::default(),
+        Bytecode::default(),
+    );
     fork_factory.insert_account_info(searcher.0.into(), account);
 
     // setup sandwich contract
@@ -118,14 +127,22 @@ fn inject_braindance_code(network: Network, fork_factory: &mut ForkFactory) {
         0,
         B256::default(),
         Bytecode::new_raw(
-            get_bot_contract_info(BotType::BRAIN_DANCE_SOL, network).unwrap().get_byte_code_and_hash().0.0,
+            get_bot_contract_info(BotType::BRAIN_DANCE_SOL, network)
+                .unwrap()
+                .get_byte_code_and_hash()
+                .0
+                 .0,
         ),
     );
     fork_factory.insert_account_info((*DEV_BRAINDANCE_ADDRESS).0.into(), account);
 
     // setup braindance contract controller
-    let account =
-        revm::primitives::AccountInfo::new(parse_ether(69).unwrap().into(), 0,B256::default(), Bytecode::default());
+    let account = revm::primitives::AccountInfo::new(
+        parse_ether(69).unwrap().into(),
+        0,
+        B256::default(),
+        Bytecode::default(),
+    );
     fork_factory.insert_account_info((*DEV_BRAINDANCE_CONTRAOLLER_ADDRESS).0.into(), account);
 }
 

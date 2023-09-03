@@ -1,7 +1,6 @@
 //! sandwidtch mev bot
 
-use ethers::prelude::k256::pkcs8::der::oid::Error;
-use ethers::prelude::*;
+use ethers::prelude::{k256::pkcs8::der::oid::Error, *};
 use futures::future::join_all;
 use gumdrop::Options;
 use serde::{Deserialize, __private::de};
@@ -18,9 +17,7 @@ use std::{
 };
 use tracing::{debug, info, instrument::WithSubscriber, warn, Level};
 
-use meta_address::{
-    get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info, Token,
-};
+use meta_address::{get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info, Token};
 use meta_bots::{mev_bots::sandwidth::BotSandwidth, JupyterConfig};
 use meta_common::enums::{BotType, ContractType, DexExchange, Network};
 use meta_contracts::{
@@ -104,11 +101,11 @@ async fn run(config: JupyterConfig) -> anyhow::Result<()> {
         Network::BSC => {
             let info = get_token_info(Token::WBNB, Network::BSC).unwrap();
             info.address
-        },
+        }
         _ => {
             let info = get_token_info(Token::WETH, network).unwrap();
             info.address
-        },
+        }
     };
 
     // Execution loop (reconnect bot if it dies)

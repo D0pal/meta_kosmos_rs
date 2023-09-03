@@ -1,6 +1,11 @@
-use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
-use std::{hint, thread};
+use std::{
+    hint,
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc,
+    },
+    thread,
+};
 
 fn main() {
     static GLOBAL_THREAD_COUNT: AtomicUsize = AtomicUsize::new(0);

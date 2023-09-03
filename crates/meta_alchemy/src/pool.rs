@@ -23,7 +23,7 @@ use meta_common::{
 };
 use revm::primitives::{AccountInfo, Bytecode, B160 as rAddress, B256, U256 as rU256};
 use std::{collections::HashMap, sync::Arc};
-use tokio::{sync::RwLock};
+use tokio::sync::RwLock;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct DefiStorage {
@@ -361,4 +361,3 @@ mod test_pools {
 // fetch storage address: 0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48, slot: 0x1f21a62c4538bacf2aabeca410f0fe63151869f172e03c0e00357ba26a341eff, val: 0x00000000000000000000000000000000000000000000000000007f398158d67f
 // fetch storage address: 0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48, slot: 0x3c53a91714fd8d27deef117c3827ce1fa74e6ad389952cc14a012bab8632e4ed, val: 0x0000000000000000000000000000000000000000000000000000000000000000
 // fetch storage address: 0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2, slot: 0x390f6178407c9b8e95802b8659e6df8e34c1e3d4f8d6a49e6132bbcdd937b63a, val: 0x000000000000000000000000000000000000000000000d7272384a3bad55e841
-

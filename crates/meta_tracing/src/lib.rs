@@ -5,8 +5,7 @@ use tracing::Level;
 use tracing_appender::{non_blocking::WorkerGuard, rolling};
 use tracing_flame::FlameLayer;
 use tracing_opentelemetry::OpenTelemetryLayer;
-use tracing_subscriber::fmt;
-use tracing_subscriber::prelude::*;
+use tracing_subscriber::{fmt, prelude::*};
 
 pub struct TraceConfig {
     pub file_name_prefix: String,
@@ -34,9 +33,7 @@ pub fn init_tracing(config: TraceConfig) -> Vec<WorkerGuard> {
     ));
     guards.push(telemetry_guard);
 
-    let tracer = stdout::new_pipeline()
-        .with_writer(telemetry_writter)
-        .install_simple();
+    let tracer = stdout::new_pipeline().with_writer(telemetry_writter).install_simple();
 
     let layered = tracing_subscriber::fmt()
         .with_max_level(level)
@@ -53,10 +50,7 @@ pub fn init_tracing(config: TraceConfig) -> Vec<WorkerGuard> {
         guards.push(folded_guard);
 
         if console {
-            layered
-                .with(fmt::Layer::default())
-                .with(FlameLayer::new(folded_writter))
-                .init();
+            layered.with(fmt::Layer::default()).with(FlameLayer::new(folded_writter)).init();
         } else {
             layered.with(FlameLayer::new(folded_writter)).init()
         }

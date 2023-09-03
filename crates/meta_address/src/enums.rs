@@ -1,6 +1,6 @@
+use crate::Token;
 use serde::Deserialize;
 use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString, EnumVariantNames};
-use crate::{Token};
 
 #[derive(
     Clone,

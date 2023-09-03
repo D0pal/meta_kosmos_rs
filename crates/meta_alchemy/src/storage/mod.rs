@@ -1,2 +1,2 @@
-pub mod slots;
 pub mod code;
+pub mod slots;
