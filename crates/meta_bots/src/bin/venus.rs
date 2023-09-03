@@ -29,7 +29,7 @@ use meta_contracts::{
         UniswapV2PairWrapper,
     },
 };
-use meta_dex::{enums::TokenInfo, swap_exact_in_single, swap_exact_out_single, DexService};
+use meta_dex::{enums::TokenInfo, DexService};
 use meta_tracing::init_tracing;
 use meta_util::{
     defi::{get_swap_price_limit, get_token0_and_token1},
@@ -110,7 +110,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
     let wallet = SignerMiddleware::new(provider_ws.clone(), wallet);
     let wallet = NonceManagerMiddleware::new(wallet, wallet_address);
     let wallet = Arc::new(wallet);
-    let dex = DexService::new(wallet.clone(), config.network, config.dex);
+    let dex_service = DexService::new(wallet.clone(), config.network, config.dex);
     match config.dex {
         DexExchange::UniswapV3 => {
             let (base_token, quote_token) = (config.base_asset.into(), config.quote_asset.into());
@@ -337,7 +337,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
 
                             if cex_bid > dex_ask {
                                 let change = get_price_delta_in_bp(cex_bid, dex_ask);
-                                if change > Decimal::from_f32(20f32).unwrap() {
+                                if change > Decimal::from_u32(config.spread_diff_threshold).unwrap() {
                                     info!(
                                         "found a cross, cex bid {:?}, dex ask {:?}, price change {:?}",
                                         cex_bid, dex_ask, change
@@ -357,18 +357,14 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                             base_token: base_token.clone(),
                                             quote_token: quote_token.clone(),
                                             recipient: wallet_address,
+                                            fee: V3_FEE
                                         },
                                     };
-                                    let dex_ptr = &swap_router
-                                        as *const SwapRouter<
-                                            NonceManagerMiddleware<
-                                                SignerMiddleware<Arc<Provider<Ws>>, LocalWallet>,
-                                            >,
-                                        >;
+
                                     try_arbitrage(
                                         instraction,
                                         cefi_service.clone().load(Ordering::Relaxed),
-                                        dex_ptr,
+                                        &dex_service,
                                     )
                                     .await;
                                 }
@@ -376,7 +372,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
 
                             if dex_bid > cex_ask {
                                 let change = get_price_delta_in_bp(dex_bid, cex_ask);
-                                if change > Decimal::from_f32(20f32).unwrap() {
+                                if change > Decimal::from_u32(config.spread_diff_threshold).unwrap() {
                                     // sell dex, buy cex
                                     info!(
                                         "found a cross, dex bid {:?}, cex ask {:?}, price change {:?}",
@@ -397,18 +393,14 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                             base_token: base_token.clone(),
                                             quote_token: quote_token.clone(),
                                             recipient: wallet_address,
+                                            fee: V3_FEE
                                         },
                                     };
-                                    let dex_ptr = &swap_router
-                                        as *const SwapRouter<
-                                            NonceManagerMiddleware<
-                                                SignerMiddleware<Arc<Provider<Ws>>, LocalWallet>,
-                                            >,
-                                        >;
+                                   
                                     try_arbitrage(
                                         instraction,
                                         cefi_service.clone().load(Ordering::Relaxed),
-                                        dex_ptr,
+                                        &dex_service,
                                     )
                                     .await;
                                 }
@@ -438,6 +430,7 @@ pub struct DexInstruction {
     amount: Decimal,
     base_token: TokenInfo,
     quote_token: TokenInfo,
+    fee: u32,
     recipient: Address,
 }
 
@@ -450,7 +443,7 @@ pub struct ArbitrageInstruction {
 async fn try_arbitrage<'a, M: Middleware>(
     instruction: ArbitrageInstruction,
     cefi_service_ptr: *mut CefiService,
-    swap_router_ptr: *const SwapRouter<M>,
+    dex_service_ref: &DexService<M>,
 ) {
     let request_id = Uuid::new_v4().to_string();
     let meta = OrderMeta { request_id: Some(request_id) };
@@ -478,48 +471,23 @@ async fn try_arbitrage<'a, M: Middleware>(
 
     match instruction.dex.venue {
         DexExchange::UniswapV3 => {
-            let ddl = get_current_ts().as_secs() + 1000000;
-
-            if instruction.dex.amount.is_sign_negative() {
-                // sell
-                info!(
-                    "start send dex sell trade, venue: {:?}, token_in {:?}, token_out {:?}",
-                    instruction.dex.venue,
-                    instruction.dex.base_token.token,
-                    instruction.dex.quote_token.token
-                );
-                // swap_exact_in_single(
-                //     swap_router_ptr,
-                //     instruction.dex.base_token,
-                //     instruction.dex.quote_token,
-                //     V3_FEE,
-                //     instruction.dex.amount.abs(),
-                //     instruction.dex.recipient,
-                // )
-                // .await;
-                info!("end send dex sell trade");
-            } else {
-                // buy
-                info!(
-                    "start send dex buy trade, venue: {:?}, token_in {:?}, token_out {:?}",
-                    instruction.dex.venue,
-                    instruction.dex.quote_token.token,
-                    instruction.dex.base_token.token
-                );
-                // swap_exact_out_single(
-                //     swap_router_ptr,
-                //     instruction.dex.quote_token,
-                //     instruction.dex.base_token,
-                //     V3_FEE,
-                //     instruction.dex.amount.abs(),
-                //     instruction.dex.recipient,
-                // )
-                // .await;
-                info!("end send dex buy trade");
+            let ret = dex_service_ref
+                .submit_order(
+                    instruction.dex.base_token,
+                    instruction.dex.quote_token,
+                    instruction.dex.amount,
+                    instruction.dex.fee,
+                    instruction.dex.recipient,
+                )
+                .await;
+            match ret {
+                Ok(hash) => info!("send dex order success {:?}", hash),
+                Err(e) => error!("error in send dex order {:?}", e),
             }
         }
         _ => unimplemented!(),
     }
+    info!("end send dex trade");
 }
 
 async fn main_impl() -> anyhow::Result<()> {

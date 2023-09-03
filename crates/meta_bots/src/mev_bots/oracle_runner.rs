@@ -6,7 +6,8 @@ use meta_dex::{
     oracle::{BlockInfo, BlockOracle},
     pool::Pool,
     sandwidth::SandwichMaker,
-    sync_dex, DexService,
+    // sync_dex, 
+    DexService,
 };
 use std::{sync::Arc, thread, time::Duration};
 use tokio::sync::RwLock;
@@ -65,42 +66,42 @@ pub fn start_add_new_pools<M: Middleware + 'static>(
     tokio::spawn(async move {
         // loop so we can reconnect if the websocket connection is lost
         loop {
-            let mut block_stream = if let Ok(stream) = client.subscribe_blocks().await {
-                stream
-            } else {
-                panic!("Failed to create new block stream");
-            };
+            // let mut block_stream = if let Ok(stream) = client.subscribe_blocks().await {
+            //     stream
+            // } else {
+            //     panic!("Failed to create new block stream");
+            // };
 
-            let mut counter = 0;
-            let mut current_block_num = client.get_block_number().await.unwrap();
+            // let mut counter = 0;
+            // let mut current_block_num = client.get_block_number().await.unwrap();
 
-            while let Some(block) = block_stream.next().await {
-                counter += 1;
+            // while let Some(block) = block_stream.next().await {
+            //     counter += 1;
 
-                // every 50 blocks fetch and new pools
-                if counter == 50 {
-                    let latest_block_number = block.number.unwrap();
-                    let fetched_new_pools = sync_dex(
-                        dexes.clone(),
-                        Some(BlockNumber::Number(current_block_num)),
-                        BlockNumber::Number(latest_block_number),
-                    )
-                    .await
-                    .unwrap();
+            //     // every 50 blocks fetch and new pools
+            //     if counter == 50 {
+            //         let latest_block_number = block.number.unwrap();
+            //         let fetched_new_pools = sync_dex(
+            //             dexes.clone(),
+            //             Some(BlockNumber::Number(current_block_num)),
+            //             BlockNumber::Number(latest_block_number),
+            //         )
+            //         .await
+            //         .unwrap();
 
-                    let fetched_pools_count = fetched_new_pools.len();
+            //         let fetched_pools_count = fetched_new_pools.len();
 
-                    // turn fetched pools into hashmap
-                    for pool in fetched_new_pools {
-                        // Create hashmap from our vec
-                        all_pools.insert(pool.address, pool);
-                    }
+            //         // turn fetched pools into hashmap
+            //         for pool in fetched_new_pools {
+            //             // Create hashmap from our vec
+            //             all_pools.insert(pool.address, pool);
+            //         }
 
-                    counter = 0;
-                    current_block_num = latest_block_number;
-                    info!("added {} new pools", fetched_pools_count);
-                }
-            }
+            //         counter = 0;
+            //         current_block_num = latest_block_number;
+            //         info!("added {} new pools", fetched_pools_count);
+            //     }
+            // }
         }
     });
 }

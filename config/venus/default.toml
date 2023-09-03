@@ -4,6 +4,7 @@ cex = "BITFINEX"
 quote_asset = "USD"
 base_asset = "ARB"
 base_asset_quote_amt = "200"
+spread_diff_threshold = 20
 
 [log]
 file_name_prefix = "meta_kosmos_venus"

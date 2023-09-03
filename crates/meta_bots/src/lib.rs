@@ -114,6 +114,7 @@ pub struct VenusConfig {
     pub base_asset: Asset,
     pub quote_asset: Asset,
     pub base_asset_quote_amt: Decimal,
+    pub spread_diff_threshold: u32,
     pub log: ConfigLog,
     pub provider: ConfigProvider,
     pub account: ConfigAccount,

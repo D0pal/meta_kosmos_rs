@@ -1,3 +1,5 @@
+#![allow(unused_imports)]
+
 pub mod defi;
 pub mod enums;
 pub mod error;
