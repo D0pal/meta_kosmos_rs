@@ -40,6 +40,7 @@ hashbrown = "0.13.2"
 strum = { version = "0.24", features = ["derive"] }
 strum_macros = "0.24"
 convert_case = "0.6"
+uuid= {version = "1.4.1", features = ["v4", "fast-rng", "macro-diagnostics"]}
 # blockchain
 ethers = { version = "2.0.0" , features = ["ws"]}
 revm = { git = "https://github.com/bluealloy/revm/" }

@@ -64,6 +64,7 @@ pub struct BU {
     pub b: Decimal,
 }
 
+// https://docs.bitfinex.com/reference/ws-auth-input-order-new
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NewOrderOnReq {
     pub mts: u64,                //	int	Millisecond Time Stamp of the update
@@ -71,7 +72,7 @@ pub struct NewOrderOnReq {
     pub message_id: Option<u64>, // 	int	unique ID of the message
     pub id: Option<u64>,  //ID	int	Order ID
     pub order: Order,
-    pub a: Option<String>,
+    pub code: Option<String>, //omitted for 'on' event
     pub status: String, // STATUS	string	Status of the notification; it may vary over time (SUCCESS, ERROR, FAILURE, ...)
     pub text: String,   // TEXT	string	Text of the notification
 }
@@ -142,54 +143,46 @@ pub struct TeEvent {
 }
 
 
+/// type: 'os' (order snapshot), 'on' (order new), 'ou' (order update), 'oc' (order cancel (canceled or fully executed)).
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct OcEvent {  // oc
+pub struct OrderUpdateEvent {  // https://docs.bitfinex.com/reference/ws-auth-orders
 
-    // [125271920288,0,1693153165935,\"tARBUSD\",
-    pub id: u64,
+    pub id: u64,  // id
     pub gid: u64,       //	int	Group ID
     pub cid: u64,       //	int	Client Order ID
     pub symbol: String, //	string	Pair (tBTCUSD, …)
- // 1693153166200,1693153166202,0,1,
     pub mts_create: u64,      //	int	Millisecond timestamp of creation
     pub mts_update: u64,      //	int	Millisecond timestamp of update
     pub amount: Decimal,      //	float	Positive means buy, negative means sell.
     pub amount_orig: Decimal, //	float	Original amount
- // \"EXCHANGE MARKET\",null,null,null,
     pub order_type: String, // 	string	The type of the order: LIMIT, EXCHANGE LIMIT, MARKET, EXCHANGE MARKET, STOP, EXCHANGE STOP, STOP LIMIT, EXCHANGE STOP LIMIT, TRAILING STOP, EXCHANGE TRAILING STOP, FOK, EXCHANGE FOK, IOC, EXCHANGE IOC.
     pub type_prev: Option<String>, //	string	Previous order type
-    pub a: Option<String>,
-    pub b: Option<String>,
+    pub mts_tif: Option<String>, /// Millisecond timestamp of Time-In-Force: automatic order cancellation
+    pub _place_holder_1: Option<String>,
 
-    // 0,\"EXECUTED @ 0.95902(1.0)\",null,null,
-    pub o: i32,
-    pub text: String,
-    pub p: Option<String>,
-    pub q: Option<String>,
+    pub flags: i32,     // pub flags: i32,     // FLAGS	int	See https://docs.bitfinex.com/v2/docs/flag-values.
+    pub order_status: String, //\"EXECUTED @ 0.95902(1.0)\"
+    pub _place_holder_2: Option<String>,
+    pub _place_holder_3: Option<String>,
 
-    // 0.9591,0.95902,0,0,
-    pub qnt: Decimal, //	int	Millisecond timestamp of Time-In-Force: automatic order cancellation
-    pub amt: Decimal, //	string	Order Status: ACTIVE
-    pub c: i32,
-    pub d: i32,
+    pub price: Decimal, //	int	Millisecond timestamp of Time-In-Force: automatic order cancellation
+    pub price_avg: Decimal, //	string	Order Status: ACTIVE
+    pub price_tailing: i32,
+    pub price_aux_limit: i32,
 
-    // null,null,null,0,
-    pub e: Option<String>,
-    pub f: Option<String>,
-    pub g: Option<String>,
-    pub h: u64,
+    pub _place_holder_4: Option<String>,
+    pub _place_holder_5: Option<String>,
+    pub _place_holder_6: Option<String>,
+    pub notify: u64,
 
-    // 0,null,null,null,\"API>BFX\",null,null,{}]
     pub hiddern: i32, // HIDDEN	int	0 if false, 1 if true
-    pub i: Option<String>,
-    pub j: Option<String>,
-    pub k: Option<String>,
+    pub placed_id: Option<String>,     // pub placed_id: i32, // PLACED_ID	int	If another order caused this order to be placed (OCO) this will be that other order's ID
+    pub _place_holder_7: Option<String>,
+    pub _place_holder_8: Option<String>,
 
-    // pub placed_id: i32, // PLACED_ID	int	If another order caused this order to be placed (OCO) this will be that other order's ID
     pub routing: String, // ROUTING	string	indicates origin of action: BFX, ETHFX, API>BFX, API>ETHFX
-    // pub flags: i32,     // FLAGS	int	See https://docs.bitfinex.com/v2/docs/flag-values.
-    pub l: Option<String>,
-    pub m: Option<String>,
+    pub _place_holder_9: Option<String>,
+    pub _place_holder_10: Option<String>,
     pub meta: Value, // META	json string	Additional meta information about the order ( $F7 = IS_POST_ONLY (0 if false, 1 if true), $F33 = Leverage (int))
                      // pub code: Option<i32>, //  CODE	null or integer	Work in progress
                      //

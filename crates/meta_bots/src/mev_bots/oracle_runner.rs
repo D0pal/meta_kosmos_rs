@@ -6,7 +6,7 @@ use meta_dex::{
     oracle::{BlockInfo, BlockOracle},
     pool::Pool,
     sandwidth::SandwichMaker,
-    sync_dex, Dex,
+    sync_dex, DexService,
 };
 use std::{sync::Arc, thread, time::Duration};
 use tokio::sync::RwLock;
@@ -58,7 +58,7 @@ pub fn start_block_oracle(client: Arc<Provider<Ws>>, oracle: &mut Arc<RwLock<Blo
 pub fn start_add_new_pools<M: Middleware + 'static>(
     client: Arc<Provider<Ws>>, //Vec<Arc<Dex<M>>>,
     all_pools: &mut Arc<DashMap<Address, Pool>>,
-    dexes: Vec<Arc<Dex<M>>>,
+    dexes: Vec<Arc<DexService<M>>>,
 ) {
     let all_pools = all_pools.clone();
 

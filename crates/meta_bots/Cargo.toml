@@ -52,6 +52,7 @@ hashbrown.workspace = true
 dashmap.workspace = true
 lazy_static.workspace = true
 rust_decimal.workspace=true
+uuid.workspace=true
 # CLI
 gumdrop = "0.8.0"
 # error

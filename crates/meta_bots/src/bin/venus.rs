@@ -6,6 +6,7 @@ use gumdrop::Options;
 use meta_address::enums::Asset;
 use meta_address::{get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info, Token};
 use meta_bots::{AppConfig, VenusConfig};
+use meta_cefi::bitfinex::model::OrderMeta;
 use meta_cefi::cefi_service::{AccessKey, CefiService, CexConfig};
 use meta_common::{
     enums::{BotType, CexExchange, ContractType, DexExchange, Network},
@@ -28,7 +29,7 @@ use meta_contracts::{
     },
 };
 use meta_dex::enums::TokenInfo;
-use meta_dex::{swap_exact_in_single, swap_exact_out_single};
+use meta_dex::{swap_exact_in_single, swap_exact_out_single, DexService};
 use meta_tracing::init_tracing;
 use meta_util::defi::{get_swap_price_limit, get_token0_and_token1};
 use meta_util::ether::{address_from_str, decimal_from_wei, decimal_to_wei};
@@ -58,6 +59,7 @@ use std::{
 };
 use tokio::sync::RwLock;
 use tracing::{debug, error, info, instrument::WithSubscriber, warn, Level};
+use uuid::Uuid;
 
 #[derive(Debug, Clone, Options)]
 struct Opts {
@@ -107,6 +109,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
     let wallet = SignerMiddleware::new(provider_ws.clone(), wallet);
     let wallet = NonceManagerMiddleware::new(wallet, wallet_address);
     let wallet = Arc::new(wallet);
+    let dex = DexService::new(wallet.clone(), config.network, config.dex);
     match config.dex {
         DexExchange::UniswapV3 => {
             let (base_token, quote_token) = (config.base_asset.into(), config.quote_asset.into());
@@ -133,15 +136,10 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                 ContractType::UniV3QuoterV2,
             )
             .unwrap();
-            let swap_router_address = get_dex_address(
-                DexExchange::UniswapV3,
-                config.network,
-                ContractType::UniV3SwapRouterV2,
-            )
-            .unwrap();
 
             let quoter = QuoterV2::new(quoter_address.address, provider_ws.clone());
-            let swap_router = SwapRouter::new(swap_router_address.address, wallet.clone());
+
+
 
             match config.cex {
                 CexExchange::BITFINEX => {
@@ -455,6 +453,9 @@ async fn try_arbitrage<'a, M: Middleware>(
     cefi_service_ptr: *mut CefiService,
     swap_router_ptr: *const SwapRouter<M>,
 ) {
+    let request_id = Uuid::new_v4().to_string();
+    let meta = OrderMeta { request_id: Some(request_id) };
+
     info!("start arbitrage with instruction {:?}", instruction);
     info!(
         "start send cex trade, venue {:?}, base_asset {:?}, quote_asset {:?}, amount {:?}",
@@ -482,31 +483,39 @@ async fn try_arbitrage<'a, M: Middleware>(
 
             if instruction.dex.amount.is_sign_negative() {
                 // sell
-                info!("start send dex sell trade, venue: {:?}, token_in {:?}, token_out {:?}", instruction.dex.venue, instruction.dex.base_token.token,
-                instruction.dex.quote_token.token);
-                swap_exact_in_single(
-                    swap_router_ptr,
-                    instruction.dex.base_token,
-                    instruction.dex.quote_token,
-                    V3_FEE,
-                    instruction.dex.amount.abs(),
-                    instruction.dex.recipient,
-                )
-                .await;
+                info!(
+                    "start send dex sell trade, venue: {:?}, token_in {:?}, token_out {:?}",
+                    instruction.dex.venue,
+                    instruction.dex.base_token.token,
+                    instruction.dex.quote_token.token
+                );
+                // swap_exact_in_single(
+                //     swap_router_ptr,
+                //     instruction.dex.base_token,
+                //     instruction.dex.quote_token,
+                //     V3_FEE,
+                //     instruction.dex.amount.abs(),
+                //     instruction.dex.recipient,
+                // )
+                // .await;
                 info!("end send dex sell trade");
             } else {
                 // buy
-                info!("start send dex buy trade, venue: {:?}, token_in {:?}, token_out {:?}", instruction.dex.venue, instruction.dex.quote_token.token,
-                instruction.dex.base_token.token);
-                swap_exact_out_single(
-                    swap_router_ptr,
-                    instruction.dex.quote_token,
-                    instruction.dex.base_token,
-                    V3_FEE,
-                    instruction.dex.amount.abs(),
-                    instruction.dex.recipient,
-                )
-                .await;
+                info!(
+                    "start send dex buy trade, venue: {:?}, token_in {:?}, token_out {:?}",
+                    instruction.dex.venue,
+                    instruction.dex.quote_token.token,
+                    instruction.dex.base_token.token
+                );
+                // swap_exact_out_single(
+                //     swap_router_ptr,
+                //     instruction.dex.quote_token,
+                //     instruction.dex.base_token,
+                //     V3_FEE,
+                //     instruction.dex.amount.abs(),
+                //     instruction.dex.recipient,
+                // )
+                // .await;
                 info!("end send dex buy trade");
             }
         }
@@ -538,10 +547,7 @@ async fn main_impl() -> anyhow::Result<()> {
     if let Some(pk_path) = opts.private_key_path {
         app_config.account.private_key_path = Some(pk_path);
     }
-    // app_config.log.file_name_prefix = format!(
-    //     "{:?}_{:?}_{:?}",
-    //     &app_config.log.file_name_prefix, app_config.base_asset, app_config.quote_asset
-    // );
+
     app_config.log.file_name_prefix.push_str("_");
     app_config.log.file_name_prefix.push_str(&app_config.base_asset.to_string());
     app_config.log.file_name_prefix.push_str(&app_config.quote_asset.to_string());

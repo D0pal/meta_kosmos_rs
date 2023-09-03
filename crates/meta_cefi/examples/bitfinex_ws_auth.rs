@@ -30,8 +30,8 @@ fn main() {
     map.insert(
         CexExchange::BITFINEX,
         AccessKey {
-            api_key: "".to_string(),
-            api_secret: "".to_string(),
+            api_key: "OxKwOcq23cR33VHSv29WGHKs2ae32os7TZV3sU6Kk1c".to_string(),
+            api_secret: "89iwIdYapm3oov7Qsgiu6u9IsMUgnwCBQCRXWvNTPhu".to_string(),
         },
     );
     let cex_config = CexConfig { keys: Some(map) };
@@ -58,7 +58,7 @@ fn main() {
             CexExchange::BITFINEX,
             Asset::ARB,
             Asset::USD,
-            Decimal::from_f64(-1.5f64).unwrap(),
+            Decimal::from_f64(-1.2f64).unwrap(),
         );
     }
     thread::sleep(Duration::from_secs(5));

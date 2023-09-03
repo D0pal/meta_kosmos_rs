@@ -3,7 +3,7 @@ use crate::bitfinex::book::{
 };
 use serde::Deserialize;
 
-use super::wallet::{FundingCreditSnapshot, NewOrderOnReq, PositionSnapshot, WalletSnapshot, BU, TeEvent, OcEvent, TuEvent};
+use super::wallet::{FundingCreditSnapshot, NewOrderOnReq, PositionSnapshot, WalletSnapshot, BU, TeEvent, OrderUpdateEvent, TuEvent};
 
 pub type SEQUENCE = u32;
 
@@ -30,7 +30,7 @@ pub enum DataEvent {
     FundingCreditSnapshotEvent(i32, String, Vec<FundingCreditSnapshot>, SEQUENCE, i32), // fcs
     BuEvent(i32, String, BU, SEQUENCE, i32),   // bu
     TeEvent(i32, String, TeEvent, SEQUENCE,i32),
-    OcEvent(i32, String, OcEvent, SEQUENCE, i32),
+    OrderUpdateEvent(i32, String, OrderUpdateEvent, SEQUENCE, i32),
     TuEvent(i32,String, TuEvent, SEQUENCE, i32),
     NewOrderOnReq(i32, String, NewOrderOnReq, SEQUENCE),
 

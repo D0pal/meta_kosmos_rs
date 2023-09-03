@@ -9,7 +9,7 @@ use tracing::{debug, error, info};
 use crate::mev_bots::oracle_runner::{start_add_new_pools, start_block_oracle};
 use meta_common::{constants::ERC20_TRANSFER_EVENT_SIG, enums::Network};
 use meta_contracts::wrappers::Erc20Wrapper;
-use meta_dex::{prelude::*, Dex};
+use meta_dex::{prelude::*, DexService};
 
 // mod oracles;
 // mod state;
@@ -194,7 +194,7 @@ pub struct BotSandwidth<M: Middleware + 'static> {
     all_pools: Arc<DashMap<Address, Pool>>,
     // sandwich_maker: Arc<SandwichMaker>,
     // bundle_sender: Arc<RwLock<BundleSender>>,
-    dexes: Vec<Arc<Dex<M>>>,
+    dexes: Vec<Arc<DexService<M>>>,
 }
 
 impl<M: Middleware + 'static> BotSandwidth<M> {
@@ -212,7 +212,7 @@ impl<M: Middleware + 'static> BotSandwidth<M> {
         sandwidth_contract_address: Address,
         sandwich_inception_block: U64,
         weth_address: Address,
-        dexes: Vec<Arc<Dex<M>>>,
+        dexes: Vec<Arc<DexService<M>>>,
         pool_vec: Vec<Pool>,
         provider: Arc<Provider<Ws>>,
         wallet: Arc<LocalWallet>, // dexes: Vec<Dex>,

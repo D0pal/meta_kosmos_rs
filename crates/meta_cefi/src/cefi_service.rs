@@ -125,7 +125,7 @@ impl EventHandler for BitfinexEventHandler {
         } else if let DataEvent::BuEvent(_, _, _, seq, _) = event {
             debug!("handle on bu event {:?}", event);
             self.check_sequence(seq);
-        } else if let DataEvent::OcEvent(_, _, _, seq, _) = event {
+        } else if let DataEvent::OrderUpdateEvent(_, _, _, seq, _) = event {
             debug!("handle on oc event {:?}", event);
             self.check_sequence(seq);
         }else if let DataEvent::TuEvent(_, _, _, seq, _) = event {
@@ -276,7 +276,7 @@ impl CefiService {
                 let symbol = format!("t{:?}{:?}", base, quote);
                 if self.btf_sockets.contains_key(&pair) {
                     self.btf_sockets.entry(pair).and_modify(|web_socket| {
-                        (*web_socket).submit_order(symbol, amount.to_string());
+                        (*web_socket).submit_order(symbol, amount.to_string(), None);
                     });
                 }
             }

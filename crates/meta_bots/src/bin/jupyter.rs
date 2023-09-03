@@ -33,7 +33,7 @@ use meta_contracts::{
         UniswapV2PairWrapper,
     },
 };
-use meta_dex::{sync_dex, Dex};
+use meta_dex::{sync_dex, DexService};
 use meta_tracing::init_tracing;
 use meta_util::{enums::dexs_from_str, ether::address_from_str};
 
@@ -85,7 +85,7 @@ async fn run(config: JupyterConfig) -> anyhow::Result<()> {
         .dexs
         .unwrap()
         .into_iter()
-        .map(|d| Arc::new(Dex::new(provider_ws.clone(), network, d)))
+        .map(|d| Arc::new(DexService::new(provider_ws.clone(), network, d)))
         .collect::<Vec<_>>();
 
     let current_block = provider_ws.get_block_number().await.unwrap();
