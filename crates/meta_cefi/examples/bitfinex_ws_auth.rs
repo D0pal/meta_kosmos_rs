@@ -27,8 +27,8 @@ fn main() {
     map.insert(
         CexExchange::BITFINEX,
         AccessKey {
-            api_key: "OxKwOcq23cR33VHSv29WGHKs2ae32os7TZV3sU6Kk1c".to_string(),
-            api_secret: "89iwIdYapm3oov7Qsgiu6u9IsMUgnwCBQCRXWvNTPhu".to_string(),
+            api_key: "".to_string(),
+            api_secret: "".to_string(),
         },
     );
     let cex_config = CexConfig { keys: Some(map) };
