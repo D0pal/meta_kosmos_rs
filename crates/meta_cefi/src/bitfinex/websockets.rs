@@ -319,7 +319,6 @@ impl WebSockets {
                                 //     let event: DataEvent = from_str(&text)?;
                                 //     h.on_checksum(event);
                                 // }
-                                println!("got data event {:?}", text.clone());
                                 let event: DataEvent = from_str(&text)?;
 
                                 h.on_data_event(event);

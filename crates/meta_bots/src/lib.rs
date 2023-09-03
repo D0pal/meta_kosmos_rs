@@ -118,6 +118,7 @@ pub struct VenusConfig {
     pub log: ConfigLog,
     pub provider: ConfigProvider,
     pub account: ConfigAccount,
+    // TODO: do not print for Debug
     pub bitfinex: Option<AccessKey>,
 }
 

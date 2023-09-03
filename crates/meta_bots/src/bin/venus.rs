@@ -335,6 +335,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                 }
                             }
 
+                            info!("current spread, cex_bid: {:?}, dex_ask: {:?}, dex_bid: {:?}, cex_ask {:?}", cex_bid, dex_ask, dex_bid, cex_ask);
                             if cex_bid > dex_ask {
                                 let change = get_price_delta_in_bp(cex_bid, dex_ask);
                                 if change > Decimal::from_u32(config.spread_diff_threshold).unwrap() {
