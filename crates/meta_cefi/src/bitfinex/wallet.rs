@@ -124,22 +124,59 @@ pub struct Order {
                      //
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct TeEvent {
-    pub id: u64,
+// https://docs.bitfinex.com/reference/ws-auth-trades
+// could be either te or tu
+// pub type TradeExecutionUpdate = (
+//     u64, // Trade database id
+//     String,
+//     u64,     // Client Order ID
+//     u64,     // Order id
+//     Decimal, // Positive means buy, negative means sell
+//     Decimal, // Execution price
+//     String,
+//     Decimal,
+//     i8, // 1 if true, -1 if false
+//     Option<String>,
+//     Option<String>,
+//     u64, // client order id
+// );
+
+// // 'te' (trade executed),
+// #[derive(Serialize, Deserialize, Debug, Clone)]
+// pub struct TradeExecuted {
+//     pub id: u64, // Trade database id
+//     pub symbol: String,
+//     pub mts_create: u64, // Client Order ID
+//     pub order_id: u64,   // Order id
+
+//     pub exec_amount: Decimal, // Positive means buy, negative means sell
+//     pub exec_price: Decimal,  // Execution price
+//     pub order_type: String,
+//     pub order_price: Decimal,
+
+//     pub maker: i8, // 1 if true, -1 if false
+//     pub _place_holder_1: Option<Decimal>,
+//     pub _place_holder_2: Option<String>,
+//     pub cid: u64, // client order id
+// }
+// 'tu' (trade execution update)
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct TradeExecutionUpdate {
+    pub id: u64, // Trade database id
     pub symbol: String,
-    pub gid: u64,
-    pub cid: u64,
+    pub mts_create: u64, // Client Order ID
+    pub order_id: u64,   // Order id
 
-    pub amount: Decimal,
-    pub qty: Decimal,
+    pub exec_amount: Decimal, // Positive means buy, negative means sell
+    pub exec_price: Decimal,  // Execution price
     pub order_type: String,
-    pub amt: Decimal,
+    pub order_price: Decimal,
 
-    pub quantity: Decimal,
-    pub a: Option<String>,
-    pub b: Option<String>,
-    pub c: u64,
+    pub maker: i8,                    // 1 if true, -1 if false
+    pub fee: Option<Decimal>,         // Fee ('tu' only)
+    pub fee_currency: Option<String>, // Fee currency ('tu' only)
+    pub cid: u64,                     // client order id
 }
 
 /// type: 'os' (order snapshot), 'on' (order new), 'ou' (order update), 'oc' (order cancel (canceled or fully executed)).

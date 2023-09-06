@@ -134,7 +134,7 @@ pub struct TradeCancelResponse {
     pub text: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct OrderMeta {
-    pub request_id: Option<String>,
-}
+// #[derive(Debug, Serialize, Deserialize)]
+// pub struct OrderMeta {
+//     pub client_order_id: u128,
+// }

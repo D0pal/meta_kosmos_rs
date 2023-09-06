@@ -29,6 +29,9 @@ pub enum OrderError<M: Middleware> {
     #[error("send on chain tx error")]
     SendTxError,
 
+    #[error("error in find receipt")]
+    UnableFetchTxReceiptError,
+
     #[error(transparent)]
     ContractError(#[from] ContractError<M>),
 }

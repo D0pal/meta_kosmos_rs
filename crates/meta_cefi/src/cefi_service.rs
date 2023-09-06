@@ -3,6 +3,7 @@ use crate::bitfinex::{
     common::*,
     errors::*,
     events::{DataEvent, NotificationEvent, SEQUENCE},
+    wallet::{OrderUpdateEvent, TradeExecutionUpdate},
     websockets::{EventHandler, EventType, WebSockets},
 };
 use meta_address::enums::Asset;
@@ -10,28 +11,26 @@ use meta_common::{
     enums::CexExchange,
     models::{CurrentSpread, MarcketChange},
 };
-use rust_decimal::{
-    Decimal,
-};
+use rust_decimal::Decimal;
 use serde::Deserialize;
-use std::{
-    collections::{BTreeMap},
-    sync::{
-        mpsc::{SyncSender},
-    },
-};
-use tracing::{debug, error, info};
+use std::{collections::BTreeMap, sync::mpsc::SyncSender};
+use tokio::sync::mpsc::{channel, Sender};
+use tracing::{debug, error, info, warn};
 
 #[derive(Clone, Debug)]
 pub struct BitfinexEventHandler {
-    sender: Option<SyncSender<MarcketChange>>,
+    sender: Option<SyncSender<MarcketChange>>, // send market change
+    trade_execution_sender: Option<SyncSender<TradeExecutionUpdate>>, // tu event, contains fee information
     order_book: Option<OrderBook>,
     sequence: u32,
 }
 
 impl BitfinexEventHandler {
-    pub fn new(sender: Option<SyncSender<MarcketChange>>) -> Self {
-        Self { order_book: None, sequence: 0, sender }
+    pub fn new(
+        sender: Option<SyncSender<MarcketChange>>,
+        order_sender: Option<SyncSender<TradeExecutionUpdate>>,
+    ) -> Self {
+        Self { order_book: None, sequence: 0, sender, trade_execution_sender: order_sender }
     }
 
     fn check_sequence(&mut self, seq: u32) {
@@ -114,14 +113,22 @@ impl EventHandler for BitfinexEventHandler {
         } else if let DataEvent::WalletUpdateEvent(_, _, _, seq, _) = event {
             debug!("handle on wu event {:?}", event);
             self.check_sequence(seq);
-        } else if let DataEvent::TeEvent(_, _, _, seq, _) = event {
-            debug!("handle on te event {:?}", event);
+        } else if let DataEvent::TradeExecutionEvent(_, ty, e, seq, _) = event {
+            debug!("handle on trade execution update event type {:?}, {:?}", ty, e);
             self.check_sequence(seq);
+            if ty.eq("tu") {
+                match self.trade_execution_sender {
+                    Some(ref tx) => {
+                        let _ = tx.send(e);
+                    }
+                    None => warn!("no tx sender"),
+                };
+            }
         } else if let DataEvent::BuEvent(_, _, _, seq, _) = event {
             debug!("handle on bu event {:?}", event);
             self.check_sequence(seq);
-        } else if let DataEvent::OrderUpdateEvent(_, _, _, seq, _) = event {
-            debug!("handle on oc event {:?}", event);
+        } else if let DataEvent::OrderUpdateEvent(_, order_event_type, _, seq, _) = event {
+            debug!("handle order update type {:?}", order_event_type);
             self.check_sequence(seq);
         } else if let DataEvent::TuEvent(_, _, _, seq, _) = event {
             debug!("handle on tu event {:?}", event);
@@ -216,6 +223,7 @@ pub struct OrderBook {
 pub struct CefiService {
     config: Option<CexConfig>,
     sender: Option<SyncSender<MarcketChange>>,
+    order_sender: Option<SyncSender<TradeExecutionUpdate>>,
     btf_sockets: BTreeMap<String, WebSockets>,
 }
 
@@ -223,8 +231,12 @@ unsafe impl Send for CefiService {}
 unsafe impl Sync for CefiService {}
 
 impl CefiService {
-    pub fn new(config: Option<CexConfig>, sender: Option<SyncSender<MarcketChange>>) -> Self {
-        Self { config, sender, btf_sockets: BTreeMap::new() }
+    pub fn new(
+        config: Option<CexConfig>,
+        sender: Option<SyncSender<MarcketChange>>,
+        order_sender: Option<SyncSender<TradeExecutionUpdate>>,
+    ) -> Self {
+        Self { config, sender, btf_sockets: BTreeMap::new(), order_sender }
     }
 
     pub fn subscribe_book(&mut self, cex: CexExchange, base: Asset, quote: Asset) {
@@ -233,7 +245,8 @@ impl CefiService {
             CexExchange::BITFINEX => {
                 let ak = self.config.as_ref().unwrap().keys.as_ref().unwrap().get(&cex).unwrap();
                 if !self.btf_sockets.contains_key(&pair) {
-                    let handler = BitfinexEventHandler::new(self.sender.clone());
+                    let handler =
+                        BitfinexEventHandler::new(self.sender.clone(), self.order_sender.clone());
                     let web_socket = WebSockets::new();
                     self.btf_sockets.insert(pair.to_owned(), web_socket);
                     self.btf_sockets.entry(pair).and_modify(|web_socket| {
@@ -260,7 +273,14 @@ impl CefiService {
         }
     }
 
-    pub fn submit_order(&mut self, cex: CexExchange, base: Asset, quote: Asset, amount: Decimal) {
+    pub fn submit_order(
+        &mut self,
+        client_order_id: u128,
+        cex: CexExchange,
+        base: Asset,
+        quote: Asset,
+        amount: Decimal,
+    ) {
         let pair = get_pair(base, quote);
 
         match cex {
@@ -268,7 +288,7 @@ impl CefiService {
                 let symbol = format!("t{:?}{:?}", base, quote);
                 if self.btf_sockets.contains_key(&pair) {
                     self.btf_sockets.entry(pair).and_modify(|web_socket| {
-                        (*web_socket).submit_order(symbol, amount.to_string(), None);
+                        (*web_socket).submit_order(client_order_id, symbol, amount.to_string());
                     });
                 }
             }
@@ -376,9 +396,7 @@ mod test_cefi {
 
     use super::*;
     use meta_address::enums::Asset;
-    use rust_decimal::{
-        prelude::{ToPrimitive},
-    };
+    use rust_decimal::prelude::ToPrimitive;
     use serde_json::from_str;
     #[test]
     fn test_get_pair() {

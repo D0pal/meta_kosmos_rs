@@ -9,16 +9,16 @@ lazy_static! {
         U256::from_str_radix("1461446703485210103287273052203988822378723970341", 10).unwrap();
 }
 
-pub fn get_token0_and_token1(token_a: Address, token_b: Address) -> (Address, Address) {
+pub fn get_token0_and_token1(token_a: &Address, token_b: &Address) -> (Address, Address) {
     if token_a.lt(&token_b) {
-        (token_a, token_b)
+        (token_a.clone(), token_b.clone())
     } else {
-        (token_b, token_a)
+        (token_b.clone(), token_a.clone())
     }
 }
 
 pub fn get_swap_price_limit(token_a: Address, token_b: Address, token_in: Address) -> U256 {
-    let (token_0, _token_1) = get_token0_and_token1(token_a, token_b);
+    let (token_0, _token_1) = get_token0_and_token1(&token_a, &token_b);
     if token_in.eq(&token_0) {
         U256::zero()
     } else {
@@ -55,9 +55,9 @@ mod test {
         let token_a = address_from_str("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
         let token_b = address_from_str("0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d");
         let token_c = address_from_str("0x82aF49447D8a07e3bd95BD0d56f35241523fBab1");
-        assert_eq!(get_token0_and_token1(token_a, token_b), (token_b, token_a));
-        assert_eq!(get_token0_and_token1(token_a, token_c), (token_c, token_a));
-        assert_eq!(get_token0_and_token1(token_b, token_c), (token_c, token_b));
+        assert_eq!(get_token0_and_token1(&token_a, &token_b), (token_b, token_a));
+        assert_eq!(get_token0_and_token1(&token_a, &token_c), (token_c, token_a));
+        assert_eq!(get_token0_and_token1(&token_b, &token_c), (token_c, token_b));
     }
 
     #[test]

@@ -1,0 +1,1 @@
+cargo run -p meta_cefi --example bitfinex_ws_auth

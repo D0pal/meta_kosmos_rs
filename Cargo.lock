@@ -3159,6 +3159,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "meta_integration"
+version = "0.1.0"
+dependencies = [
+ "meta_address",
+ "meta_common",
+ "meta_model",
+ "meta_util",
+ "reqwest",
+ "rust_decimal",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
 name = "meta_macro"
 version = "0.1.0"
 dependencies = [
@@ -3180,6 +3195,23 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+]
+
+[[package]]
+name = "meta_model"
+version = "0.1.0"
+dependencies = [
+ "ethers 2.0.4",
+ "hex",
+ "lazy_static",
+ "meta_address",
+ "meta_common",
+ "meta_util",
+ "rust_decimal",
+ "serde",
+ "serde_json",
+ "strum 0.24.1",
+ "strum_macros 0.24.3",
 ]
 
 [[package]]

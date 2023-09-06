@@ -11,6 +11,8 @@ members = [
     "crates/meta_cefi",
     "crates/meta_alchemy",
     "crates/meta_macro",
+    "crates/meta_integration",
+    "crates/meta_model"
 ]
 exclude = ["crates/meta_python", "crates/meta_alchemy"]
 

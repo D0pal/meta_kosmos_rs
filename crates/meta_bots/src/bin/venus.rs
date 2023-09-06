@@ -8,7 +8,7 @@ use meta_address::{
 };
 use meta_bots::{AppConfig, VenusConfig};
 use meta_cefi::{
-    bitfinex::model::OrderMeta,
+    bitfinex::wallet::{OrderUpdateEvent, TradeExecutionUpdate},
     cefi_service::{AccessKey, CefiService, CexConfig},
 };
 use meta_common::{
@@ -87,6 +87,56 @@ struct Opts {
 
 pub const V3_FEE: u32 = 500u32;
 
+#[derive(Debug)]
+pub struct CexTradeInfo {
+    pub venue: CexExchange,
+    pub trade_info: Option<TradeExecutionUpdate>,
+}
+
+#[derive(Debug)]
+pub struct DexTradeInfo {
+    pub network: Network,
+    pub venue: DexExchange,
+    pub tx_hash: Option<TxHash>,
+}
+
+#[derive(Debug)]
+pub struct ArbitragePair {
+    pub base: Asset,
+    pub quote: Asset,
+    pub cex: CexTradeInfo,
+    pub dex: DexTradeInfo,
+}
+
+pub type CID = u128; //client order id
+
+pub fn check_arbitrage_status(
+    map: Arc<SyncRwLock<BTreeMap<CID, ArbitragePair>>>,
+) -> Option<(CID, TradeExecutionUpdate, TxHash)> {
+    let mut _g = map.read().expect("unable to get read lock");
+    let mut iter = _g.iter();
+    loop {
+        let mut cur = iter.next();
+        if cur.is_none() {
+            break None;
+        } else {
+            let (key, val) = cur.unwrap();
+            if val.cex.trade_info.is_some() && val.dex.tx_hash.is_some() {
+                //  both legs completed
+                let trade_info = val.cex.trade_info.as_ref().unwrap().clone();
+                let hash = val.dex.tx_hash.as_ref().unwrap().clone();
+                break Some((key.clone(), trade_info, hash));
+            } else {
+                continue;
+            }
+        }
+    }
+}
+
+pub async fn notify_arbitrage_result() {
+    
+}
+
 async fn run(config: VenusConfig) -> anyhow::Result<()> {
     debug!("run venus app with config: {:?}", config);
     let rpc_info = get_rpc_info(config.network).unwrap();
@@ -111,6 +161,10 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
     let wallet = NonceManagerMiddleware::new(wallet, wallet_address);
     let wallet = Arc::new(wallet);
     let dex_service = DexService::new(wallet.clone(), config.network, config.dex);
+
+    let mut arbitrages: Arc<SyncRwLock<BTreeMap<CID, ArbitragePair>>> =
+        Arc::new(SyncRwLock::new(BTreeMap::new())); // key is request id
+
     match config.dex {
         DexExchange::UniswapV3 => {
             let (base_token, quote_token) = (config.base_asset.into(), config.quote_asset.into());
@@ -142,7 +196,9 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
 
             match config.cex {
                 CexExchange::BITFINEX => {
+                    // for receiving spread update
                     let (tx, mut rx) = mpsc::sync_channel::<MarcketChange>(1000);
+                    let (tx_order, mut rx_order) = mpsc::sync_channel::<TradeExecutionUpdate>(100);
 
                     let mut map = BTreeMap::new();
                     let ak = config.bitfinex.unwrap();
@@ -154,10 +210,31 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                         },
                     );
                     let cex_config = CexConfig { keys: Some(map) };
-                    let mut cefi_service = CefiService::new(Some(cex_config), Some(tx.clone()));
+                    let mut cefi_service = CefiService::new(
+                        Some(cex_config),
+                        Some(tx.clone()),
+                        Some(tx_order.clone()),
+                    );
 
                     let cefi_service = &mut cefi_service as *mut CefiService;
                     let cefi_service = Arc::new(AtomicPtr::new(cefi_service));
+
+                    // receive cex trade execution info and update to arbitrages
+                    {
+                        let arbitrages_clone = arbitrages.clone();
+                        thread::spawn(move || loop {
+                            let ou_event = rx_order.recv();
+                            if let Ok(trade) = ou_event {
+                                if let Ok(mut _g) = arbitrages_clone.write() {
+                                    _g.entry(trade.cid.into()).and_modify(|e| {
+                                        (*e).cex.trade_info = Some(trade);
+                                    });
+                                } else {
+                                    error!("unable to get arbitrages write lock");
+                                }
+                            }
+                        });
+                    }
 
                     {
                         let cefi_service = cefi_service.clone();
@@ -189,7 +266,6 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                             loop {
                                 match new_block_stream.next().await {
                                     Some(block) => {
-                                    
                                         if let Some(block_number) = block.number {
                                             if block_number.as_u64() > last_block {
                                                 last_block = block_number.as_u64();
@@ -339,7 +415,8 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                             info!("current spread, cex_bid: {:?}, dex_ask: {:?}, dex_bid: {:?}, cex_ask {:?}", cex_bid, dex_ask, dex_bid, cex_ask);
                             if cex_bid > dex_ask {
                                 let change = get_price_delta_in_bp(cex_bid, dex_ask);
-                                if change > Decimal::from_u32(config.spread_diff_threshold).unwrap() {
+                                if change > Decimal::from_u32(config.spread_diff_threshold).unwrap()
+                                {
                                     info!(
                                         "found a cross, cex bid {:?}, dex ask {:?}, price change {:?}",
                                         cex_bid, dex_ask, change
@@ -354,16 +431,18 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                             quote_asset: config.quote_asset,
                                         },
                                         dex: DexInstruction {
+                                            network: config.network,
                                             venue: DexExchange::UniswapV3,
                                             amount: config.base_asset_quote_amt,
                                             base_token: base_token.clone(),
                                             quote_token: quote_token.clone(),
                                             recipient: wallet_address,
-                                            fee: V3_FEE
+                                            fee: V3_FEE,
                                         },
                                     };
 
                                     try_arbitrage(
+                                        arbitrages.clone(),
                                         instraction,
                                         cefi_service.clone().load(Ordering::Relaxed),
                                         &dex_service,
@@ -374,7 +453,8 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
 
                             if dex_bid > cex_ask {
                                 let change = get_price_delta_in_bp(dex_bid, cex_ask);
-                                if change > Decimal::from_u32(config.spread_diff_threshold).unwrap() {
+                                if change > Decimal::from_u32(config.spread_diff_threshold).unwrap()
+                                {
                                     // sell dex, buy cex
                                     info!(
                                         "found a cross, dex bid {:?}, cex ask {:?}, price change {:?}",
@@ -390,16 +470,18 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                             quote_asset: config.quote_asset,
                                         },
                                         dex: DexInstruction {
+                                            network: config.network,
                                             venue: DexExchange::UniswapV3,
                                             amount: amount,
                                             base_token: base_token.clone(),
                                             quote_token: quote_token.clone(),
                                             recipient: wallet_address,
-                                            fee: V3_FEE
+                                            fee: V3_FEE,
                                         },
                                     };
-                                   
+
                                     try_arbitrage(
+                                        arbitrages.clone(),
                                         instraction,
                                         cefi_service.clone().load(Ordering::Relaxed),
                                         &dex_service,
@@ -428,6 +510,7 @@ pub struct CexInstruction {
 
 #[derive(Debug)]
 pub struct DexInstruction {
+    network: Network,
     venue: DexExchange,
     amount: Decimal,
     base_token: TokenInfo,
@@ -443,12 +526,12 @@ pub struct ArbitrageInstruction {
 }
 
 async fn try_arbitrage<'a, M: Middleware>(
+    arbitrages: Arc<SyncRwLock<BTreeMap<CID, ArbitragePair>>>,
     instruction: ArbitrageInstruction,
     cefi_service_ptr: *mut CefiService,
     dex_service_ref: &DexService<M>,
 ) {
-    let request_id = Uuid::new_v4().to_string();
-    let meta = OrderMeta { request_id: Some(request_id) };
+    let client_order_id = get_current_ts().as_millis();
 
     info!("start arbitrage with instruction {:?}", instruction);
     info!(
@@ -458,9 +541,27 @@ async fn try_arbitrage<'a, M: Middleware>(
         instruction.cex.quote_asset,
         instruction.cex.amount
     );
+
+    let mut _g = arbitrages.write().expect("unable to get write lock");
+
+    _g.insert(
+        client_order_id,
+        ArbitragePair {
+            base: instruction.cex.base_asset,
+            quote: instruction.cex.quote_asset,
+            cex: CexTradeInfo { venue: instruction.cex.venue, trade_info: None },
+            dex: DexTradeInfo {
+                network: instruction.dex.network,
+                venue: instruction.dex.venue,
+                tx_hash: None,
+            },
+        },
+    );
+
     match instruction.cex.venue {
         CexExchange::BITFINEX => unsafe {
             (*cefi_service_ptr).submit_order(
+                client_order_id,
                 CexExchange::BITFINEX,
                 instruction.cex.base_asset,
                 instruction.cex.quote_asset,
@@ -483,7 +584,12 @@ async fn try_arbitrage<'a, M: Middleware>(
                 )
                 .await;
             match ret {
-                Ok(hash) => info!("send dex order success {:?}", hash),
+                Ok(hash) => {
+                    info!("send dex order success {:?}", hash);
+                    _g.entry(client_order_id).and_modify(|e| {
+                        (*e).dex.tx_hash = Some(hash);
+                    });
+                }
                 Err(e) => error!("error in send dex order {:?}", e),
             }
         }
@@ -537,5 +643,61 @@ async fn main() {
             eprintln!("run Error: {}", e);
             std::process::exit(exitcode::DATAERR);
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use meta_util::ether::tx_hash_from_str;
+
+    use super::*;
+
+    #[test]
+    fn test_check_arbitrage_status() {
+        let mut map: BTreeMap<CID, ArbitragePair> = BTreeMap::new();
+        map.insert(
+            u128::from(100u32),
+            ArbitragePair {
+                base: Asset::ARB,
+                quote: Asset::USD,
+                cex: CexTradeInfo { venue: CexExchange::BITFINEX, trade_info: None },
+                dex: DexTradeInfo {
+                    network: Network::ARBI,
+                    venue: DexExchange::UniswapV3,
+                    tx_hash: None,
+                },
+            },
+        );
+        map.insert(
+            u128::from(200u32),
+            ArbitragePair {
+                base: Asset::ARB,
+                quote: Asset::USD,
+                cex: CexTradeInfo {
+                    venue: CexExchange::BITFINEX,
+                    trade_info: Some(TradeExecutionUpdate::default()),
+                },
+                dex: DexTradeInfo {
+                    network: Network::ARBI,
+                    venue: DexExchange::UniswapV3,
+                    tx_hash: None,
+                },
+            },
+        );
+        let map = Arc::new(std::sync::RwLock::new(map));
+        let output = check_arbitrage_status(map.clone());
+        assert!(output.is_none());
+
+        {
+            let mut _g = map.write().unwrap();
+            _g.entry(u128::from(200u32)).and_modify(|e| {
+                (*e).dex.tx_hash = Some(tx_hash_from_str(
+                    "0xcba0d4fc27a32aaddece248d469beb430e29c1e6fecdd5db3383e1c8b212cdeb",
+                ))
+            });
+        }
+        let output = check_arbitrage_status(map.clone());
+        assert!(output.is_some());
+        assert_eq!(output.unwrap().0, u128::from(200u32));
     }
 }

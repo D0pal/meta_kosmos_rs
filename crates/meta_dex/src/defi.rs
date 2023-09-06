@@ -4,18 +4,20 @@ use std::{cell::RefCell, collections::HashMap, sync::Arc};
 use meta_address::get_dex_address;
 use meta_common::enums::{ContractType, DexExchange, Network, PoolVariant};
 use meta_contracts::bindings::{
-    quoter_v2::QuoterV2, uniswap_v3_factory::UniswapV3Factory, uniswap_v3_pool::UniswapV3Pool,
+    quoter_v2::QuoterV2, swap_router::SwapRouter, uniswap_v3_factory::UniswapV3Factory,
+    uniswap_v3_pool::UniswapV3Pool,
 };
 
 #[derive(Debug, Clone)]
 pub struct UniV3Contracts<M> {
     pub factory: UniswapV3Factory<M>,
     pub quoter_v2: RefCell<QuoterV2<M>>,
+    pub swap_router: RefCell<SwapRouter<M>>,
     pub pools: HashMap<Address, HashMap<Address, RefCell<UniswapV3Pool<M>>>>,
 }
 
 #[derive(Clone, Debug)]
-pub struct Defi<M> {
+pub struct DexWrapper<M> {
     pub client: Arc<M>,
     pub network: Network,
     pub dex: DexExchange,
@@ -23,7 +25,7 @@ pub struct Defi<M> {
     pub v3_contracts: Option<UniV3Contracts<M>>,
 }
 
-impl<M: Middleware> Defi<M> {
+impl<M: Middleware> DexWrapper<M> {
     /// # Description
     /// Creates a new dex instance
     pub fn new(client: Arc<M>, network: Network, dex_exchange: DexExchange) -> Self {
@@ -33,14 +35,18 @@ impl<M: Middleware> Defi<M> {
                     get_dex_address(dex_exchange, network, ContractType::UniV3Factory).unwrap();
                 let quoter_v2_contract_info =
                     get_dex_address(dex_exchange, network, ContractType::UniV3QuoterV2).unwrap();
+                let swap_router_info =
+                    get_dex_address(dex_exchange, network, ContractType::UniV3SwapRouterV2).unwrap();
                 let v3_factory =
                     UniswapV3Factory::new(factory_contract_info.address, client.clone());
                 let v3_quoter_v2 = QuoterV2::new(quoter_v2_contract_info.address, client.clone());
+                let swap_router = SwapRouter::new(swap_router_info.address, client.clone());
                 (
                     PoolVariant::UniswapV3,
                     UniV3Contracts {
                         factory: v3_factory,
                         quoter_v2: RefCell::new(v3_quoter_v2),
+                        swap_router: RefCell::new(swap_router),
                         pools: HashMap::new(),
                     },
                 )
@@ -139,6 +145,26 @@ impl<M: Middleware> Defi<M> {
         });
         let ret =
             unsafe { self.v3_contracts.as_ref().unwrap().quoter_v2.as_ptr().as_ref().unwrap() };
+        return Ok(ret);
+    }
+
+    pub fn get_v3_swap_router(&self) -> anyhow::Result<&SwapRouter<M>> {
+        let swap_router = self.v3_contracts.as_ref().map(|c| &c.swap_router);
+        if swap_router.is_some() {
+            let ret = unsafe { swap_router.unwrap().as_ptr().as_ref() };
+            return Ok(ret.unwrap());
+        }
+
+        let swap_router_address =
+            get_dex_address(self.dex, self.network, ContractType::UniV3SwapRouterV2)
+                .expect("swap router address not found");
+        let router = SwapRouter::new(swap_router_address.address, self.client.clone());
+        self.v3_contracts.as_ref().map(|x| {
+            let borrowed = &mut (*x.swap_router.borrow_mut());
+            unsafe { *(borrowed as *mut SwapRouter<M>) = router };
+        });
+        let ret =
+            unsafe { self.v3_contracts.as_ref().unwrap().swap_router.as_ptr().as_ref().unwrap() };
         return Ok(ret);
     }
 

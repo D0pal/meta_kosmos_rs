@@ -12,14 +12,12 @@ use std::{
     net::TcpStream,
     sync::mpsc::{self, channel},
 };
-use tracing::{info};
+use tracing::info;
 use tungstenite::{
     connect, handshake::client::Response, protocol::WebSocket, stream::MaybeTlsStream, Message,
 };
 use url::Url;
 
-
-use super::model::OrderMeta;
 
 static INFO: &'static str = "info";
 static SUBSCRIBED: &'static str = "subscribed";
@@ -209,13 +207,12 @@ impl WebSockets {
         }
     }
 
-    pub fn submit_order<S, F>(&mut self, symbol: S, qty: F, meta_option: Option<OrderMeta>)
+    pub fn submit_order<S, F>(&mut self, client_order_id: u128, symbol: S, qty: F)
     where
         S: Into<String>,
         F: Into<String>,
     {
-        let cid = get_current_ts().as_millis();
-        let option: Option<serde_json::Value> = meta_option.map_or(None, |meta| Some(json!(meta)));
+        // let option: Option<serde_json::Value> = meta_option.map_or(None, |meta| Some(json!(meta)));
         let msg = json!(
         [
             0,
@@ -223,11 +220,11 @@ impl WebSockets {
             null,
             {
                 "gid": 0,
-                "cid": cid,
+                "cid": client_order_id,
                 "type": OrderType::EXCHANGE_MARKET.to_string(),
                 "symbol": symbol.into(),
-                "amount": qty.into(),
-                "meta":option
+                "amount": qty.into()
+                // "meta":option
             }
         ]);
 
@@ -275,7 +272,7 @@ impl WebSockets {
                     match self.rx.try_recv() {
                         Ok(msg) => match msg {
                             WsMessage::Text(text) => {
-                                println!("ws write message {:?}", text);
+                                // println!("ws write message {:?}", text);
                                 let ret = socket.0.write_message(Message::Text(text));
                                 match ret {
                                     Err(e) => eprintln!("{:?}", e),
@@ -319,8 +316,16 @@ impl WebSockets {
                                 //     let event: DataEvent = from_str(&text)?;
                                 //     h.on_checksum(event);
                                 // }
-                                let event: DataEvent = from_str(&text)?;
+                                // let ret: Vec<&str> = text.split(',').collect();
+                                // let ele: Vec<&str> = ret.iter().skip(1).take(1).cloned().collect();
 
+                                // let event_type = ele[0];
+                                // println!("event type {:?}", event_type);
+                                // if event_type == "te" {
+                                //     let event: DataEvent::TradeExecutionEvent = from_str(&text)?;
+                                // }
+
+                                let event: DataEvent = from_str(&text)?;
                                 h.on_data_event(event);
                                 // if let DataEvent::HeartbeatEvent(a, b, c) = event {
                                 //     h.on_heart_beat(a, b, c);

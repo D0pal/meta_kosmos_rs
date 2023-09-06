@@ -55,4 +55,12 @@ mod tests {
             Decimal::from_str_radix("99.00990099009900990099009900", 10).unwrap()
         );
     }
+
+    #[test]
+    fn test_split() {
+        let input = "a,b,te,eg,egae";
+        let ret: Vec<&str> = input.split(',').collect();
+        let ele: Vec<&str> = ret.iter().skip(2).take(1).cloned().collect();
+        println!("ret {:?}", ele);
+    }
 }
