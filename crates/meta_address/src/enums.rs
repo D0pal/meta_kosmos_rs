@@ -52,6 +52,22 @@ impl Into<Token> for Asset {
     }
 }
 
+impl From<Token> for Asset {
+    fn from(val: Token) -> Asset {
+        match val {
+            Token::BTC => Asset::BTC,
+            Token::ARB => Asset::ARB,
+            Token::WETH => Asset::ETH,
+            Token::USDC => Asset::USD,
+            _ => {
+                let token_str: String = val.into();
+                let asset = token_str.parse::<Asset>().unwrap();
+                asset
+            }
+        }
+    }
+}
+
 impl Default for Asset {
     fn default() -> Self {
         Self::USD

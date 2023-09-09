@@ -130,7 +130,7 @@ impl<M: Middleware> DexService<M> {
                     }
                     Ok(TradeBalanceDiff {
                         trade: diff,
-                        fee: FeeInfo { fee_token: Token::ETH, amount: gas_fee },
+                        fee: FeeInfo { fee_token: Token::ETH, amount: gas_fee.saturating_mul(Decimal::NEGATIVE_ONE) },
                     })
                 }
                 None => Err(OrderError::UnableFetchTxReceiptError),

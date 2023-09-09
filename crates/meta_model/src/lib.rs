@@ -10,7 +10,7 @@ pub struct ArbitrageOutcome {
     pub price: Decimal,
     pub fee_token: Asset,
     pub fee_amount: Decimal,
-    pub id: String,
+    pub id: String, // identifier to the trade, scan link url for blockchain trade, cid for cex trade
     pub network: Option<Network>,
 }
 

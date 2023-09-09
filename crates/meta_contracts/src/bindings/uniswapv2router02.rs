@@ -44485,7 +44485,7 @@ pub mod uniswap_v2_router_02 {
         > {
             let factory = ::ethers::contract::ContractFactory::new(
                 UNISWAPV2ROUTER02_ABI.clone(),
-                UNISWAPV2ROUTER02_BYTECODE.clone(),
+                UNISWAPV2ROUTER02_BYTECODE.clone().into(),
                 client,
             );
             let deployer = factory.deploy(constructor_args)?;

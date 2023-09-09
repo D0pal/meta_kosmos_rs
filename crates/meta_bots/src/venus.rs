@@ -1,14 +1,12 @@
 use chrono::prelude::*;
 use ethers::prelude::*;
-use meta_address::{
-    enums::Asset,
-    TokenInfo,
-};
+use meta_address::{enums::Asset, TokenInfo};
 use meta_cefi::bitfinex::wallet::TradeExecutionUpdate;
 use meta_common::enums::{CexExchange, DexExchange, Network};
 use meta_dex::DexService;
 use meta_integration::Lark;
 use meta_model::{ArbitrageOutcome, ArbitrageSummary};
+use meta_util::ether::get_network_scan_url;
 use rust_decimal::Decimal;
 use std::{
     collections::BTreeMap,
@@ -127,8 +125,10 @@ pub async fn notify_arbitrage_result(
             dex_outcome.quote_amount = *parsed_tx.trade.get(&quote_token).unwrap();
             dex_outcome.price =
                 dex_outcome.base_amount.checked_div(dex_outcome.quote_amount).unwrap().abs();
-            dex_outcome.fee_token = dex_outcome.fee_token;
-            dex_outcome.fee_amount = dex_outcome.fee_amount;
+            dex_outcome.fee_token = parsed_tx.fee.fee_token.into();
+            dex_outcome.fee_amount = parsed_tx.fee.amount;
+            dex_outcome.id = get_network_scan_url(dex_trade_info.network, hash);
+            dex_outcome.network = Some(dex_trade_info.network);
             let summary = ArbitrageSummary {
                 datetime: arbitrage_info.datetime.to_rfc3339(),
                 base: arbitrage_info.base,
