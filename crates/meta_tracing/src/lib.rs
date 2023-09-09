@@ -1,5 +1,3 @@
-
-
 use opentelemetry::sdk::export::trace::stdout;
 use tracing::Level;
 use tracing_appender::{non_blocking::WorkerGuard, rolling};

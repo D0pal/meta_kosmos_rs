@@ -1,5 +1,3 @@
-
-
 use ethers::{
     prelude::*,
     providers::{Provider, ProviderError, Ws},

@@ -2,19 +2,19 @@ use chrono::prelude::*;
 use ethers::prelude::*;
 use meta_address::{
     enums::Asset, get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info, Token,
+    TokenInfo,
 };
-use meta_cefi::{ bitfinex::wallet::TradeExecutionUpdate};
+use meta_cefi::bitfinex::wallet::TradeExecutionUpdate;
 use meta_common::enums::{CexExchange, DexExchange, Network};
-use meta_dex::{DexService};
-use meta_model::{ArbitrageSummary, ArbitrageOutcome};
-use std::{
-    sync::{Arc,RwLock},
-    collections::BTreeMap,
-};
+use meta_dex::DexService;
 use meta_integration::Lark;
-use tracing::error;
+use meta_model::{ArbitrageOutcome, ArbitrageSummary};
 use rust_decimal::Decimal;
-use meta_address::TokenInfo;
+use std::{
+    collections::BTreeMap,
+    sync::{Arc, RwLock},
+};
+use tracing::error;
 
 #[derive(Debug, Clone)]
 pub struct CexTradeInfo {
@@ -53,13 +53,13 @@ pub struct CexInstruction {
 
 #[derive(Debug)]
 pub struct DexInstruction {
-   pub network: Network,
-   pub venue: DexExchange,
-   pub amount: Decimal,
-   pub base_token: TokenInfo,
-   pub quote_token: TokenInfo,
-   pub fee: u32,
-   pub recipient: Address,
+    pub network: Network,
+    pub venue: DexExchange,
+    pub amount: Decimal,
+    pub base_token: TokenInfo,
+    pub quote_token: TokenInfo,
+    pub fee: u32,
+    pub recipient: Address,
 }
 
 #[derive(Debug)]

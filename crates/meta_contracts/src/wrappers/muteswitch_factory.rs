@@ -1,19 +1,10 @@
-
-use crate::bindings::{
-    mute_switch_factory::MuteSwitchFactory,
-};
+use crate::bindings::mute_switch_factory::MuteSwitchFactory;
 // use core::num;
 use ethers::prelude::*;
 
-use meta_common::{
-    enums::{DexExchange, Network},
-};
+use meta_common::enums::{DexExchange, Network};
 
-
-use std::{
-    sync::Arc,
-};
-
+use std::sync::Arc;
 
 pub struct MuteSwitchFactoryWrapper<M> {
     // pub config_contract: Config<M>,

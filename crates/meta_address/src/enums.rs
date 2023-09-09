@@ -52,7 +52,6 @@ impl Into<Token> for Asset {
     }
 }
 
-
 impl Default for Asset {
     fn default() -> Self {
         Self::USD

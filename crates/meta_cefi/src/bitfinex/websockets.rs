@@ -18,7 +18,6 @@ use tungstenite::{
 };
 use url::Url;
 
-
 static INFO: &'static str = "info";
 static SUBSCRIBED: &'static str = "subscribed";
 static AUTH: &'static str = "auth";

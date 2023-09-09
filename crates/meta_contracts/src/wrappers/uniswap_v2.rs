@@ -1,4 +1,4 @@
-use super::{Erc20Wrapper};
+use super::Erc20Wrapper;
 use crate::bindings::{
     flash_bots_router::UniswapWethParams, mute_switch_factory::MuteSwitchFactory,
     uniswap_v2_factory::UniswapV2Factory, uniswap_v2_pair::UniswapV2Pair,
@@ -7,10 +7,8 @@ use crate::bindings::{
 // use core::num;
 use ethers::prelude::*;
 use futures::future::join_all;
-use meta_common::{
-    enums::{DexExchange, Network},
-};
-use meta_util::ether::{address_to_str};
+use meta_common::enums::{DexExchange, Network};
+use meta_util::ether::address_to_str;
 
 use std::{
     borrow::BorrowMut,
@@ -470,7 +468,7 @@ mod test {
     use super::Erc20Info;
     use ethers::prelude::*;
     use meta_common::constants::ETHER;
-    use mockall::{mock};
+    use mockall::mock;
     mock!(UniswapV2Pair {});
 
     #[test]

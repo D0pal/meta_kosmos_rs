@@ -30,7 +30,7 @@ use meta_contracts::{
         UniswapV2PairWrapper,
     },
 };
-use meta_dex::{DexService};
+use meta_dex::DexService;
 use meta_tracing::init_tracing;
 use meta_util::{enums::dexs_from_str, ether::address_from_str};
 

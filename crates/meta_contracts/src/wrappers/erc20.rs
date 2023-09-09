@@ -1,6 +1,4 @@
-use crate::bindings::{
-    ERC20,
-};
+use crate::bindings::ERC20;
 use ethers::prelude::*;
 
 use meta_common::enums::Network;

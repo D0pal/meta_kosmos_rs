@@ -9,11 +9,11 @@ pub mod prelude {
     pub use super::{error::*, oracle::*, pool::*, sandwidth::*};
 }
 
-use meta_address::TokenInfo;
 use defi::DexWrapper;
 use error::OrderError;
 use ethers::prelude::*;
 use eyre::Result;
+use meta_address::TokenInfo;
 
 use hashbrown::HashMap;
 use meta_address::{get_dex_address, Token};
@@ -55,8 +55,8 @@ pub struct FeeInfo {
 
 #[derive(Debug)]
 pub struct TradeBalanceDiff {
-   pub trade: HashMap<Token, Decimal>,
-   pub  fee: FeeInfo,
+    pub trade: HashMap<Token, Decimal>,
+    pub fee: FeeInfo,
 }
 
 impl<M: Middleware> DexService<M> {
@@ -130,10 +130,7 @@ impl<M: Middleware> DexService<M> {
                     }
                     Ok(TradeBalanceDiff {
                         trade: diff,
-                        fee: FeeInfo {
-                            fee_token: Token::ETH,
-                            amount: gas_fee,
-                        },
+                        fee: FeeInfo { fee_token: Token::ETH, amount: gas_fee },
                     })
                 }
                 None => Err(OrderError::UnableFetchTxReceiptError),

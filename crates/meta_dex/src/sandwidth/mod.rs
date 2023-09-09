@@ -3,9 +3,7 @@ pub mod v2;
 
 use std::sync::Arc;
 
-use ethers::prelude::{
-    *,
-};
+use ethers::prelude::*;
 use lazy_static::lazy_static;
 use tokio::sync::RwLock;
 

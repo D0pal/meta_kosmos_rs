@@ -40,7 +40,7 @@ pub fn decimal_from_wei(input: U256, decimals: u32) -> Decimal {
 
     // let reduced_f64 = reduced.to_string().parse::<f64>().unwrap();
     // let out = Decimal::from_f64(reduced_f64).unwrap();
-    // 
+    //
 }
 
 #[cfg(test)]

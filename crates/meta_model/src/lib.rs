@@ -1,7 +1,7 @@
-use std::time::Instant;
 use meta_address::enums::Asset;
 use meta_common::enums::Network;
 use rust_decimal::Decimal;
+use std::time::Instant;
 
 #[derive(Debug, Default)]
 pub struct ArbitrageOutcome {
@@ -11,7 +11,7 @@ pub struct ArbitrageOutcome {
     pub fee_token: Asset,
     pub fee_amount: Decimal,
     pub id: String,
-    pub network: Option<Network>
+    pub network: Option<Network>,
 }
 
 #[derive(Debug)]

@@ -8,10 +8,11 @@ use meta_address::{
     enums::Asset, get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info,
     ContractInfo, Token,
 };
-use meta_bots::venus::{notify_arbitrage_result, ArbitragePair, CexTradeInfo, DexTradeInfo};
-use meta_bots::{AppConfig, VenusConfig};
-use meta_cefi::bitfinex::wallet::TradeExecutionUpdate;
-use meta_cefi::cefi_service::CefiService;
+use meta_bots::{
+    venus::{notify_arbitrage_result, ArbitragePair, CexTradeInfo, DexTradeInfo},
+    AppConfig, VenusConfig,
+};
+use meta_cefi::{bitfinex::wallet::TradeExecutionUpdate, cefi_service::CefiService};
 use meta_common::{
     enums::{BotType, CexExchange, ContractType, DexExchange, Network, RpcProvider},
     models::{CurrentSpread, MarcketChange},
@@ -31,13 +32,15 @@ use meta_contracts::{
         UniswapV2PairWrapper,
     },
 };
-use meta_dex::enums::to_token_info;
-use meta_dex::{enums::TokenInfo, DexService};
+use meta_dex::{
+    enums::{to_token_info, TokenInfo},
+    DexService,
+};
+use meta_integration::Lark;
 use meta_tracing::init_tracing;
-use meta_util::ether::tx_hash_from_str;
 use meta_util::{
     defi::{get_swap_price_limit, get_token0_and_token1},
-    ether::{address_from_str, decimal_from_wei, decimal_to_wei},
+    ether::{address_from_str, decimal_from_wei, decimal_to_wei, tx_hash_from_str},
     get_price_delta_in_bp,
     time::get_current_ts,
 };
@@ -64,7 +67,6 @@ use std::{
 };
 use tokio::sync::RwLock;
 use tracing::{debug, error, info, instrument::WithSubscriber, warn, Level};
-use meta_integration::Lark;
 
 #[tokio::main]
 async fn main() {
@@ -112,42 +114,41 @@ async fn main() {
         "https://open.larksuite.com/open-apis/bot/v2/hook/722d27f3-fa80-4c79-8cf5-87970ce1712a";
     let lark = Lark::new(web_hook.to_string());
 
-
     let base_token_info = to_token_info(arb_token_info, network, arb);
     let quote_token_info = to_token_info(usdc_token_info, network, usdc);
-    let pair = ArbitragePair {
-        datetime: Utc::now(),
-        base: Asset::ARB,
-        quote: Asset::USD,
-        cex: CexTradeInfo {
-            venue: CexExchange::BITFINEX,
-            trade_info: Some(TradeExecutionUpdate {
-                id: 123456u64, // Trade database id
-                symbol: "tARBUSD".to_string(),
-                mts_create: 123456u64, // Client Order ID
-                order_id: 123456u64,   // Order id
-            
-                exec_amount: Decimal::from_f64(-12.0).unwrap(), // Positive means buy, negative means sell
-                exec_price: Decimal::from_f64(0.89).unwrap(),  // Execution price
-                order_type: "MARKET".to_string(),
-                order_price: Decimal::from_f64(0.89).unwrap(),
-            
-                maker: -1,                    // 1 if true, -1 if false
-                fee: Some(Decimal::from_f64(0.001).unwrap()),         // Fee ('tu' only)
-                fee_currency: Some("ARB".to_string()), // Fee currency ('tu' only)
-                cid: 12345678u64,                     // client order id
-            }),
-        },
-        dex: DexTradeInfo {
-            network: network,
-            venue: dex,
-            tx_hash: Some(tx_hash_from_str("0xcba0d4fc27a32aaddece248d469beb430e29c1e6fecdd5db3383e1c8b212cdeb")),
-            base_token_info: TokenInfo {
+    // let pair = ArbitragePair {
+    //     datetime: Utc::now(),
+    //     base: Asset::ARB,
+    //     quote: Asset::USD,
+    //     cex: CexTradeInfo {
+    //         venue: CexExchange::BITFINEX,
+    //         trade_info: Some(TradeExecutionUpdate {
+    //             id: 123456u64, // Trade database id
+    //             symbol: "tARBUSD".to_string(),
+    //             mts_create: 123456u64, // Client Order ID
+    //             order_id: 123456u64,   // Order id
 
-            },
-            quote_token_info: TokenInfo,
-            v3_fee: Option<u32>,
-        },
-    };
-    notify_arbitrage_result(&lark, &dex_service, 123456u128,).await;
+    //             exec_amount: Decimal::from_f64(-12.0).unwrap(), // Positive means buy, negative means sell
+    //             exec_price: Decimal::from_f64(0.89).unwrap(),  // Execution price
+    //             order_type: "MARKET".to_string(),
+    //             order_price: Decimal::from_f64(0.89).unwrap(),
+
+    //             maker: -1,                    // 1 if true, -1 if false
+    //             fee: Some(Decimal::from_f64(0.001).unwrap()),         // Fee ('tu' only)
+    //             fee_currency: Some("ARB".to_string()), // Fee currency ('tu' only)
+    //             cid: 12345678u64,                     // client order id
+    //         }),
+    //     },
+    //     dex: DexTradeInfo {
+    //         network: network,
+    //         venue: dex,
+    //         tx_hash: Some(tx_hash_from_str("0xcba0d4fc27a32aaddece248d469beb430e29c1e6fecdd5db3383e1c8b212cdeb")),
+    //         base_token_info: TokenInfo {
+
+    //         },
+    //         quote_token_info: TokenInfo,
+    //         v3_fee: Option<u32>,
+    //     },
+    // };
+    // notify_arbitrage_result(&lark, &dex_service, 123456u128,).await;
 }

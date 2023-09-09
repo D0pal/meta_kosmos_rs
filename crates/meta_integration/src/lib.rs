@@ -1,9 +1,9 @@
 use std::ops::Add;
 
+use chrono::Utc;
 use meta_address::enums::Asset;
 use meta_model::ArbitrageSummary;
 use reqwest::{header, Client};
-use chrono::Utc;
 
 #[derive(Debug)]
 pub struct Lark {
@@ -20,7 +20,7 @@ impl Lark {
             .default_headers(default_header)
             .build()
             .expect("unable to build http client");
-       
+
         Self { client, url: web_hook }
     }
 

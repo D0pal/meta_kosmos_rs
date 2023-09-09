@@ -9,7 +9,6 @@ use rust_decimal::{
     Decimal,
 };
 
-
 pub fn int_from_hex_str(input: &str) -> u64 {
     let parsed = input.replace("0x", "");
     u64::from_str_radix(&parsed, 16).unwrap()

@@ -1,9 +1,9 @@
+use chrono::prelude::*;
 use meta_address::enums::Asset;
+use meta_common::enums::Network;
 use meta_integration::Lark;
 use meta_model::{ArbitrageOutcome, ArbitrageSummary};
 use rust_decimal::{prelude::FromPrimitive, Decimal};
-use meta_common::enums::Network;
-use chrono::prelude::*;
 
 #[tokio::main]
 async fn main() {

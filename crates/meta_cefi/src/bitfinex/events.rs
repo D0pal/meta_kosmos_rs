@@ -4,8 +4,8 @@ use crate::bitfinex::book::{
 use serde::Deserialize;
 
 use super::wallet::{
-    FundingCreditSnapshot, NewOrderOnReq, OrderUpdateEvent, PositionSnapshot, TradeExecutionUpdate, TuEvent,
-    WalletSnapshot, BU,
+    FundingCreditSnapshot, NewOrderOnReq, OrderUpdateEvent, PositionSnapshot, TradeExecutionUpdate,
+    TuEvent, WalletSnapshot, BU,
 };
 
 pub type SEQUENCE = u32;

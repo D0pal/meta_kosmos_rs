@@ -1,8 +1,4 @@
-use std::{
-    sync::{
-        atomic::{AtomicUsize, Ordering},
-    },
-};
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 fn main() {
     static GLOBAL_THREAD_COUNT: AtomicUsize = AtomicUsize::new(0);

@@ -32,11 +32,7 @@ use revm::{
     inspectors::NoOpInspector,
     primitives::{bytes, ExecutionResult, Output, TransactTo, U256 as rU256},
 };
-use std::{
-    collections::{BTreeMap},
-    sync::Arc,
-    time::Duration,
-};
+use std::{collections::BTreeMap, sync::Arc, time::Duration};
 use tokio::{
     sync::{mpsc::Sender, Mutex, RwLock},
     task::JoinError,

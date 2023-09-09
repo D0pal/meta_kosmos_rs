@@ -6,8 +6,15 @@ use futures_util::future::try_join_all;
 use gumdrop::Options;
 use meta_address::{
     enums::Asset, get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info, Token,
+    TokenInfo,
 };
-use meta_bots::{AppConfig, VenusConfig, venus::{ArbitragePair, CexTradeInfo, DexTradeInfo}};
+use meta_bots::{
+    venus::{
+        ArbitrageInstruction, ArbitragePair, CexInstruction, CexTradeInfo, DexInstruction,
+        DexTradeInfo, CID,
+    },
+    AppConfig, VenusConfig,
+};
 use meta_cefi::{
     bitfinex::wallet::{OrderUpdateEvent, TradeExecutionUpdate},
     cefi_service::{AccessKey, CefiService, CexConfig},
@@ -30,8 +37,7 @@ use meta_contracts::{
         UniswapV2PairWrapper,
     },
 };
-use meta_address::TokenInfo;
-use meta_dex::{ DexService};
+use meta_dex::DexService;
 use meta_integration::Lark;
 use meta_model::{ArbitrageOutcome, ArbitrageSummary};
 use meta_tracing::init_tracing;
@@ -65,7 +71,6 @@ use std::{
 use tokio::sync::RwLock;
 use tracing::{debug, error, info, instrument::WithSubscriber, warn, Level};
 use uuid::Uuid;
-use meta_bots::venus::{CID, CexInstruction, DexInstruction, ArbitrageInstruction};
 
 #[derive(Debug, Clone, Options)]
 struct Opts {
@@ -91,7 +96,6 @@ struct Opts {
 }
 
 pub const V3_FEE: u32 = 500u32;
-
 
 async fn run(config: VenusConfig) -> anyhow::Result<()> {
     debug!("run venus app with config: {:?}", config);
@@ -136,7 +140,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                 unwrap_to: None,
                 byte_code: None,
                 code_hash: None,
-                native: false
+                native: false,
             };
             let quote_token: TokenInfo = TokenInfo {
                 token: quote_token,
@@ -146,7 +150,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                 unwrap_to: None,
                 byte_code: None,
                 native: false,
-                code_hash: None
+                code_hash: None,
             };
 
             let quoter_address = get_dex_address(
@@ -463,7 +467,6 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
         }
     }
 }
-
 
 async fn try_arbitrage<'a, M: Middleware>(
     arbitrages: Arc<SyncRwLock<BTreeMap<CID, ArbitragePair>>>,

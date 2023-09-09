@@ -36,7 +36,8 @@ impl<M: Middleware> DexWrapper<M> {
                 let quoter_v2_contract_info =
                     get_dex_address(dex_exchange, network, ContractType::UniV3QuoterV2).unwrap();
                 let swap_router_info =
-                    get_dex_address(dex_exchange, network, ContractType::UniV3SwapRouterV2).unwrap();
+                    get_dex_address(dex_exchange, network, ContractType::UniV3SwapRouterV2)
+                        .unwrap();
                 let v3_factory =
                     UniswapV3Factory::new(factory_contract_info.address, client.clone());
                 let v3_quoter_v2 = QuoterV2::new(quoter_v2_contract_info.address, client.clone());
