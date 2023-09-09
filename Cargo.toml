@@ -72,6 +72,7 @@ tracing = "0.1.29"
 colored = "2.0.0"
 # misc
 indicatif = "0.17.1"
+chrono = "0.4.30"
 # CLI
 gumdrop = "0.8.0"
 

@@ -29,6 +29,8 @@ meta_address = { path = "../meta_address" }
 meta_contracts = { path = "../meta_contracts" }
 meta_dex = { path = "../meta_dex" }
 meta_cefi = { path = "../meta_cefi" }
+meta_integration = { path = "../meta_integration" }
+meta_model = { path = "../meta_model"}
 # blockchain
 ethers.workspace = true
 revm.workspace = true
@@ -62,3 +64,5 @@ eyre.workspace = true
 # tracing
 tracing.workspace = true
 colored.workspace = true
+# misc
+chrono.workspace=true

@@ -1,7 +1,6 @@
 #![allow(unused_imports)]
 
 pub mod defi;
-pub mod enums;
 pub mod error;
 pub mod oracle;
 pub mod pool;
@@ -10,7 +9,7 @@ pub mod prelude {
     pub use super::{error::*, oracle::*, pool::*, sandwidth::*};
 }
 
-use crate::enums::TokenInfo;
+use meta_address::TokenInfo;
 use defi::DexWrapper;
 use error::OrderError;
 use ethers::prelude::*;
@@ -56,8 +55,8 @@ pub struct FeeInfo {
 
 #[derive(Debug)]
 pub struct TradeBalanceDiff {
-    trade: HashMap<Token, Decimal>,
-    fee: FeeInfo,
+   pub trade: HashMap<Token, Decimal>,
+   pub  fee: FeeInfo,
 }
 
 impl<M: Middleware> DexService<M> {

@@ -1,5 +1,6 @@
 pub mod forked_db;
 pub mod mev_bots;
+pub mod venus;
 
 use async_trait::async_trait;
 use config::{Config, ConfigError, File};

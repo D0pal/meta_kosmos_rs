@@ -1,4 +1,5 @@
 //! cex dex arbitrage bot
+use chrono::prelude::*;
 use ethers::prelude::*;
 use futures::future::join_all;
 use futures_util::future::try_join_all;
@@ -6,7 +7,7 @@ use gumdrop::Options;
 use meta_address::{
     enums::Asset, get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info, Token,
 };
-use meta_bots::{AppConfig, VenusConfig};
+use meta_bots::{AppConfig, VenusConfig, venus::{ArbitragePair, CexTradeInfo, DexTradeInfo}};
 use meta_cefi::{
     bitfinex::wallet::{OrderUpdateEvent, TradeExecutionUpdate},
     cefi_service::{AccessKey, CefiService, CexConfig},
@@ -29,7 +30,10 @@ use meta_contracts::{
         UniswapV2PairWrapper,
     },
 };
-use meta_dex::{enums::TokenInfo, DexService};
+use meta_address::TokenInfo;
+use meta_dex::{ DexService};
+use meta_integration::Lark;
+use meta_model::{ArbitrageOutcome, ArbitrageSummary};
 use meta_tracing::init_tracing;
 use meta_util::{
     defi::{get_swap_price_limit, get_token0_and_token1},
@@ -61,6 +65,7 @@ use std::{
 use tokio::sync::RwLock;
 use tracing::{debug, error, info, instrument::WithSubscriber, warn, Level};
 use uuid::Uuid;
+use meta_bots::venus::{CID, CexInstruction, DexInstruction, ArbitrageInstruction};
 
 #[derive(Debug, Clone, Options)]
 struct Opts {
@@ -87,55 +92,6 @@ struct Opts {
 
 pub const V3_FEE: u32 = 500u32;
 
-#[derive(Debug)]
-pub struct CexTradeInfo {
-    pub venue: CexExchange,
-    pub trade_info: Option<TradeExecutionUpdate>,
-}
-
-#[derive(Debug)]
-pub struct DexTradeInfo {
-    pub network: Network,
-    pub venue: DexExchange,
-    pub tx_hash: Option<TxHash>,
-}
-
-#[derive(Debug)]
-pub struct ArbitragePair {
-    pub base: Asset,
-    pub quote: Asset,
-    pub cex: CexTradeInfo,
-    pub dex: DexTradeInfo,
-}
-
-pub type CID = u128; //client order id
-
-pub fn check_arbitrage_status(
-    map: Arc<SyncRwLock<BTreeMap<CID, ArbitragePair>>>,
-) -> Option<(CID, TradeExecutionUpdate, TxHash)> {
-    let mut _g = map.read().expect("unable to get read lock");
-    let mut iter = _g.iter();
-    loop {
-        let mut cur = iter.next();
-        if cur.is_none() {
-            break None;
-        } else {
-            let (key, val) = cur.unwrap();
-            if val.cex.trade_info.is_some() && val.dex.tx_hash.is_some() {
-                //  both legs completed
-                let trade_info = val.cex.trade_info.as_ref().unwrap().clone();
-                let hash = val.dex.tx_hash.as_ref().unwrap().clone();
-                break Some((key.clone(), trade_info, hash));
-            } else {
-                continue;
-            }
-        }
-    }
-}
-
-pub async fn notify_arbitrage_result() {
-    
-}
 
 async fn run(config: VenusConfig) -> anyhow::Result<()> {
     debug!("run venus app with config: {:?}", config);
@@ -177,12 +133,20 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                 decimals: base_token_info.decimals,
                 network: config.network,
                 address: base_token_address,
+                unwrap_to: None,
+                byte_code: None,
+                code_hash: None,
+                native: false
             };
             let quote_token: TokenInfo = TokenInfo {
                 token: quote_token,
                 decimals: quote_token_info.decimals,
                 network: config.network,
                 address: quote_token_address,
+                unwrap_to: None,
+                byte_code: None,
+                native: false,
+                code_hash: None
             };
 
             let quoter_address = get_dex_address(
@@ -500,30 +464,6 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
     }
 }
 
-#[derive(Debug)]
-pub struct CexInstruction {
-    venue: CexExchange,
-    amount: Decimal,
-    base_asset: Asset,
-    quote_asset: Asset,
-}
-
-#[derive(Debug)]
-pub struct DexInstruction {
-    network: Network,
-    venue: DexExchange,
-    amount: Decimal,
-    base_token: TokenInfo,
-    quote_token: TokenInfo,
-    fee: u32,
-    recipient: Address,
-}
-
-#[derive(Debug)]
-pub struct ArbitrageInstruction {
-    cex: CexInstruction,
-    dex: DexInstruction,
-}
 
 async fn try_arbitrage<'a, M: Middleware>(
     arbitrages: Arc<SyncRwLock<BTreeMap<CID, ArbitragePair>>>,
@@ -547,6 +487,7 @@ async fn try_arbitrage<'a, M: Middleware>(
     _g.insert(
         client_order_id,
         ArbitragePair {
+            datetime: chrono::Utc::now(),
             base: instruction.cex.base_asset,
             quote: instruction.cex.quote_asset,
             cex: CexTradeInfo { venue: instruction.cex.venue, trade_info: None },
@@ -554,6 +495,9 @@ async fn try_arbitrage<'a, M: Middleware>(
                 network: instruction.dex.network,
                 venue: instruction.dex.venue,
                 tx_hash: None,
+                base_token_info: instruction.dex.base_token.clone(),
+                quote_token_info: instruction.dex.quote_token.clone(),
+                v3_fee: Some(instruction.dex.fee),
             },
         },
     );
@@ -665,6 +609,19 @@ mod test {
                     network: Network::ARBI,
                     venue: DexExchange::UniswapV3,
                     tx_hash: None,
+                    base_token_info: TokenInfo {
+                        token: Token::ARB,
+                        decimals: 18,
+                        network: Network::ARBI,
+                        address: address_from_str("0x89dbEA2B8c120a60C086a5A7f73cF58261Cb9c44"),
+                    },
+                    quote_token_info: TokenInfo {
+                        token: Token::USD,
+                        decimals: 6,
+                        network: Network::ARBI,
+                        address: address_from_str("0x89dbEA2B8c120a60C086a5A7f73cF58261Cb9c44"),
+                    },
+                    v3_fee: None,
                 },
             },
         );
@@ -681,6 +638,19 @@ mod test {
                     network: Network::ARBI,
                     venue: DexExchange::UniswapV3,
                     tx_hash: None,
+                    base_token_info: TokenInfo {
+                        token: Token::ARB,
+                        decimals: 18,
+                        network: Network::ARBI,
+                        address: address_from_str("0x89dbEA2B8c120a60C086a5A7f73cF58261Cb9c44"),
+                    },
+                    quote_token_info: TokenInfo {
+                        token: Token::USD,
+                        decimals: 6,
+                        network: Network::ARBI,
+                        address: address_from_str("0x89dbEA2B8c120a60C086a5A7f73cF58261Cb9c44"),
+                    },
+                    v3_fee: None,
                 },
             },
         );

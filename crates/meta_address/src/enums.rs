@@ -1,5 +1,6 @@
 use crate::Token;
 use serde::Deserialize;
+use std::str::FromStr;
 use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString, EnumVariantNames};
 
 #[derive(
@@ -51,8 +52,20 @@ impl Into<Token> for Asset {
     }
 }
 
+
 impl Default for Asset {
     fn default() -> Self {
         Self::USD
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_asset_from_str() {
+        let output = "ETH".parse::<Asset>().unwrap();
+        assert_eq!(output, Asset::ETH);
     }
 }

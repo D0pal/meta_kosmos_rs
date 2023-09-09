@@ -3,6 +3,7 @@ use std::ops::Add;
 use meta_address::enums::Asset;
 use meta_model::ArbitrageSummary;
 use reqwest::{header, Client};
+use chrono::Utc;
 
 #[derive(Debug)]
 pub struct Lark {
@@ -19,12 +20,13 @@ impl Lark {
             .default_headers(default_header)
             .build()
             .expect("unable to build http client");
+       
         Self { client, url: web_hook }
     }
 
     pub async fn send_arbitrage_summary(&self, summary: ArbitrageSummary) {
-        let mut base_net = summary.cex.base.checked_add(summary.dex.base).unwrap();
-        let mut quote_net = summary.cex.quote.checked_add(summary.dex.quote).unwrap();
+        let mut base_net = summary.cex.base_amount.checked_add(summary.dex.base_amount).unwrap();
+        let mut quote_net = summary.cex.quote_amount.checked_add(summary.dex.quote_amount).unwrap();
 
         if summary.cex.fee_token.eq(&summary.base) {
             base_net = base_net.add(summary.cex.fee_amount);
@@ -43,20 +45,20 @@ impl Lark {
         "#,
             summary.base,
             summary.quote,
-            summary.timestamp,
+            summary.datetime,
             summary.base, // start of cex
-            summary.cex.base,
+            summary.cex.base_amount,
             summary.quote,
-            summary.cex.quote,
+            summary.cex.quote_amount,
             summary.cex.price,
             summary.cex.fee_token,
             summary.cex.fee_amount,
             summary.cex.id,
             summary.dex.network.map_or("".to_string(), |e| e.to_string()), // start of dex
             summary.base,
-            summary.dex.base,
+            summary.dex.base_amount,
             summary.quote,
-            summary.dex.quote,
+            summary.dex.quote_amount,
             summary.dex.price,
             summary.dex.fee_token,
             summary.dex.fee_amount,

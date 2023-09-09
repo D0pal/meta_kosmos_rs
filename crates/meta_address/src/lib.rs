@@ -7,7 +7,7 @@ use meta_common::{
 };
 use meta_macro::impl_contract_code;
 use once_cell::sync::Lazy;
-use std::collections::HashMap;
+use std::{collections::HashMap, str::FromStr};
 
 include!(concat!(env!("OUT_DIR"), "/token_enum.rs"));
 
@@ -25,8 +25,20 @@ impl Contract {
 }
 
 #[derive(Clone, Debug, Deserialize)]
+struct PersistedTokenInfo {
+    pub decimals: u8,
+    pub address: Address,
+    pub native: bool,
+    pub unwrap_to: Option<Token>,
+    pub byte_code: Option<String>,
+    pub code_hash: Option<String>,
+}
+
+#[derive(Clone, Debug)]
 #[impl_contract_code()]
 pub struct TokenInfo {
+    pub network: Network,
+    pub token: Token,
     pub decimals: u8,
     pub address: Address,
     pub native: bool,
@@ -58,24 +70,26 @@ const BOT_ADDRESS_JSON: &str = include_str!("../static/bot_address.json");
 const RPC_JSON: &str = include_str!("../static/rpc.json");
 
 /// <token_name, <network, token_info>>
-static NAMED_TOKEN_INFO_BOOK: Lazy<HashMap<String, HashMap<Network, TokenInfo>>> =
+static NAMED_TOKEN_INFO_BOOK: Lazy<HashMap<String, HashMap<Network, PersistedTokenInfo>>> =
     Lazy::new(|| serde_json::from_str(TOKEN_ADDRESS_JSON).unwrap());
 
 /// <network, <token_address, token_info>>
-static ADDRESSED_TOKEN_INFO_BOOK: Lazy<HashMap<Network, HashMap<Address, TokenInfo>>> =
-    Lazy::new(|| {
-        let mut book = HashMap::default();
-        NAMED_TOKEN_INFO_BOOK.iter().for_each(|(_, val)| {
-            val.iter().for_each(|(network, info)| {
-                if !book.contains_key(network) {
-                    book.insert(network.to_owned(), HashMap::new());
-                }
-                let info_map = book.get_mut(network).unwrap();
-                info_map.entry(info.address).or_insert(info.to_owned());
-            })
-        });
-        book
+static ADDRESSED_TOKEN_INFO_BOOK: Lazy<
+    HashMap<Network, HashMap<Address, (String, PersistedTokenInfo)>>,
+> = Lazy::new(|| {
+    let mut book: HashMap<Network, HashMap<ethers::types::H160, (String, PersistedTokenInfo)>, _> =
+        HashMap::default();
+    NAMED_TOKEN_INFO_BOOK.iter().for_each(|(name, val)| {
+        val.iter().for_each(|(network, info)| {
+            if !book.contains_key(network) {
+                book.insert(network.to_owned(), HashMap::new());
+            }
+            let info_map = book.get_mut(network).unwrap();
+            info_map.entry(info.address).or_insert((name.to_string(), info.to_owned()));
+        })
     });
+    book
+});
 
 static DEX_ADDRESS_BOOK: Lazy<
     HashMap<DexExchange, HashMap<Network, HashMap<ContractType, ContractInfo>>>,
@@ -87,11 +101,38 @@ static RPC_INFO_BOOK: Lazy<HashMap<Network, RpcInfo>> =
     Lazy::new(|| serde_json::from_str(RPC_JSON).unwrap());
 
 pub fn get_token_info<T: Into<String>>(token_name: T, network: Network) -> Option<TokenInfo> {
-    NAMED_TOKEN_INFO_BOOK.get(&token_name.into()).map_or(None, |x| x.get(&network).cloned())
+    let token_name: String = token_name.into();
+    NAMED_TOKEN_INFO_BOOK.get(&token_name).map_or(None, |x| {
+        x.get(&network).cloned().map_or(None, |e| {
+            Some(TokenInfo {
+                network: network,
+                token: Token::from_str(&token_name).unwrap(),
+                decimals: e.decimals,
+                address: e.address,
+                native: e.native,
+                unwrap_to: e.unwrap_to,
+                byte_code: e.byte_code,
+                code_hash: e.code_hash,
+            })
+        })
+    })
 }
 
 pub fn get_addressed_token_info(network: Network, address: Address) -> Option<TokenInfo> {
-    ADDRESSED_TOKEN_INFO_BOOK.get(&network).map_or(None, |x| x.get(&address).cloned())
+    ADDRESSED_TOKEN_INFO_BOOK.get(&network).map_or(None, |x| {
+        x.get(&address).cloned().map_or(None, |e| {
+            Some(TokenInfo {
+                network: network,
+                token: Token::from_str(&e.0).unwrap(),
+                decimals: e.1.decimals,
+                address: e.1.address,
+                native: e.1.native,
+                unwrap_to: e.1.unwrap_to,
+                byte_code: e.1.byte_code,
+                code_hash: e.1.code_hash,
+            })
+        })
+    })
 }
 
 pub fn get_bot_contract_info(name: BotType, network: Network) -> Option<ContractInfo> {

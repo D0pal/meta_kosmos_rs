@@ -1,10 +1,9 @@
-use std::time::Instant;
-
 use meta_address::enums::Asset;
 use meta_integration::Lark;
 use meta_model::{ArbitrageOutcome, ArbitrageSummary};
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 use meta_common::enums::Network;
+use chrono::prelude::*;
 
 #[tokio::main]
 async fn main() {
@@ -12,12 +11,12 @@ async fn main() {
         "https://open.larksuite.com/open-apis/bot/v2/hook/722d27f3-fa80-4c79-8cf5-87970ce1712a";
     let lark = Lark::new(web_hook.to_string());
     let summary = ArbitrageSummary {
-        timestamp: Instant::now(),
+        datetime: Utc::now().to_rfc3339(),
         base: Asset::ARB,
         quote: Asset::USD,
         cex: ArbitrageOutcome {
-            base: Decimal::from_f64(10.0).unwrap(),
-            quote: Decimal::from_f64(-12.0).unwrap(),
+            base_amount: Decimal::from_f64(10.0).unwrap(),
+            quote_amount: Decimal::from_f64(-12.0).unwrap(),
             price: Decimal::from_f64(1.2).unwrap(),
             fee_token: Asset::ARB,
             fee_amount: Decimal::from_f64(0.01).unwrap(),
@@ -25,8 +24,8 @@ async fn main() {
             network: None,
         },
         dex: ArbitrageOutcome {
-            base: Decimal::from_f64(-10.0).unwrap(),
-            quote: Decimal::from_f64(12.12).unwrap(),
+            base_amount: Decimal::from_f64(-10.0).unwrap(),
+            quote_amount: Decimal::from_f64(12.12).unwrap(),
             price: Decimal::from_f64(1.212).unwrap(),
             fee_token: Asset::ETH,
             fee_amount: Decimal::from_f64(0.00012).unwrap(),
