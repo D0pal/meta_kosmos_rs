@@ -1,19 +1,18 @@
 use colored::Colorize;
 use dashmap::DashMap;
 use ethers::prelude::*;
-use meta_common::enums::Network;
+
 use meta_dex::{
-    oracle::{BlockInfo, BlockOracle},
+    oracle::{BlockOracle},
     pool::Pool,
-    sandwidth::SandwichMaker,
     // sync_dex,
     DexService,
 };
-use std::{sync::Arc, thread, time::Duration};
+use std::{sync::Arc};
 use tokio::sync::RwLock;
 use tracing::info;
 
-use super::{bundle::BundleSender, sandwidth::BotState};
+
 
 // Update latest block variable whenever we recieve a new block
 //
@@ -57,11 +56,11 @@ pub fn start_block_oracle(client: Arc<Provider<Ws>>, oracle: &mut Arc<RwLock<Blo
 }
 
 pub fn start_add_new_pools<M: Middleware + 'static>(
-    client: Arc<Provider<Ws>>, //Vec<Arc<Dex<M>>>,
+    _client: Arc<Provider<Ws>>, //Vec<Arc<Dex<M>>>,
     all_pools: &mut Arc<DashMap<Address, Pool>>,
-    dexes: Vec<Arc<DexService<M>>>,
+    _dexes: Vec<Arc<DexService<M>>>,
 ) {
-    let all_pools = all_pools.clone();
+    let _all_pools = all_pools.clone();
 
     tokio::spawn(async move {
         // loop so we can reconnect if the websocket connection is lost

@@ -2,7 +2,7 @@ pub mod forked_db;
 pub mod mev_bots;
 pub mod venus;
 
-use async_trait::async_trait;
+
 use config::{Config, ConfigError, File};
 use meta_address::enums::Asset;
 use meta_cefi::cefi_service::AccessKey;
@@ -72,11 +72,11 @@ impl AppConfig {
 impl From<ConfigLog> for TraceConfig {
     fn from(config_log: ConfigLog) -> Self {
         let level = Level::from_str(&config_log.level)
-            .expect(&format!("converting level: {} error", &config_log.level));
+            .unwrap_or_else(|_| panic!("converting level: {} error", &config_log.level));
         TraceConfig {
             file_name_prefix: config_log.file_name_prefix,
             dir: config_log.dir,
-            level: level,
+            level,
             flame: config_log.flame,
             console: config_log.console,
         }

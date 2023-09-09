@@ -16,7 +16,7 @@ lazy_static! {
     /// for weth_usdc
     pub static ref TICK_SLOTS: HashMap<i32, [H256; 4]> = {
         let mut map = HashMap::new();
-        (200000..201500).into_iter().for_each(|tick| {
+        (200000..201500).for_each(|tick| {
             map.insert(tick, uni_v3_tick_storage_slots(tick));
         });
         map
@@ -25,7 +25,7 @@ lazy_static! {
      /// for weth_usdc
      pub static ref TICK_MAP_SLOTS: HashMap<(i32, i32), H256> = {
         let mut map = HashMap::new();
-        (200000..201500).into_iter().for_each(|tick| {
+        (200000..201500).for_each(|tick| {
             map.insert((tick, 10), uni_v3_tick_map_slots(tick, 10));
             map.insert((tick, 60), uni_v3_tick_map_slots(tick, 60));
             map.insert((tick, 200), uni_v3_tick_map_slots(tick, 200));
@@ -34,7 +34,7 @@ lazy_static! {
     };
 
     pub static ref OBSERVATIONS_SLOTS: Vec<H256> = {
-        (0..65535).into_iter().map(|index| uni_v3_observations_slot(index)).collect()
+        (0..65535).map(uni_v3_observations_slot).collect()
     };
 
 
@@ -118,16 +118,16 @@ pub fn uni_v3_tick_storage_slots(tick: i32) -> [H256; 4] {
 pub fn uni_v3_tick_map_slots(tick: i32, tick_spacing: i32) -> H256 {
     let mut compressed = tick / tick_spacing;
     if tick < 0 && tick % tick_spacing != 0 {
-        compressed = compressed - 1; // round towards negative infinity
+        compressed -= 1; // round towards negative infinity
     }
     let (word_pos, _bit_pos) = position(compressed);
     // let (word_pos, bit_pos) = position(compressed+1);
 
-    let slot = H256::from(ethers::utils::keccak256(abi::encode(&[
+    
+    H256::from(ethers::utils::keccak256(abi::encode(&[
         abi::Token::Int(U256::from(word_pos)),
         abi::Token::Uint(U256::from(6)), // 6nd storage, mapping(int16 => uint256) public override tickBitmap;
-    ])));
-    slot
+    ])))
 }
 
 /// Oracle.Observation[65535] public override observations;

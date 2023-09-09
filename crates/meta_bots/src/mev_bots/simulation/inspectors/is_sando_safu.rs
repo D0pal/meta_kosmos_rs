@@ -61,7 +61,7 @@ impl SalmonellaInspectoooor {
             suspicious_opcodes.insert(0, gas_opcode);
         }
 
-        match self.suspicious_opcodes.len() == 0 {
+        match self.suspicious_opcodes.is_empty() {
             true => IsSandoSafu::Safu,
             false => IsSandoSafu::NotSafu(suspicious_opcodes),
         }

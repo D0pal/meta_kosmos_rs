@@ -1,7 +1,7 @@
 use std::ops::Add;
 
-use chrono::Utc;
-use meta_address::enums::Asset;
+
+
 use meta_model::ArbitrageSummary;
 use reqwest::{header, Client};
 
@@ -70,7 +70,7 @@ impl Lark {
             summary.dex.fee_token,
             gas_fee_net,
         );
-        let response = self
+        let _response = self
             .client
             .post(&self.url)
             .json(&serde_json::json!({

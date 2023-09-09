@@ -35,7 +35,7 @@ impl SandwichLogicV2 {
         let mut jump_labels: HashMap<String, u32> = HashMap::new();
 
         // pattern: {input||output}{isWeth0||isWeth1}_{numBytesToEncodeTo}
-        let jump_label_names = vec!["v2_output0", "v2_input0", "v2_output1", "v2_input1"];
+        let jump_label_names = ["v2_output0", "v2_input0", "v2_output1", "v2_input1"];
 
         let start_offset = 6;
 

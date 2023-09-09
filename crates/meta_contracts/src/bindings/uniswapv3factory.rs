@@ -49576,7 +49576,7 @@ pub mod uniswap_v3_factory {
         > {
             let factory = ::ethers::contract::ContractFactory::new(
                 UNISWAPV3FACTORY_ABI.clone(),
-                UNISWAPV3FACTORY_BYTECODE.clone().into(),
+                UNISWAPV3FACTORY_BYTECODE.clone(),
                 client,
             );
             let deployer = factory.deploy(constructor_args)?;

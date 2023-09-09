@@ -10,10 +10,10 @@ lazy_static! {
 }
 
 pub fn get_token0_and_token1(token_a: &Address, token_b: &Address) -> (Address, Address) {
-    if token_a.lt(&token_b) {
-        (token_a.clone(), token_b.clone())
+    if token_a.lt(token_b) {
+        (*token_a, *token_b)
     } else {
-        (token_b.clone(), token_a.clone())
+        (*token_b, *token_a)
     }
 }
 

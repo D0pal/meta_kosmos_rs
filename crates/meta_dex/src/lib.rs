@@ -78,7 +78,7 @@ impl<M: Middleware> DexService<M> {
         }
     }
 
-    pub async fn get_pool_address(&mut self, token_0: Address, token_1: Address) -> Address {
+    pub async fn get_pool_address(&mut self, _token_0: Address, _token_1: Address) -> Address {
         Address::default()
     }
 
@@ -88,7 +88,7 @@ impl<M: Middleware> DexService<M> {
         base_token_info: TokenInfo,
         quote_token_info: TokenInfo,
         fee: u32,
-    ) -> Result<(TradeBalanceDiff), OrderError<M>> {
+    ) -> Result<TradeBalanceDiff, OrderError<M>> {
         let receipt = self.client.get_transaction_receipt(hash).await;
         match receipt {
             Ok(r) => match r {
@@ -135,7 +135,7 @@ impl<M: Middleware> DexService<M> {
                 }
                 None => Err(OrderError::UnableFetchTxReceiptError),
             },
-            Err(e) => Err(OrderError::UnableFetchTxReceiptError),
+            Err(_e) => Err(OrderError::UnableFetchTxReceiptError),
         }
     }
 
@@ -158,8 +158,8 @@ impl<M: Middleware> DexService<M> {
                     let swap_param = ExactInputSingleParams {
                         token_in: token_in.address,
                         token_out: token_out.address,
-                        fee: fee,
-                        recipient: recipient,
+                        fee,
+                        recipient,
                         deadline: ddl.into(),
                         amount_in: amount_in_wei,
                         amount_out_minimum: U256::zero(),
@@ -183,7 +183,7 @@ impl<M: Middleware> DexService<M> {
                     match ret {
                         Ok(ref tx) => {
                             info!("send v3 exact input transaction {:?}", tx);
-                            return Ok(tx.tx_hash());
+                            Ok(tx.tx_hash())
                         }
                         Err(e) => Err(OrderError::ContractError(e)),
                     }
@@ -194,8 +194,8 @@ impl<M: Middleware> DexService<M> {
                     let param_output = ExactOutputSingleParams {
                         token_in: token_in.address,
                         token_out: token_out.address,
-                        fee: fee,
-                        recipient: recipient,
+                        fee,
+                        recipient,
                         deadline: ddl.into(),
                         amount_out: amount_out_wei,
                         // TODO: to determin amount_in_maximum, assume no asset is more expensive than 200_000 per quote
@@ -221,7 +221,7 @@ impl<M: Middleware> DexService<M> {
                     match ret {
                         Ok(ref tx) => {
                             info!("send v3 exact out single transaction {:?}", tx);
-                            return Ok(tx.tx_hash());
+                            Ok(tx.tx_hash())
                         }
                         Err(e) => Err(OrderError::ContractError(e)),
                     }

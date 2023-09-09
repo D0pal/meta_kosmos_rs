@@ -27,8 +27,7 @@ impl<M: Middleware> MuteSwitchFactoryWrapper<M> {
     }
 
     pub async fn get_pair_addr(&self, tokenA: Address, tokenB: Address) -> Address {
-        let contract_addr =
-            (self.factory_contract.get_pair(tokenA, tokenB, false).call().await).unwrap();
-        contract_addr
+        
+        (self.factory_contract.get_pair(tokenA, tokenB, false).call().await).unwrap()
     }
 }

@@ -77,8 +77,8 @@ impl<M: Middleware> DexWrapper<M> {
     #[allow(dead_code)]
     fn get_v3_factory(&self) -> UniswapV3Factory<M> {
         let factory_address = self.get_factoy_address();
-        let v3_factory = UniswapV3Factory::new(factory_address, self.client.clone());
-        v3_factory
+        
+        UniswapV3Factory::new(factory_address, self.client.clone())
     }
 
     pub async fn get_v3_pool(
@@ -97,11 +97,10 @@ impl<M: Middleware> DexWrapper<M> {
         token_1: Address,
         fee: u32,
     ) -> anyhow::Result<&UniswapV3Pool<M>> {
-        let pool = self.v3_contracts.as_ref().map_or(None, |contracts| {
+        let pool = self.v3_contracts.as_ref().and_then(|contracts| {
             contracts
                 .pools
-                .get(&token_0)
-                .map_or(None, |inner| inner.get_key_value(&token_1).map(|x| x.1))
+                .get(&token_0).and_then(|inner| inner.get_key_value(&token_1).map(|x| x.1))
         });
 
         if pool.is_some() {
@@ -120,7 +119,7 @@ impl<M: Middleware> DexWrapper<M> {
                         .entry(token_1)
                         .or_insert(pool);
                     let ret = unsafe { ret.as_ptr().as_ref().unwrap() };
-                    return Ok(ret);
+                    Ok(ret)
                 }
                 Err(_e) => {
                     todo!()
@@ -146,7 +145,7 @@ impl<M: Middleware> DexWrapper<M> {
         });
         let ret =
             unsafe { self.v3_contracts.as_ref().unwrap().quoter_v2.as_ptr().as_ref().unwrap() };
-        return Ok(ret);
+        Ok(ret)
     }
 
     pub fn get_v3_swap_router(&self) -> anyhow::Result<&SwapRouter<M>> {
@@ -166,7 +165,7 @@ impl<M: Middleware> DexWrapper<M> {
         });
         let ret =
             unsafe { self.v3_contracts.as_ref().unwrap().swap_router.as_ptr().as_ref().unwrap() };
-        return Ok(ret);
+        Ok(ret)
     }
 
     // pub fn quote_v3_exact_input_single() {

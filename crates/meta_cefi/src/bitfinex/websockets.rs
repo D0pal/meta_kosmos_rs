@@ -6,7 +6,7 @@ use crate::bitfinex::{
     orders::OrderType,
 };
 use error_chain::bail;
-use meta_util::time::get_current_ts;
+
 use serde_json::{from_str, json};
 use std::{
     net::TcpStream,
@@ -18,13 +18,13 @@ use tungstenite::{
 };
 use url::Url;
 
-static INFO: &'static str = "info";
-static SUBSCRIBED: &'static str = "subscribed";
-static AUTH: &'static str = "auth";
-static CONF: &'static str = "conf";
-static CHECKSUM: &'static str = "cs";
-static FUNDING_CREDIT_SNAPSHOT: &'static str = "fcs";
-static WEBSOCKET_URL: &'static str = "wss://api.bitfinex.com/ws/2";
+static INFO: &str = "info";
+static SUBSCRIBED: &str = "subscribed";
+static AUTH: &str = "auth";
+static CONF: &str = "conf";
+static CHECKSUM: &str = "cs";
+static FUNDING_CREDIT_SNAPSHOT: &str = "fcs";
+static WEBSOCKET_URL: &str = "wss://api.bitfinex.com/ws/2";
 static DEAD_MAN_SWITCH_FLAG: u8 = 4;
 
 pub trait EventHandler {
@@ -62,13 +62,13 @@ unsafe impl Sync for WebSockets {}
 impl WebSockets {
     pub fn new() -> WebSockets {
         let (tx, rx) = channel::<WsMessage>();
-        let sender = Sender { tx: tx };
+        let sender = Sender { tx };
 
-        WebSockets { socket: None, sender: sender, rx: rx, event_handler: None }
+        WebSockets { socket: None, sender, rx, event_handler: None }
     }
 
     pub fn connect(&mut self) -> Result<()> {
-        let wss: String = format!("{}", WEBSOCKET_URL);
+        let wss: String = WEBSOCKET_URL.to_string();
         let url = Url::parse(&wss)?;
 
         match connect(url) {
@@ -256,12 +256,12 @@ impl WebSockets {
     }
 
     fn format_symbol(&mut self, symbol: String, et: EventType) -> String {
-        let local_symbol = match et {
+        
+
+        match et {
             EventType::Funding => format!("f{}", symbol),
             EventType::Trading => format!("t{}", symbol),
-        };
-
-        local_symbol
+        }
     }
 
     pub fn event_loop(&mut self) -> Result<()> {
@@ -295,16 +295,16 @@ impl WebSockets {
                     Message::Text(text) => {
                         // println!("got msg: {:?}", text);
                         if let Some(ref mut h) = self.event_handler {
-                            if text.find(INFO) != None {
+                            if text.contains(INFO) {
                                 let event: NotificationEvent = from_str(&text)?;
                                 h.on_connect(event);
-                            } else if text.find(SUBSCRIBED) != None {
+                            } else if text.contains(SUBSCRIBED) {
                                 let event: NotificationEvent = from_str(&text)?;
                                 h.on_subscribed(event);
-                            } else if text.find(AUTH).is_some() {
+                            } else if text.contains(AUTH) {
                                 let event: NotificationEvent = from_str(&text)?;
                                 h.on_auth(event);
-                            } else if text.find(CONF).is_some() {
+                            } else if text.contains(CONF) {
                                 info!("got conf msg: {:?}", text);
                             } else {
                                 // if text.find(FUNDING_CREDIT_SNAPSHOT).is_some() {  // conflicts with fcs

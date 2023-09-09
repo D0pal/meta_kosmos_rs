@@ -69,7 +69,7 @@ impl ForkFactory {
                     .build()
                     .expect("failed to create fork-backend-thread tokio runtime");
 
-                rt.block_on(async move { handler.await });
+                rt.block_on(handler);
             })
             .expect("failed to spawn backendhandler thread");
 

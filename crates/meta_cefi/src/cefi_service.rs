@@ -3,7 +3,7 @@ use crate::bitfinex::{
     common::*,
     errors::*,
     events::{DataEvent, NotificationEvent, SEQUENCE},
-    wallet::{OrderUpdateEvent, TradeExecutionUpdate},
+    wallet::{TradeExecutionUpdate},
     websockets::{EventHandler, EventType, WebSockets},
 };
 use meta_address::enums::Asset;
@@ -14,7 +14,7 @@ use meta_common::{
 use rust_decimal::Decimal;
 use serde::Deserialize;
 use std::{collections::BTreeMap, sync::mpsc::SyncSender};
-use tokio::sync::mpsc::{channel, Sender};
+
 use tracing::{debug, error, info, warn};
 
 #[derive(Clone, Debug)]
@@ -145,23 +145,23 @@ impl EventHandler for BitfinexEventHandler {
                 channel, seq, book_update
             );
             self.check_sequence(seq);
-            let prev_best_bid = self.order_book.as_ref().map_or(Decimal::default(), |ref ob| {
-                ob.bids.last_key_value().map_or(Decimal::default(), |x| x.0.clone())
+            let prev_best_bid = self.order_book.as_ref().map_or(Decimal::default(), |ob| {
+                ob.bids.last_key_value().map_or(Decimal::default(), |x| *x.0)
             });
 
-            let prev_best_ask = self.order_book.as_ref().map_or(Decimal::default(), |ref ob| {
-                ob.asks.first_key_value().map_or(Decimal::default(), |x| x.0.clone())
+            let prev_best_ask = self.order_book.as_ref().map_or(Decimal::default(), |ob| {
+                ob.asks.first_key_value().map_or(Decimal::default(), |x| *x.0)
             });
 
             if let Some(ref mut ob) = self.order_book {
                 update_order_book(ob, book_update);
             }
-            let current_best_bid = self.order_book.as_ref().map_or(Decimal::default(), |ref ob| {
-                ob.bids.last_key_value().map_or(Decimal::default(), |x| x.0.clone())
+            let current_best_bid = self.order_book.as_ref().map_or(Decimal::default(), |ob| {
+                ob.bids.last_key_value().map_or(Decimal::default(), |x| *x.0)
             });
 
-            let current_best_ask = self.order_book.as_ref().map_or(Decimal::default(), |ref ob| {
-                ob.asks.first_key_value().map_or(Decimal::default(), |x| x.0.clone())
+            let current_best_ask = self.order_book.as_ref().map_or(Decimal::default(), |ob| {
+                ob.asks.first_key_value().map_or(Decimal::default(), |x| *x.0)
             });
 
             if !current_best_ask.eq(&prev_best_ask) || !current_best_bid.eq(&prev_best_bid) {
@@ -311,10 +311,10 @@ impl CefiService {
                             if let Some(btf) = btf_handler {
                                 if let Some(ref ob) = btf.order_book {
                                     if let Some((_, ask_level)) = ob.asks.first_key_value() {
-                                        best_ask = ask_level.price.clone();
+                                        best_ask = ask_level.price;
                                     }
                                     if let Some((_, bid_level)) = ob.bids.last_key_value() {
-                                        best_bid = bid_level.price.clone();
+                                        best_bid = bid_level.price;
                                     }
                                 }
                             }
@@ -326,7 +326,7 @@ impl CefiService {
         if best_ask.is_zero() || best_bid.is_zero() {
             None
         } else {
-            Some(CurrentSpread { best_bid: best_bid, best_ask: best_ask })
+            Some(CurrentSpread { best_bid, best_ask })
         }
     }
 }
@@ -343,14 +343,14 @@ fn construct_order_book(levels: Vec<TradingOrderBookLevel>) -> OrderBook {
     let bids: KeyedOrderBook = levels
         .iter()
         .filter(|x| x.amount.is_sign_positive())
-        .map(|y| (y.price.clone(), y.clone()))
+        .map(|y| (y.price, y.clone()))
         .collect();
 
     let asks: KeyedOrderBook = levels
         .iter()
         .filter(|x| x.amount.is_sign_negative())
         .map(|y| {
-            (y.price.clone(), {
+            (y.price, {
                 let mut l = y.clone();
                 l.amount = l.amount.abs();
                 l
@@ -373,14 +373,14 @@ fn update_order_book(ob: &mut OrderBook, book_update: TradingOrderBookLevel) {
         if !book_update.amount.is_sign_negative() {
             ob.bids
                 .entry(book_update.price)
-                .and_modify(|x| (*x).amount = book_update.amount.abs())
+                .and_modify(|x| x.amount = book_update.amount.abs())
                 .or_insert(book_update);
         } else {
             let mut cloned_level = book_update.clone();
             cloned_level.amount = book_update.amount.abs();
             ob.asks
                 .entry(book_update.price)
-                .and_modify(|x| (*x).amount = book_update.amount.abs())
+                .and_modify(|x| x.amount = book_update.amount.abs())
                 .or_insert(cloned_level);
         }
     }
@@ -420,7 +420,7 @@ mod test_cefi {
             let ask_book = ob.asks;
 
             assert_eq!(
-                bid_book.keys().into_iter().filter_map(|x| x.to_f64()).collect::<Vec<f64>>(),
+                bid_book.keys().filter_map(|x| x.to_f64()).collect::<Vec<f64>>(),
                 vec![999.2f64, 1000.1f64, 1000.2f64]
             );
             let (best_bid_key, best_bid_val) = bid_book.last_key_value().unwrap();
@@ -429,7 +429,7 @@ mod test_cefi {
             assert_eq!(best_bid_val.amount, to_decimal(2.1));
 
             assert_eq!(
-                ask_book.keys().into_iter().filter_map(|x| x.to_f64()).collect::<Vec<f64>>(),
+                ask_book.keys().filter_map(|x| x.to_f64()).collect::<Vec<f64>>(),
                 vec![1002.4, 1003.4, 1004.4]
             );
 

@@ -1,7 +1,7 @@
 use meta_common::enums::DexExchange;
 
 pub fn dexs_from_str(dexs: String) -> Vec<DexExchange> {
-    dexs.split(",").into_iter().map(|dex| dex.try_into().expect("unable to convert")).collect()
+    dexs.split(',').map(|dex| dex.try_into().expect("unable to convert")).collect()
 }
 
 #[cfg(test)]

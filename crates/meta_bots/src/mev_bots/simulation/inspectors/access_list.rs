@@ -33,7 +33,7 @@ impl AccessListInspector {
         let precompiles: Vec<rAddress> = Precompiles::latest()
             .addresses()
             .into_iter()
-            .map(|addy| rAddress::from(addy))
+            .map(rAddress::from)
             .collect();
 
         let from: rAddress = from.0.into();
@@ -41,7 +41,7 @@ impl AccessListInspector {
 
         AccessListInspector {
             // exclude precomiples, from, and to addresses
-            excluded: vec![from, to].iter().chain(precompiles.iter()).copied().collect(),
+            excluded: [from, to].iter().chain(precompiles.iter()).copied().collect(),
             access_list: HashMap::default(),
         }
     }

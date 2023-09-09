@@ -1,7 +1,7 @@
 use chrono::prelude::*;
 use ethers::prelude::*;
 use meta_address::{
-    enums::Asset, get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info, Token,
+    enums::Asset,
     TokenInfo,
 };
 use meta_cefi::bitfinex::wallet::TradeExecutionUpdate;
@@ -74,13 +74,13 @@ pub fn check_arbitrage_status(
     let mut _g = map.read().expect("unable to get read lock");
     let mut iter = _g.iter();
     loop {
-        let mut cur = iter.next();
+        let cur = iter.next();
         if cur.is_none() {
             break None;
         } else {
             let (key, val) = cur.unwrap();
             if val.cex.trade_info.is_some() && val.dex.tx_hash.is_some() {
-                break Some((key.clone(), val.clone()));
+                break Some((*key, val.clone()));
             } else {
                 continue;
             }

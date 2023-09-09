@@ -27919,7 +27919,7 @@ pub mod uniswap_v2_factory {
         > {
             let factory = ::ethers::contract::ContractFactory::new(
                 UNISWAPV2FACTORY_ABI.clone(),
-                UNISWAPV2FACTORY_BYTECODE.clone().into(),
+                UNISWAPV2FACTORY_BYTECODE.clone(),
                 client,
             );
             let deployer = factory.deploy(constructor_args)?;

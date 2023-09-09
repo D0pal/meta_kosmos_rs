@@ -177,19 +177,11 @@ impl DefiStorage {
     fn get_v3_pool_slots(&self, tick: i32) -> Vec<H256> {
         let mut common_slots = COMMON_SLOTS.clone();
         let tick_slots: Vec<H256> = (tick - 20..tick + 20)
-            .into_iter()
             .flat_map(|i| TICK_SLOTS.get(&i).map_or(vec![], |x| x.to_vec()))
             .collect();
         let tick_map_slots: Vec<H256> = (tick - 20..tick + 20)
-            .into_iter()
             .filter_map(|i| {
-                if let Some(slot) =
-                    TICK_MAP_SLOTS.get(&(i, uni_v3_tick_spacking_from_fee(self.swap_fee as i32)))
-                {
-                    Some(*slot)
-                } else {
-                    None
-                }
+                TICK_MAP_SLOTS.get(&(i, uni_v3_tick_spacking_from_fee(self.swap_fee as i32))).copied()
             })
             .collect();
         common_slots.extend(tick_slots);
@@ -235,8 +227,8 @@ pub async fn get_v3_pool_slot_0(
     block: BlockId,
 ) -> Option<H256> {
     let slot = uni_v3_slot_0_storage_slot();
-    let val = ws_provider.get_storage_at(pool_address, slot, Some(block)).await.ok();
-    val
+    
+    ws_provider.get_storage_at(pool_address, slot, Some(block)).await.ok()
 }
 
 pub async fn prepare_pool(
@@ -280,7 +272,7 @@ pub async fn prepare_pool(
     for (contract, contract_slots) in slots.iter() {
         for slot in contract_slots {
             all_futures.push(async {
-                let val = ws_provider.get_storage_at(*contract, slot.clone(), block).await;
+                let val = ws_provider.get_storage_at(*contract, *slot, block).await;
                 ((*contract, *slot), val)
             })
         }

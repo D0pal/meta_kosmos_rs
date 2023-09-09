@@ -81,8 +81,8 @@ impl EvmFork {
                 let mut evm = revm::EVM::new();
                 let fork_db = g.new_sandbox_fork();
                 evm.database(fork_db);
-                evm.env.tx.transact_to = TransactTo::Call(quoter_address.clone().0.into());
-                evm.env.tx.data = quote_data.clone().0.into();
+                evm.env.tx.transact_to = TransactTo::Call(quoter_address.0.into());
+                evm.env.tx.data = quote_data.clone().0;
                 evm.env.tx.value = rU256::ZERO;
 
                 let _ret = evm.transact_ref().unwrap();
@@ -612,7 +612,7 @@ fn extract_pools(
 ) -> Option<Vec<SimPool>> {
     // capture all addresses that have a state change and are also a pool
     let touched_pools: Vec<DefiStorage> =
-        state_diffs.keys().filter_map(|e| all_pools.get(e).map(|p| (*p.value()).clone())).collect();
+        state_diffs.keys().filter_map(|e| all_pools.get(e).map(|p| (*p.value()))).collect();
 
     // find direction of swap based on state diff (does weth have state changes?)
     let weth_state = &state_diffs.get(&weth_address);

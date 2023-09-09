@@ -10,10 +10,10 @@ use serde::Serialize;
 use std::io::Read;
 use tracing::debug;
 
-static API1_HOST: &'static str = "https://api.bitfinex.com/v2/";
-static API_SIGNATURE_PATH: &'static str = "/api/v2/auth/r/";
-static API_SIGNATURE_PATH_ORDER: &'static str = "/api/v2/auth/w/";
-static NO_PARAMS: &'static [(); 0] = &[];
+static API1_HOST: &str = "https://api.bitfinex.com/v2/";
+static API_SIGNATURE_PATH: &str = "/api/v2/auth/r/";
+static API_SIGNATURE_PATH_ORDER: &str = "/api/v2/auth/w/";
+static NO_PARAMS: &[(); 0] = &[];
 
 #[derive(Clone)]
 pub struct Client {
@@ -124,7 +124,7 @@ impl Client {
             StatusCode::OK => {
                 let mut body = String::new();
                 response.read_to_string(&mut body)?;
-                return Ok(body);
+                Ok(body)
             }
             StatusCode::INTERNAL_SERVER_ERROR => {
                 bail!("Internal Server Error");
@@ -141,6 +141,6 @@ impl Client {
             s => {
                 bail!(format!("Received response: {:?}", s));
             }
-        };
+        }
     }
 }

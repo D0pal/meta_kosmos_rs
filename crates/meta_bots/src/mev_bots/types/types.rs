@@ -79,7 +79,7 @@ impl OptimalRecipe {
         for (i, x) in self.meats.iter().enumerate() {
             s.push_str(&format!("{:?}", x.hash));
             if i != self.meats.len() - 1 {
-                s.push_str(",");
+                s.push(',');
             }
         }
         s.push(']');

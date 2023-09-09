@@ -1,20 +1,17 @@
-use colored::Colorize;
+
 use ethers::prelude::{rand::Rng, *};
 use hashbrown::HashMap;
-use meta_common::enums::{Network, PoolVariant};
-use std::{collections::BTreeMap, sync::Arc};
+use meta_common::enums::{PoolVariant};
+use std::{sync::Arc};
 use tokio::sync::RwLock;
-use tracing::{error, info};
+
 
 use meta_dex::{oracle::BlockInfo, pool::Pool, sandwidth::SandwichMaker};
 
 use crate::{
-    forked_db::fork_factory::ForkFactory,
     mev_bots::{
-        alert, relay,
         sandwidth::BotState,
-        simulation::{make_sandwidth::create_optimal_sandwich, to_cache_db},
-        types::{OptimalRecipe, RawIngredients},
+        types::{OptimalRecipe},
     },
 };
 
@@ -194,16 +191,16 @@ impl BundleSender {
     // Ok(()): return nothing if sent succesful
     // Err(SendBundleError): return error if send bundle fails
     pub async fn send_bundle(
-        client: Arc<Provider<Ws>>,
+        _client: Arc<Provider<Ws>>,
         recipe: &OptimalRecipe,
         target_block: BlockInfo,
         sandwich_maker: Arc<SandwichMaker>,
-        sandwich_state: Arc<BotState>,
-        weth_address: Address,
+        _sandwich_state: Arc<BotState>,
+        _weth_address: Address,
     ) -> Result<(), SendBundleError> {
         let nonce = {
             let read_lock = sandwich_maker.nonce.read().await;
-            (*read_lock).clone()
+            (*read_lock)
         };
 
         let front_slice_request = Eip1559TransactionRequest {
@@ -219,10 +216,10 @@ impl BundleSender {
             access_list: recipe.frontrun_access_list.clone(),
         };
 
-        let raw_signed_frontrun_tx =
+        let _raw_signed_frontrun_tx =
             sign_eip1559(front_slice_request, &sandwich_maker.searcher_wallet).await?;
 
-        let raw_signed_meat_txs: Vec<Bytes> = recipe.meats.iter().map(|meat| meat.rlp()).collect();
+        let _raw_signed_meat_txs: Vec<Bytes> = recipe.meats.iter().map(|meat| meat.rlp()).collect();
 
         // let max_fee = calculate_bribe_for_max_fee(&recipe, &target_block)?;
 

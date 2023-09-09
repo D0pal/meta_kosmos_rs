@@ -88,7 +88,7 @@ pub fn extract_pools(
 ) -> Option<Vec<SandwichablePool>> {
     // capture all addresses that have a state change and are also a pool
     let touched_pools: Vec<Pool> =
-        state_diffs.keys().filter_map(|e| all_pools.get(e).map(|p| (*p.value()).clone())).collect();
+        state_diffs.keys().filter_map(|e| all_pools.get(e).map(|p| (*p.value()))).collect();
 
     // find direction of swap based on state diff (does weth have state changes?)
     let weth_state_diff = &state_diffs.get(&weth_address)?.storage;

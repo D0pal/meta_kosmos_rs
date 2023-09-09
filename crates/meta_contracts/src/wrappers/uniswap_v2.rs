@@ -101,7 +101,7 @@ impl<M: Middleware> UniswapV2<M> {
         debug!("got pair address: {:?}", contract_addr);
         let pair_contract = UniswapV2Pair::new(contract_addr, self.client.clone());
         // let (token_0, token_1) = get_token_0_and_token_1(token_a, token_b);
-        UniswapV2PairWrapper::new(self.network.clone(), self.dex.clone(), pair_contract).await
+        UniswapV2PairWrapper::new(self.network, self.dex, pair_contract).await
     }
 
     // TODO: add cache to token addrs
@@ -269,7 +269,7 @@ impl<M: Middleware> UniswapV2PairWrapper<M> {
         }
         let data = call.tx.data();
 
-        return data.clone().unwrap().to_owned();
+        data.unwrap().to_owned()
     }
 }
 
@@ -282,7 +282,7 @@ pub fn get_uni_v2_amt_out(state: &UniswapV2PairState, token_in: &Address, amount
         numerator = amt_in_with_fee * U256::from(state.reserves.reserve_0);
         denominator = U256::from(state.reserves.reserve_1) * U256::from(1000) + amt_in_with_fee;
     }
-    return U128::from((numerator / denominator).as_u128());
+    U128::from((numerator / denominator).as_u128())
 }
 
 fn get_token_0_and_token_1(token_a: Address, token_b: Address) -> (Address, Address) {
@@ -407,7 +407,6 @@ pub async fn get_atomic_arb_call_params<M: Middleware>(
         )
         .tx
         .data()
-        .clone()
         .unwrap()
         .to_owned();
 
@@ -450,7 +449,6 @@ pub async fn get_atomic_arb_call_params<M: Middleware>(
         .swap(market_second_amt_0_out, market_second_amt_1_out, receiver, vec![].into())
         .tx
         .data()
-        .clone()
         .unwrap()
         .to_owned();
 

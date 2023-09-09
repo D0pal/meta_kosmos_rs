@@ -74,7 +74,7 @@ impl Orders {
     }
 
     pub fn active_orders(&self) -> Result<Vec<Order>> {
-        let payload: String = format!("{}", "{}");
+        let payload: String = "{}".to_string();
 
         self.orders("orders".to_owned(), payload)
     }
@@ -84,13 +84,13 @@ impl Orders {
         T: Into<Option<String>>,
     {
         let value = symbol.into().unwrap_or("".into());
-        let payload: String = format!("{}", "{}");
+        let payload: String = "{}".to_string();
 
         if value.is_empty() {
-            return self.orders("orders/hist".into(), payload);
+            self.orders("orders/hist".into(), payload)
         } else {
             let request: String = format!("orders/t{}/hist", value);
-            return self.orders(request, payload);
+            self.orders(request, payload)
         }
     }
 

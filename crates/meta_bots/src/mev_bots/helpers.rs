@@ -44,7 +44,7 @@ pub fn attach_braindance_module(
 
     // Get balance mapping of braindance contract inside of weth contract
     let slot: U256 = ethers::utils::keccak256(abi::encode(&[
-        abi::Token::Address((*DEV_BRAINDANCE_ADDRESS).0.into()),
+        abi::Token::Address(DEV_BRAINDANCE_ADDRESS.0.into()),
         abi::Token::Uint(U256::from(3)),
     ]))
     .into();
@@ -134,7 +134,7 @@ fn inject_braindance_code(network: Network, fork_factory: &mut ForkFactory) {
                  .0,
         ),
     );
-    fork_factory.insert_account_info((*DEV_BRAINDANCE_ADDRESS).0.into(), account);
+    fork_factory.insert_account_info(DEV_BRAINDANCE_ADDRESS.0.into(), account);
 
     // setup braindance contract controller
     let account = revm::primitives::AccountInfo::new(
@@ -143,7 +143,7 @@ fn inject_braindance_code(network: Network, fork_factory: &mut ForkFactory) {
         B256::default(),
         Bytecode::default(),
     );
-    fork_factory.insert_account_info((*DEV_BRAINDANCE_CONTRAOLLER_ADDRESS).0.into(), account);
+    fork_factory.insert_account_info(DEV_BRAINDANCE_CONTRAOLLER_ADDRESS.0.into(), account);
 }
 
 // Setup evm blockstate
@@ -184,7 +184,7 @@ pub fn get_amount_out_evm(
 ) -> Result<U256, SimulationError> {
     // get reserves
     evm.env.tx.transact_to = TransactTo::Call(target_pool.0.into());
-    evm.env.tx.caller = (*DEV_CALLER_ADDRESS).0.into();
+    evm.env.tx.caller = DEV_CALLER_ADDRESS.0.into();
     evm.env.tx.value = rU256::ZERO;
     evm.env.tx.data = Bytes::from_str("0x0902f1ac").unwrap().0; // getReserves()
     let result = match evm.transact_ref() {
@@ -201,7 +201,7 @@ pub fn get_amount_out_evm(
     };
 
     let tokens = abi::decode(
-        &vec![ParamType::Uint(128), ParamType::Uint(128), ParamType::Uint(32)],
+        &[ParamType::Uint(128), ParamType::Uint(128), ParamType::Uint(32)],
         &output,
     )
     .unwrap();
@@ -244,7 +244,7 @@ pub fn get_balance_of_evm(
 
     evm.env.tx.transact_to = TransactTo::Call(token.0.into());
     evm.env.tx.data = erc20.encode("balanceOf", owner).unwrap().0;
-    evm.env.tx.caller = (*DEV_CALLER_ADDRESS).0.into();
+    evm.env.tx.caller = DEV_CALLER_ADDRESS.0.into();
     evm.env.tx.gas_price = next_block.base_fee.into();
     evm.env.tx.gas_limit = 700000;
     evm.env.tx.value = rU256::ZERO;
@@ -266,8 +266,8 @@ pub fn get_balance_of_evm(
     };
 
     match erc20.decode_output("balanceOf", &output) {
-        Ok(tokens) => return Ok(tokens),
-        Err(e) => return Err(SimulationError::AbiError(e)),
+        Ok(tokens) => Ok(tokens),
+        Err(e) => Err(SimulationError::AbiError(e)),
     }
 }
 
@@ -288,7 +288,7 @@ pub fn convert_access_list(access_list: Vec<(rAddress, Vec<rU256>)>) -> AccessLi
             storage_keys: keys
                 .iter()
                 .map(|k| {
-                    let slot_u256: U256 = k.clone().into();
+                    let slot_u256: U256 = (*k).into();
                     let slot_h256: H256 = H256::from_uint(&slot_u256);
                     slot_h256
                 })
