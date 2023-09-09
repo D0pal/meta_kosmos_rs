@@ -1,6 +1,6 @@
 use crate::Token;
 use serde::Deserialize;
-use std::str::FromStr;
+
 use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString, EnumVariantNames};
 
 #[derive(
