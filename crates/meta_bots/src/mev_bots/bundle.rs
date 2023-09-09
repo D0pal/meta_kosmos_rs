@@ -200,7 +200,7 @@ impl BundleSender {
     ) -> Result<(), SendBundleError> {
         let nonce = {
             let read_lock = sandwich_maker.nonce.read().await;
-            (*read_lock)
+            *read_lock
         };
 
         let front_slice_request = Eip1559TransactionRequest {

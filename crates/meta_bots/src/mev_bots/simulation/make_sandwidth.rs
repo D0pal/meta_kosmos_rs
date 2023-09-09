@@ -102,7 +102,7 @@ async fn juiced_quadratic_search(
     mut lower_bound: U256,
     mut upper_bound: U256,
     next_block: &BlockInfo,
-    mut fork_factory: &mut ForkFactory,
+    fork_factory: &mut ForkFactory,
     network: Network,
     weth_address: Address,
     _sandwidth_contract_address: Address,
