@@ -6,7 +6,7 @@ use futures_util::future::try_join_all;
 use gumdrop::Options;
 use meta_address::{
     enums::Asset, get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info,
-    ContractInfo, Token,
+    ContractInfo, Token, TokenInfo,
 };
 use meta_bots::{
     venus::{notify_arbitrage_result, ArbitragePair, CexTradeInfo, DexTradeInfo},
@@ -32,10 +32,7 @@ use meta_contracts::{
         UniswapV2PairWrapper,
     },
 };
-use meta_dex::{
-    enums::{to_token_info, TokenInfo},
-    DexService,
-};
+use meta_dex::DexService;
 use meta_integration::Lark;
 use meta_tracing::init_tracing;
 use meta_util::{
@@ -114,41 +111,39 @@ async fn main() {
         "https://open.larksuite.com/open-apis/bot/v2/hook/722d27f3-fa80-4c79-8cf5-87970ce1712a";
     let lark = Lark::new(web_hook.to_string());
 
-    let base_token_info = to_token_info(arb_token_info, network, arb);
-    let quote_token_info = to_token_info(usdc_token_info, network, usdc);
-    // let pair = ArbitragePair {
-    //     datetime: Utc::now(),
-    //     base: Asset::ARB,
-    //     quote: Asset::USD,
-    //     cex: CexTradeInfo {
-    //         venue: CexExchange::BITFINEX,
-    //         trade_info: Some(TradeExecutionUpdate {
-    //             id: 123456u64, // Trade database id
-    //             symbol: "tARBUSD".to_string(),
-    //             mts_create: 123456u64, // Client Order ID
-    //             order_id: 123456u64,   // Order id
+    let pair = ArbitragePair {
+        datetime: Utc::now(),
+        base: Asset::ARB,
+        quote: Asset::USD,
+        cex: CexTradeInfo {
+            venue: CexExchange::BITFINEX,
+            trade_info: Some(TradeExecutionUpdate {
+                id: 123456u64, // Trade database id
+                symbol: "tARBUSD".to_string(),
+                mts_create: 123456u64, // Client Order ID
+                order_id: 123456u64,   // Order id
 
-    //             exec_amount: Decimal::from_f64(-12.0).unwrap(), // Positive means buy, negative means sell
-    //             exec_price: Decimal::from_f64(0.89).unwrap(),  // Execution price
-    //             order_type: "MARKET".to_string(),
-    //             order_price: Decimal::from_f64(0.89).unwrap(),
+                exec_amount: Decimal::from_f64(-12.0).unwrap(), // Positive means buy, negative means sell
+                exec_price: Decimal::from_f64(0.89).unwrap(),   // Execution price
+                order_type: "MARKET".to_string(),
+                order_price: Decimal::from_f64(0.89).unwrap(),
 
-    //             maker: -1,                    // 1 if true, -1 if false
-    //             fee: Some(Decimal::from_f64(0.001).unwrap()),         // Fee ('tu' only)
-    //             fee_currency: Some("ARB".to_string()), // Fee currency ('tu' only)
-    //             cid: 12345678u64,                     // client order id
-    //         }),
-    //     },
-    //     dex: DexTradeInfo {
-    //         network: network,
-    //         venue: dex,
-    //         tx_hash: Some(tx_hash_from_str("0xcba0d4fc27a32aaddece248d469beb430e29c1e6fecdd5db3383e1c8b212cdeb")),
-    //         base_token_info: TokenInfo {
-
-    //         },
-    //         quote_token_info: TokenInfo,
-    //         v3_fee: Option<u32>,
-    //     },
-    // };
-    // notify_arbitrage_result(&lark, &dex_service, 123456u128,).await;
+                maker: -1,                                    // 1 if true, -1 if false
+                fee: Some(Decimal::from_f64(0.001).unwrap()), // Fee ('tu' only)
+                fee_currency: Some("ARB".to_string()),        // Fee currency ('tu' only)
+                cid: 12345678u64,                             // client order id
+            }),
+        },
+        dex: DexTradeInfo {
+            network: network,
+            venue: dex,
+            tx_hash: Some(tx_hash_from_str(
+                "0xcba0d4fc27a32aaddece248d469beb430e29c1e6fecdd5db3383e1c8b212cdeb",
+            )),
+            base_token_info: arb_token_info,
+            quote_token_info: usdc_token_info,
+            v3_fee: Some(V3_FEE),
+        },
+    };
+    notify_arbitrage_result(&lark, &dex_service, 123456u128, &pair).await;
 }
