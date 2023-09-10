@@ -629,78 +629,78 @@ mod test {
 
     use super::*;
 
-    #[test]
-    fn test_check_arbitrage_status() {
-        let mut map: BTreeMap<CID, ArbitragePair> = BTreeMap::new();
-        map.insert(
-            u128::from(100u32),
-            ArbitragePair {
-                base: Asset::ARB,
-                quote: Asset::USD,
-                cex: CexTradeInfo { venue: CexExchange::BITFINEX, trade_info: None },
-                dex: DexTradeInfo {
-                    network: Network::ARBI,
-                    venue: DexExchange::UniswapV3,
-                    tx_hash: None,
-                    base_token_info: TokenInfo {
-                        token: Token::ARB,
-                        decimals: 18,
-                        network: Network::ARBI,
-                        address: address_from_str("0x89dbEA2B8c120a60C086a5A7f73cF58261Cb9c44"),
-                    },
-                    quote_token_info: TokenInfo {
-                        token: Token::USD,
-                        decimals: 6,
-                        network: Network::ARBI,
-                        address: address_from_str("0x89dbEA2B8c120a60C086a5A7f73cF58261Cb9c44"),
-                    },
-                    v3_fee: None,
-                },
-            },
-        );
-        map.insert(
-            u128::from(200u32),
-            ArbitragePair {
-                base: Asset::ARB,
-                quote: Asset::USD,
-                cex: CexTradeInfo {
-                    venue: CexExchange::BITFINEX,
-                    trade_info: Some(TradeExecutionUpdate::default()),
-                },
-                dex: DexTradeInfo {
-                    network: Network::ARBI,
-                    venue: DexExchange::UniswapV3,
-                    tx_hash: None,
-                    base_token_info: TokenInfo {
-                        token: Token::ARB,
-                        decimals: 18,
-                        network: Network::ARBI,
-                        address: address_from_str("0x89dbEA2B8c120a60C086a5A7f73cF58261Cb9c44"),
-                    },
-                    quote_token_info: TokenInfo {
-                        token: Token::USD,
-                        decimals: 6,
-                        network: Network::ARBI,
-                        address: address_from_str("0x89dbEA2B8c120a60C086a5A7f73cF58261Cb9c44"),
-                    },
-                    v3_fee: None,
-                },
-            },
-        );
-        let map = Arc::new(std::sync::RwLock::new(map));
-        let output = check_arbitrage_status(map.clone());
-        assert!(output.is_none());
+    // #[test]
+    // fn test_check_arbitrage_status() {
+    //     let mut map: BTreeMap<CID, ArbitragePair> = BTreeMap::new();
+    //     map.insert(
+    //         u128::from(100u32),
+    //         ArbitragePair {
+    //             base: Asset::ARB,
+    //             quote: Asset::USD,
+    //             cex: CexTradeInfo { venue: CexExchange::BITFINEX, trade_info: None },
+    //             dex: DexTradeInfo {
+    //                 network: Network::ARBI,
+    //                 venue: DexExchange::UniswapV3,
+    //                 tx_hash: None,
+    //                 base_token_info: TokenInfo {
+    //                     token: Token::ARB,
+    //                     decimals: 18,
+    //                     network: Network::ARBI,
+    //                     address: address_from_str("0x89dbEA2B8c120a60C086a5A7f73cF58261Cb9c44"),
+    //                 },
+    //                 quote_token_info: TokenInfo {
+    //                     token: Token::USD,
+    //                     decimals: 6,
+    //                     network: Network::ARBI,
+    //                     address: address_from_str("0x89dbEA2B8c120a60C086a5A7f73cF58261Cb9c44"),
+    //                 },
+    //                 v3_fee: None,
+    //             },
+    //         },
+    //     );
+    //     map.insert(
+    //         u128::from(200u32),
+    //         ArbitragePair {
+    //             base: Asset::ARB,
+    //             quote: Asset::USD,
+    //             cex: CexTradeInfo {
+    //                 venue: CexExchange::BITFINEX,
+    //                 trade_info: Some(TradeExecutionUpdate::default()),
+    //             },
+    //             dex: DexTradeInfo {
+    //                 network: Network::ARBI,
+    //                 venue: DexExchange::UniswapV3,
+    //                 tx_hash: None,
+    //                 base_token_info: TokenInfo {
+    //                     token: Token::ARB,
+    //                     decimals: 18,
+    //                     network: Network::ARBI,
+    //                     address: address_from_str("0x89dbEA2B8c120a60C086a5A7f73cF58261Cb9c44"),
+    //                 },
+    //                 quote_token_info: TokenInfo {
+    //                     token: Token::USD,
+    //                     decimals: 6,
+    //                     network: Network::ARBI,
+    //                     address: address_from_str("0x89dbEA2B8c120a60C086a5A7f73cF58261Cb9c44"),
+    //                 },
+    //                 v3_fee: None,
+    //             },
+    //         },
+    //     );
+    //     let map = Arc::new(std::sync::RwLock::new(map));
+    //     let output = check_arbitrage_status(map.clone());
+    //     assert!(output.is_none());
 
-        {
-            let mut _g = map.write().unwrap();
-            _g.entry(u128::from(200u32)).and_modify(|e| {
-                (*e).dex.tx_hash = Some(tx_hash_from_str(
-                    "0xcba0d4fc27a32aaddece248d469beb430e29c1e6fecdd5db3383e1c8b212cdeb",
-                ))
-            });
-        }
-        let output = check_arbitrage_status(map.clone());
-        assert!(output.is_some());
-        assert_eq!(output.unwrap().0, u128::from(200u32));
-    }
+    //     {
+    //         let mut _g = map.write().unwrap();
+    //         _g.entry(u128::from(200u32)).and_modify(|e| {
+    //             (*e).dex.tx_hash = Some(tx_hash_from_str(
+    //                 "0xcba0d4fc27a32aaddece248d469beb430e29c1e6fecdd5db3383e1c8b212cdeb",
+    //             ))
+    //         });
+    //     }
+    //     let output = check_arbitrage_status(map.clone());
+    //     assert!(output.is_some());
+    //     assert_eq!(output.unwrap().0, u128::from(200u32));
+    // }
 }

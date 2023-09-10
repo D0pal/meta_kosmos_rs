@@ -1,38 +1,21 @@
 //! sandwidtch mev bot
 
-use ethers::prelude::{k256::pkcs8::der::oid::Error, *};
-use futures::future::join_all;
-use gumdrop::Options;
-use serde::{Deserialize, __private::de};
-use std::{
-    borrow::Borrow,
-    cell::RefCell,
-    collections::{BinaryHeap, HashMap},
-    io::BufReader,
-    path::PathBuf,
-    rc::Rc,
-    str::FromStr,
-    sync::Arc,
-    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
-};
-use tracing::{debug, info, instrument::WithSubscriber, warn, Level};
+use ethers::prelude::{*};
 
-use meta_address::{get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info, Token};
-use meta_bots::{mev_bots::sandwidth::BotSandwidth, JupyterConfig};
-use meta_common::enums::{BotType, ContractType, DexExchange, Network};
-use meta_contracts::{
-    bindings::{
-        flash_bots_router::{FlashBotsRouter, UniswapWethParams},
-        uniswap_v2_pair::{SwapFilter, UniswapV2PairEvents},
-    },
-    wrappers::{
-        calculate_price_diff, get_atomic_arb_call_params, Erc20Wrapper, UniswapV2,
-        UniswapV2PairWrapper,
-    },
+use gumdrop::Options;
+
+use std::{
+    path::PathBuf,
 };
-use meta_dex::DexService;
+
+
+
+use meta_bots::{JupyterConfig};
+use meta_common::enums::{Network};
+
+
 use meta_tracing::init_tracing;
-use meta_util::{enums::dexs_from_str, ether::address_from_str};
+use meta_util::{enums::dexs_from_str};
 
 #[derive(Debug, Clone, Options)]
 struct Opts {
@@ -48,7 +31,7 @@ struct Opts {
     private_key_path: PathBuf,
 }
 
-async fn run(config: JupyterConfig) -> anyhow::Result<()> {
+async fn run(_config: JupyterConfig) -> anyhow::Result<()> {
     // info!("run jupyter app with config: {:?}", config);
     // let provider = config.chain.provider.expect("provider required");
     // let rpc_info = get_rpc_info(config.chain.network.unwrap()).unwrap();
@@ -148,7 +131,7 @@ async fn main_impl() -> anyhow::Result<()> {
     if app_config.accounts.private_key_path.is_none() {
         app_config.accounts.private_key_path = Some(opts.private_key_path);
     }
-    let guard = init_tracing(app_config.log.clone().into());
+    let _guard = init_tracing(app_config.log.clone().into());
 
     run(app_config).await
 }
