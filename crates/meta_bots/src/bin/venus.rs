@@ -1,76 +1,48 @@
 //! cex dex arbitrage bot
-use chrono::prelude::*;
+
 use ethers::prelude::*;
-use futures::future::join_all;
 use futures_util::future::try_join_all;
 use gumdrop::Options;
-use meta_address::{
-    enums::Asset, get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info, Token,
-    TokenInfo,
-};
+use meta_address::{enums::Asset, get_dex_address, get_rpc_info, get_token_info, TokenInfo};
 use meta_bots::{
     venus::{
         check_arbitrage_status, notify_arbitrage_result, ArbitrageInstruction, ArbitragePair,
         CexInstruction, CexTradeInfo, DexInstruction, DexTradeInfo, CID,
     },
-    AppConfig, VenusConfig,
+    VenusConfig,
 };
 use meta_cefi::{
-    bitfinex::wallet::{OrderUpdateEvent, TradeExecutionUpdate},
+    bitfinex::wallet::TradeExecutionUpdate,
     cefi_service::{AccessKey, CefiService, CexConfig},
 };
 use meta_common::{
-    enums::{BotType, CexExchange, ContractType, DexExchange, Network},
+    enums::{CexExchange, ContractType, DexExchange, Network},
     models::{CurrentSpread, MarcketChange},
 };
-use meta_contracts::{
-    bindings::{
-        flash_bots_router::{FlashBotsRouter, UniswapWethParams},
-        quoter_v2::QuoterV2,
-        swap_router::SwapRouter,
-        uniswap_v2_pair::{SwapFilter, UniswapV2PairEvents},
-        ExactInputSingleParams, ExactOutputParams, ExactOutputSingleParams,
-        QuoteExactInputSingleParams, QuoteExactOutputSingleParams,
-    },
-    wrappers::{
-        calculate_price_diff, get_atomic_arb_call_params, Erc20Wrapper, UniswapV2,
-        UniswapV2PairWrapper,
-    },
+use meta_contracts::bindings::{
+    quoter_v2::QuoterV2, QuoteExactInputSingleParams, QuoteExactOutputSingleParams,
 };
 use meta_dex::DexService;
 use meta_integration::Lark;
-use meta_model::{ArbitrageOutcome, ArbitrageSummary};
 use meta_tracing::init_tracing;
 use meta_util::{
-    defi::{get_swap_price_limit, get_token0_and_token1},
-    ether::{address_from_str, decimal_from_wei, decimal_to_wei},
+    ether::{decimal_from_wei, decimal_to_wei},
     get_price_delta_in_bp,
     time::get_current_ts,
 };
-use rust_decimal::{
-    prelude::{FromPrimitive, Signed},
-    Decimal,
-};
-use serde::Deserialize;
+use rust_decimal::{prelude::FromPrimitive, Decimal};
 use std::{
-    borrow::{Borrow, BorrowMut},
-    cell::RefCell,
-    collections::{BTreeMap, BinaryHeap, HashMap},
-    io::BufReader,
-    ops::Sub,
+    collections::BTreeMap,
     path::PathBuf,
-    rc::Rc,
-    str::FromStr,
     sync::{
         atomic::{AtomicPtr, Ordering},
-        mpsc, Arc, Mutex, RwLock as SyncRwLock,
+        mpsc, Arc,
     },
     thread,
-    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
+    time::Duration,
 };
 use tokio::sync::RwLock;
-use tracing::{debug, error, info, instrument::WithSubscriber, warn, Level};
-use uuid::Uuid;
+use tracing::{debug, error, info};
 
 lazy_static::lazy_static! {
     static ref TOKIO_RUNTIME: tokio::runtime::Runtime = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
@@ -126,7 +98,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
     let wallet = Arc::new(wallet);
     let dex_service = DexService::new(wallet.clone(), config.network, config.dex);
 
-    let mut arbitrages: Arc<RwLock<BTreeMap<CID, ArbitragePair>>> =
+    let arbitrages: Arc<RwLock<BTreeMap<CID, ArbitragePair>>> =
         Arc::new(RwLock::new(BTreeMap::new())); // key is request id
 
     let lark = Arc::new(Lark::new("".to_string()));
@@ -171,8 +143,8 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
             match config.cex {
                 CexExchange::BITFINEX => {
                     // for receiving spread update
-                    let (tx, mut rx) = mpsc::sync_channel::<MarcketChange>(1000);
-                    let (tx_order, mut rx_order) = mpsc::sync_channel::<TradeExecutionUpdate>(100);
+                    let (tx, rx) = mpsc::sync_channel::<MarcketChange>(1000);
+                    let (tx_order, rx_order) = mpsc::sync_channel::<TradeExecutionUpdate>(100);
 
                     let mut map = BTreeMap::new();
                     let ak = config.bitfinex.unwrap();
@@ -204,7 +176,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                     {
                                         let mut _g = arbitrages_clone.write().await;
                                         _g.entry(trade.cid.into()).and_modify(|e| {
-                                            (*e).cex.trade_info = Some(trade);
+                                            e.cex.trade_info = Some(trade);
                                         });
                                     };
                                     {
@@ -419,12 +391,12 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                         "found a cross, cex bid {:?}, dex ask {:?}, price change {:?}",
                                         cex_bid, dex_ask, change
                                     );
-                                    let mut amount = config.base_asset_quote_amt.clone();
+                                    let mut amount = config.base_asset_quote_amt;
                                     amount.set_sign_negative(true);
                                     let instraction = ArbitrageInstruction {
                                         cex: CexInstruction {
                                             venue: CexExchange::BITFINEX,
-                                            amount: amount,
+                                            amount,
                                             base_asset: config.base_asset,
                                             quote_asset: config.quote_asset,
                                         },
@@ -458,7 +430,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                         "found a cross, dex bid {:?}, cex ask {:?}, price change {:?}",
                                         dex_bid, cex_ask, change
                                     );
-                                    let mut amount = config.base_asset_quote_amt.clone();
+                                    let mut amount = config.base_asset_quote_amt;
                                     amount.set_sign_negative(true);
                                     let instraction = ArbitrageInstruction {
                                         cex: CexInstruction {
@@ -470,7 +442,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                         dex: DexInstruction {
                                             network: config.network,
                                             venue: DexExchange::UniswapV3,
-                                            amount: amount,
+                                            amount,
                                             base_token: base_token.clone(),
                                             quote_token: quote_token.clone(),
                                             recipient: wallet_address,
@@ -564,7 +536,7 @@ async fn try_arbitrage<'a, M: Middleware>(
                 Ok(hash) => {
                     info!("send dex order success {:?}", hash);
                     _g.entry(client_order_id).and_modify(|e| {
-                        (*e).dex.tx_hash = Some(hash);
+                        e.dex.tx_hash = Some(hash);
                     });
                 }
                 Err(e) => error!("error in send dex order {:?}", e),
@@ -600,10 +572,10 @@ async fn main_impl() -> anyhow::Result<()> {
         app_config.account.private_key_path = Some(pk_path);
     }
 
-    app_config.log.file_name_prefix.push_str("_");
-    app_config.log.file_name_prefix.push_str(&app_config.base_asset.to_string());
-    app_config.log.file_name_prefix.push_str(&app_config.quote_asset.to_string());
-    let guard = init_tracing(app_config.log.clone().into());
+    app_config.log.file_name_prefix.push('_');
+    app_config.log.file_name_prefix.push_str(app_config.base_asset.as_ref());
+    app_config.log.file_name_prefix.push_str(app_config.quote_asset.as_ref());
+    let _guard = init_tracing(app_config.log.clone().into());
 
     debug!("venus config: {:?}", app_config);
     run(app_config).await;
@@ -625,9 +597,6 @@ async fn main() {
 
 #[cfg(test)]
 mod test {
-    use meta_util::ether::tx_hash_from_str;
-
-    use super::*;
 
     // #[test]
     // fn test_check_arbitrage_status() {

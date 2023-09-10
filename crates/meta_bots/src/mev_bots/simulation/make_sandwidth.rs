@@ -669,7 +669,7 @@ mod test {
         },
     };
     use ethers::prelude::*;
-    use meta_address::{get_bot_contract_info, get_rpc_info, get_token_address};
+    use meta_address::{get_bot_contract_info, get_rpc_info, get_token_info};
     use meta_common::{constants::address_from_str, enums::Network};
     use meta_dex::sandwidth::SandwichMaker;
     use std::{fmt::format, str::FromStr, sync::Arc};

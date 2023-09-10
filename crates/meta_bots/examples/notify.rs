@@ -1,7 +1,7 @@
 use chrono::Utc;
 use ethers::prelude::*;
 use meta_address::{enums::Asset, get_rpc_info, get_token_info, Token};
-use meta_bots::venus::{notify_arbitrage_result, ArbitragePair, CexTradeInfo, DexTradeInfo, CID};
+use meta_bots::venus::{ArbitragePair, CexTradeInfo, DexTradeInfo};
 use meta_cefi::bitfinex::wallet::TradeExecutionUpdate;
 use meta_common::enums::{CexExchange, ContractType, DexExchange, Network, RpcProvider};
 use meta_dex::DexService;
@@ -36,13 +36,13 @@ async fn main() {
     let provider_ws = provider_ws.interval(Duration::from_millis(200));
     let provider_ws = Arc::new(provider_ws);
 
-    let dex_service = DexService::new(provider_ws.clone(), network, dex);
+    let _dex_service = DexService::new(provider_ws.clone(), network, dex);
     let web_hook =
         "https://open.larksuite.com/open-apis/bot/v2/hook/722d27f3-fa80-4c79-8cf5-87970ce1712a";
-    let lark = Lark::new(web_hook.to_string());
+    let _lark = Lark::new(web_hook.to_string());
 
     let cid = 1694323690468u64;
-    let pair = ArbitragePair {
+    let _pair = ArbitragePair {
         datetime: Utc::now(),
         base: Asset::ARB,
         quote: Asset::USD,
@@ -64,7 +64,7 @@ async fn main() {
                 maker: -1,                                    // 1 if true, -1 if false
                 fee: Some(Decimal::from_f64(-0.0048).unwrap()), // Fee ('tu' only)
                 fee_currency: Some("ARB".to_string()),        // Fee currency ('tu' only)
-                cid: cid,                             // client order id
+                cid,                             // client order id
             }),
         },
         dex: DexTradeInfo {
