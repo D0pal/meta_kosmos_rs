@@ -101,7 +101,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
     let arbitrages: Arc<RwLock<BTreeMap<CID, ArbitragePair>>> =
         Arc::new(RwLock::new(BTreeMap::new())); // key is request id
 
-    let lark = Arc::new(Lark::new("".to_string()));
+    let lark = Arc::new(Lark::new(config.lark.webhook));
 
     match config.dex {
         DexExchange::UniswapV3 => {

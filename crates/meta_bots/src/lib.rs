@@ -46,6 +46,11 @@ pub struct ConfigAccount {
     pub private_key_path: Option<PathBuf>,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct ConfigLark {
+    pub webhook: String,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct AppConfig {
     pub log: ConfigLog,
@@ -121,6 +126,7 @@ pub struct VenusConfig {
     pub account: ConfigAccount,
     // TODO: do not print for Debug
     pub bitfinex: Option<AccessKey>,
+    pub lark: ConfigLark,
 }
 
 impl VenusConfig {
