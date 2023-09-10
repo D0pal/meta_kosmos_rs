@@ -211,7 +211,9 @@ impl WebSockets {
         S: Into<String>,
         F: Into<String>,
     {
-        // let option: Option<serde_json::Value> = meta_option.map_or(None, |meta| Some(json!(meta)));
+        let symbol_str: String = symbol.into();
+        let qty_str: String = qty.into();
+        info!("websockets submit order symbol: {:?}, qty {:?}", symbol_str, qty_str);
         let msg = json!(
         [
             0,
@@ -221,8 +223,8 @@ impl WebSockets {
                 "gid": 0,
                 "cid": client_order_id,
                 "type": OrderType::EXCHANGE_MARKET.to_string(),
-                "symbol": symbol.into(),
-                "amount": qty.into()
+                "symbol": symbol_str,
+                "amount": qty_str
                 // "meta":option
             }
         ]);
@@ -256,8 +258,6 @@ impl WebSockets {
     }
 
     fn format_symbol(&mut self, symbol: String, et: EventType) -> String {
-        
-
         match et {
             EventType::Funding => format!("f{}", symbol),
             EventType::Trading => format!("t{}", symbol),
