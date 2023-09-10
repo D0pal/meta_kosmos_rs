@@ -78,5 +78,5 @@ async fn main() {
             v3_fee: Some(V3_FEE),
         },
     };
-    notify_arbitrage_result(&lark, &dex_service, cid.into(), &pair).await;
+    // notify_arbitrage_result(&lark, &dex_service, cid.into(), &pair).await;
 }
