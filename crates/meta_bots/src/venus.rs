@@ -10,8 +10,9 @@ use meta_util::ether::get_network_scan_url;
 use rust_decimal::Decimal;
 use std::{
     collections::BTreeMap,
-    sync::{Arc, RwLock},
+    sync::{Arc},
 };
+use tokio::sync::RwLock;
 use tracing::error;
 
 #[derive(Debug, Clone)]
@@ -66,10 +67,10 @@ pub struct ArbitrageInstruction {
     pub dex: DexInstruction,
 }
 
-pub fn check_arbitrage_status(
+pub async fn check_arbitrage_status(
     map: Arc<RwLock<BTreeMap<CID, ArbitragePair>>>,
 ) -> Option<(CID, ArbitragePair)> {
-    let mut _g = map.read().expect("unable to get read lock");
+    let mut _g = map.read().await;
     let mut iter = _g.iter();
     loop {
         let cur = iter.next();
@@ -88,10 +89,12 @@ pub fn check_arbitrage_status(
 
 pub async fn notify_arbitrage_result(
     lark: &Lark,
-    dex_service: &DexService<Provider<Ws>>,
+    provider: Arc<Provider<Ws>>,
     cid: CID,
     arbitrage_info: &ArbitragePair,
 ) {
+    let dex_service =
+        DexService::new(provider.clone(), arbitrage_info.dex.network, arbitrage_info.dex.venue);
     let dex_trade_info = arbitrage_info.dex.clone();
     let cex_trade_info = arbitrage_info.cex.clone();
     let hash = dex_trade_info.tx_hash.unwrap();

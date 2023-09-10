@@ -1,5 +1,7 @@
 use crate::bitfinex::{book::*, orders::*};
 
+use super::account::Account;
+
 #[derive(Clone)]
 pub struct Bitfinex {
     pub book: Book,
@@ -7,7 +9,7 @@ pub struct Bitfinex {
     // pub ticker: Ticker,
     // pub trades: Trades,
     // pub candles: Candles,
-    // pub account: Account,
+    pub account: Account,
     // pub ledger: Ledger
 }
 
@@ -19,7 +21,7 @@ impl Bitfinex {
             // trades: Trades::new(),
             // candles: Candles::new(),
             orders: Orders::new(api_key.clone(), secret_key.clone()),
-            // account: Account::new(api_key.clone(), secret_key.clone()),
+            account: Account::new(api_key.clone(), secret_key.clone()),
             // ledger: Ledger::new(api_key.clone(), secret_key.clone()),
         }
     }

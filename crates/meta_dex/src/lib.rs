@@ -130,7 +130,10 @@ impl<M: Middleware> DexService<M> {
                     }
                     Ok(TradeBalanceDiff {
                         trade: diff,
-                        fee: FeeInfo { fee_token: Token::ETH, amount: gas_fee.saturating_mul(Decimal::NEGATIVE_ONE) },
+                        fee: FeeInfo {
+                            fee_token: Token::ETH,
+                            amount: gas_fee.saturating_mul(Decimal::NEGATIVE_ONE),
+                        },
                     })
                 }
                 None => Err(OrderError::UnableFetchTxReceiptError),
@@ -174,6 +177,7 @@ impl<M: Middleware> DexService<M> {
                     let call = self
                         .dex_contracts
                         .get_v3_swap_router()
+                        .await
                         .as_ref()
                         .unwrap()
                         .exact_input_single(swap_param)
@@ -212,6 +216,7 @@ impl<M: Middleware> DexService<M> {
                     let call = self
                         .dex_contracts
                         .get_v3_swap_router()
+                        .await
                         .as_ref()
                         .unwrap()
                         .exact_output_single(param_output)

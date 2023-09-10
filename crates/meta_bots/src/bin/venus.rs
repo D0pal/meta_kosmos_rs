@@ -10,8 +10,8 @@ use meta_address::{
 };
 use meta_bots::{
     venus::{
-        ArbitrageInstruction, ArbitragePair, CexInstruction, CexTradeInfo, DexInstruction,
-        DexTradeInfo, CID,
+        check_arbitrage_status, notify_arbitrage_result, ArbitrageInstruction, ArbitragePair,
+        CexInstruction, CexTradeInfo, DexInstruction, DexTradeInfo, CID,
     },
     AppConfig, VenusConfig,
 };
@@ -72,6 +72,10 @@ use tokio::sync::RwLock;
 use tracing::{debug, error, info, instrument::WithSubscriber, warn, Level};
 use uuid::Uuid;
 
+lazy_static::lazy_static! {
+    static ref TOKIO_RUNTIME: tokio::runtime::Runtime = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
+}
+
 #[derive(Debug, Clone, Options)]
 struct Opts {
     help: bool,
@@ -122,8 +126,10 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
     let wallet = Arc::new(wallet);
     let dex_service = DexService::new(wallet.clone(), config.network, config.dex);
 
-    let mut arbitrages: Arc<SyncRwLock<BTreeMap<CID, ArbitragePair>>> =
-        Arc::new(SyncRwLock::new(BTreeMap::new())); // key is request id
+    let mut arbitrages: Arc<RwLock<BTreeMap<CID, ArbitragePair>>> =
+        Arc::new(RwLock::new(BTreeMap::new())); // key is request id
+
+    let lark = Arc::new(Lark::new("".to_string()));
 
     match config.dex {
         DexExchange::UniswapV3 => {
@@ -190,15 +196,37 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                     // receive cex trade execution info and update to arbitrages
                     {
                         let arbitrages_clone = arbitrages.clone();
-                        thread::spawn(move || loop {
-                            let ou_event = rx_order.recv();
-                            if let Ok(trade) = ou_event {
-                                if let Ok(mut _g) = arbitrages_clone.write() {
-                                    _g.entry(trade.cid.into()).and_modify(|e| {
-                                        (*e).cex.trade_info = Some(trade);
-                                    });
-                                } else {
-                                    error!("unable to get arbitrages write lock");
+                        let provider_ws_clone = provider_ws.clone();
+                        TOKIO_RUNTIME.spawn(async move {
+                            loop {
+                                let ou_event = rx_order.recv();
+                                if let Ok(trade) = ou_event {
+                                    {
+                                        let mut _g = arbitrages_clone.write().await;
+                                        _g.entry(trade.cid.into()).and_modify(|e| {
+                                            (*e).cex.trade_info = Some(trade);
+                                        });
+                                    };
+                                    {
+                                        let lark_clone = lark.clone();
+                                        let map_clone = arbitrages_clone.clone();
+
+                                        let provider_ws_clone_local = provider_ws_clone.clone();
+                                        TOKIO_RUNTIME.spawn(async move {
+                                            info!("check and notify arbitrage result");
+                                            tokio::time::sleep(Duration::from_millis(2000)).await;
+                                            let ret = check_arbitrage_status(map_clone).await;
+                                            if let Some((cid, arbitrage_info)) = ret {
+                                                notify_arbitrage_result(
+                                                    &lark_clone,
+                                                    provider_ws_clone_local,
+                                                    cid,
+                                                    &arbitrage_info,
+                                                )
+                                                .await;
+                                            }
+                                        });
+                                    }
                                 }
                             }
                         });
@@ -226,17 +254,19 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                     {
                         let last_dex_sell_price = last_dex_sell_price.clone();
                         let last_dex_buy_price = last_dex_buy_price.clone();
+                        let provider_ws_clone_sub = provider_ws.clone();
                         tokio::spawn(async move {
                             let mut new_block_stream =
-                                provider_ws.subscribe_blocks().await.unwrap();
+                                provider_ws_clone_sub.subscribe_blocks().await.unwrap();
                             let mut last_block: u64 = 0;
 
                             loop {
                                 match new_block_stream.next().await {
                                     Some(block) => {
                                         if let Some(block_number) = block.number {
-                                            if block_number.as_u64() > last_block {
-                                                last_block = block_number.as_u64();
+                                            let new_block = block_number.as_u64();
+                                            if new_block > last_block {
+                                                last_block = new_block;
 
                                                 // quote for 500, 3000, all pools
                                                 let base_quote_amt_in_wei = decimal_to_wei(
@@ -469,7 +499,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
 }
 
 async fn try_arbitrage<'a, M: Middleware>(
-    arbitrages: Arc<SyncRwLock<BTreeMap<CID, ArbitragePair>>>,
+    arbitrages: Arc<RwLock<BTreeMap<CID, ArbitragePair>>>,
     instruction: ArbitrageInstruction,
     cefi_service_ptr: *mut CefiService,
     dex_service_ref: &DexService<M>,
@@ -485,7 +515,7 @@ async fn try_arbitrage<'a, M: Middleware>(
         instruction.cex.amount
     );
 
-    let mut _g = arbitrages.write().expect("unable to get write lock");
+    let mut _g = arbitrages.write().await;
 
     _g.insert(
         client_order_id,

@@ -1,7 +1,7 @@
 use ethers::prelude::*;
 use meta_address::{get_dex_address, get_rpc_info, get_token_info, Token};
 use meta_common::enums::{ContractType, DexExchange, Network, RpcProvider};
-use meta_dex::{enums::to_token_info, DexService};
+use meta_dex::DexService;
 use meta_util::ether::tx_hash_from_str;
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 use std::{sync::Arc, time::Duration};
@@ -47,20 +47,19 @@ async fn main() {
     let dex_service = DexService::new(wallet.clone(), network, dex);
     // println!("dex_service.factory_creation_block {:?}", dex_service.factory_creation_block);
 
-    let base_token_info = to_token_info(arb_token_info, network, arb);
-    let quote_token_info = to_token_info(usdc_token_info, network, usdc);
-    // let ret = dex_service
-    //     .submit_order(
-    //         base_token_info,
-    //         quote_token_info,
-    //         Decimal::from_f64(-1.2).unwrap(),
-    //         V3_FEE,
-    //         wallet_address,
-    //     )
-    //     .await;
-    // println!("ret {:?}", ret);
-    let hash =
-        tx_hash_from_str("0xcba0d4fc27a32aaddece248d469beb430e29c1e6fecdd5db3383e1c8b212cdeb");
-    let ret = dex_service.analyze_v3_tx(hash, base_token_info, quote_token_info, V3_FEE).await;
+
+    let ret = dex_service
+        .submit_order(
+            arb_token_info,
+            usdc_token_info,
+            Decimal::from_f64(-1.2).unwrap(),
+            V3_FEE,
+            wallet_address,
+        )
+        .await;
     println!("ret {:?}", ret);
+    // let hash =
+    //     tx_hash_from_str("0xcba0d4fc27a32aaddece248d469beb430e29c1e6fecdd5db3383e1c8b212cdeb");
+    // let ret = dex_service.analyze_v3_tx(hash, arb_token_info, usdc_token_info, V3_FEE).await;
+    // println!("ret {:?}", ret);
 }

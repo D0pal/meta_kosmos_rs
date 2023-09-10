@@ -1,5 +1,11 @@
 use ethers::prelude::*;
-use std::{cell::RefCell, collections::HashMap, sync::Arc};
+use std::{
+    borrow::BorrowMut,
+    cell::{RefCell, UnsafeCell},
+    collections::HashMap,
+    sync::Arc,
+};
+use tokio::sync::RwLock;
 
 use meta_address::get_dex_address;
 use meta_common::enums::{ContractType, DexExchange, Network, PoolVariant};
@@ -11,9 +17,9 @@ use meta_contracts::bindings::{
 #[derive(Debug, Clone)]
 pub struct UniV3Contracts<M> {
     pub factory: UniswapV3Factory<M>,
-    pub quoter_v2: RefCell<QuoterV2<M>>,
-    pub swap_router: RefCell<SwapRouter<M>>,
-    pub pools: HashMap<Address, HashMap<Address, RefCell<UniswapV3Pool<M>>>>,
+    pub quoter_v2: Arc<RwLock<QuoterV2<M>>>,
+    pub swap_router: Arc<RwLock<SwapRouter<M>>>,
+    pub pools: Arc<RwLock<HashMap<Address, HashMap<Address, Arc<UniswapV3Pool<M>>>>>>,
 }
 
 #[derive(Clone, Debug)]
@@ -46,9 +52,9 @@ impl<M: Middleware> DexWrapper<M> {
                     PoolVariant::UniswapV3,
                     UniV3Contracts {
                         factory: v3_factory,
-                        quoter_v2: RefCell::new(v3_quoter_v2),
-                        swap_router: RefCell::new(swap_router),
-                        pools: HashMap::new(),
+                        quoter_v2: Arc::new(RwLock::new(v3_quoter_v2)),
+                        swap_router: Arc::new(RwLock::new(swap_router)),
+                        pools: Arc::new(RwLock::new(HashMap::new())),
                     },
                 )
             }
@@ -77,7 +83,7 @@ impl<M: Middleware> DexWrapper<M> {
     #[allow(dead_code)]
     fn get_v3_factory(&self) -> UniswapV3Factory<M> {
         let factory_address = self.get_factoy_address();
-        
+
         UniswapV3Factory::new(factory_address, self.client.clone())
     }
 
@@ -86,43 +92,32 @@ impl<M: Middleware> DexWrapper<M> {
         token_0: Address,
         token_1: Address,
         fee: u32,
-    ) -> anyhow::Result<&UniswapV3Pool<M>> {
-        let _this = self as *const Self as *mut Self;
-        unsafe { _this.as_mut().unwrap().get_v3_pool_mut(token_0, token_1, fee).await }
-    }
-
-    async fn get_v3_pool_mut(
-        &mut self,
-        token_0: Address,
-        token_1: Address,
-        fee: u32,
-    ) -> anyhow::Result<&UniswapV3Pool<M>> {
-        let pool = self.v3_contracts.as_ref().and_then(|contracts| {
-            contracts
-                .pools
-                .get(&token_0).and_then(|inner| inner.get_key_value(&token_1).map(|x| x.1))
-        });
-
-        if pool.is_some() {
-            let ret = unsafe { pool.unwrap().as_ptr().as_ref() };
-            return Ok(ret.unwrap());
-        }
-        if let Some(ref mut v3_contract) = self.v3_contracts {
-            let address = v3_contract.factory.get_pool(token_0, token_1, fee).call().await;
-            match address {
-                Ok(addr) => {
-                    let pool = RefCell::new(UniswapV3Pool::new(addr, self.client.clone()));
-                    let ret = v3_contract
-                        .pools
-                        .entry(token_0)
-                        .or_insert(HashMap::new())
-                        .entry(token_1)
-                        .or_insert(pool);
-                    let ret = unsafe { ret.as_ptr().as_ref().unwrap() };
-                    Ok(ret)
-                }
-                Err(_e) => {
-                    todo!()
+    ) -> anyhow::Result<Arc<UniswapV3Pool<M>>> {
+        if let Some(ref v3_contract) = self.v3_contracts {
+            {
+                let _g = v3_contract.pools.read().await;
+                _g.get(&token_0).and_then(|inner| {
+                    inner.get_key_value(&token_1).map(|x| {
+                        return x.1.clone();
+                    })
+                })
+            };
+            {
+                let mut _g = v3_contract.pools.write().await;
+                let address = v3_contract.factory.get_pool(token_0, token_1, fee).call().await;
+                match address {
+                    Ok(addr) => {
+                        let pool = Arc::new(UniswapV3Pool::new(addr, self.client.clone()));
+                        let ret = _g
+                            .entry(token_0)
+                            .or_insert(HashMap::new())
+                            .entry(token_1)
+                            .or_insert(pool);
+                        Ok(ret.clone())
+                    }
+                    Err(_e) => {
+                        todo!()
+                    }
                 }
             }
         } else {
@@ -130,51 +125,27 @@ impl<M: Middleware> DexWrapper<M> {
         }
     }
 
-    pub fn get_v3_quoter(&self) -> anyhow::Result<&QuoterV2<M>> {
-        let quoter = self.v3_contracts.as_ref().map(|c| &c.quoter_v2);
-        if quoter.is_some() {
-            let ret = unsafe { quoter.unwrap().as_ptr().as_ref() };
-            return Ok(ret.unwrap());
+    pub async fn get_v3_quoter(&self) -> anyhow::Result<QuoterV2<M>> {
+        if let Some(ref v3_contract) = self.v3_contracts {
+            {
+                let _g = v3_contract.quoter_v2.read().await;
+                let a = _g.clone();
+                return Ok(a);
+            };
+        } else {
+            todo!()
         }
-        let quoter_address = get_dex_address(self.dex, self.network, ContractType::UniV3QuoterV2)
-            .expect("quoter address not found");
-        let quoter = QuoterV2::new(quoter_address.address, self.client.clone());
-        self.v3_contracts.as_ref().map(|x| {
-            let borrowed = &mut (*x.quoter_v2.borrow_mut());
-            unsafe { *(borrowed as *mut QuoterV2<M>) = quoter };
-        });
-        let ret =
-            unsafe { self.v3_contracts.as_ref().unwrap().quoter_v2.as_ptr().as_ref().unwrap() };
-        Ok(ret)
     }
 
-    pub fn get_v3_swap_router(&self) -> anyhow::Result<&SwapRouter<M>> {
-        let swap_router = self.v3_contracts.as_ref().map(|c| &c.swap_router);
-        if swap_router.is_some() {
-            let ret = unsafe { swap_router.unwrap().as_ptr().as_ref() };
-            return Ok(ret.unwrap());
+    pub async fn get_v3_swap_router(&self) -> anyhow::Result<SwapRouter<M>> {
+        if let Some(ref v3_contract) = self.v3_contracts {
+            {
+                let _g = v3_contract.swap_router.read().await;
+                let a = _g.clone();
+                return Ok(a);
+            };
+        } else {
+            todo!()
         }
-
-        let swap_router_address =
-            get_dex_address(self.dex, self.network, ContractType::UniV3SwapRouterV2)
-                .expect("swap router address not found");
-        let router = SwapRouter::new(swap_router_address.address, self.client.clone());
-        self.v3_contracts.as_ref().map(|x| {
-            let borrowed = &mut (*x.swap_router.borrow_mut());
-            unsafe { *(borrowed as *mut SwapRouter<M>) = router };
-        });
-        let ret =
-            unsafe { self.v3_contracts.as_ref().unwrap().swap_router.as_ptr().as_ref().unwrap() };
-        Ok(ret)
     }
-
-    // pub fn quote_v3_exact_input_single() {
-    //     let params = QuoteExactInputSingleParams {
-    //         token_in: weth,
-    //         token_out: usdc,
-    //         amount_in: decimal_to_wei(Decimal::from_f64(0.1f64).unwrap(), 18),
-    //         fee: 500,
-    //         sqrt_price_limit_x96: U256::from(0),
-    //     };
-    // }
 }

@@ -1,7 +1,7 @@
 use chrono::Utc;
 use ethers::prelude::*;
 use meta_address::{enums::Asset, get_rpc_info, get_token_info, Token};
-use meta_bots::venus::{notify_arbitrage_result, ArbitragePair, CexTradeInfo, DexTradeInfo};
+use meta_bots::venus::{notify_arbitrage_result, ArbitragePair, CexTradeInfo, DexTradeInfo, CID};
 use meta_cefi::bitfinex::wallet::TradeExecutionUpdate;
 use meta_common::enums::{CexExchange, ContractType, DexExchange, Network, RpcProvider};
 use meta_dex::DexService;
@@ -41,39 +41,42 @@ async fn main() {
         "https://open.larksuite.com/open-apis/bot/v2/hook/722d27f3-fa80-4c79-8cf5-87970ce1712a";
     let lark = Lark::new(web_hook.to_string());
 
+    let cid = 1694323690468u64;
     let pair = ArbitragePair {
         datetime: Utc::now(),
         base: Asset::ARB,
         quote: Asset::USD,
+        // { id: 1415532545, symbol: "tARBUSD", mts_create: 1694323690714, order_id: 126110503315, exec_amount: 12, exec_price: 0.87011, order_type: "EXCHANGE MARKET", order_price: 0.87011, maker: -1, fee: Some(-0.0048), fee_currency: Some("ARB"), cid: 1694323690468 }
+
         cex: CexTradeInfo {
             venue: CexExchange::BITFINEX,
             trade_info: Some(TradeExecutionUpdate {
-                id: 123456u64, // Trade database id
+                id: 1415532545u64, // Trade database id
                 symbol: "tARBUSD".to_string(),
-                mts_create: 123456u64, // Client Order ID
-                order_id: 123456u64,   // Order id
+                mts_create: 1694323690714u64, // Client Order ID
+                order_id: 126110503315u64,   // Order id
 
-                exec_amount: Decimal::from_f64(-12.0).unwrap(), // Positive means buy, negative means sell
-                exec_price: Decimal::from_f64(0.89).unwrap(),   // Execution price
+                exec_amount: Decimal::from_f64(12.0).unwrap(), // Positive means buy, negative means sell
+                exec_price: Decimal::from_f64(0.87011).unwrap(),   // Execution price
                 order_type: "MARKET".to_string(),
-                order_price: Decimal::from_f64(0.89).unwrap(),
+                order_price: Decimal::from_f64(0.87011).unwrap(),
 
                 maker: -1,                                    // 1 if true, -1 if false
-                fee: Some(Decimal::from_f64(0.001).unwrap()), // Fee ('tu' only)
+                fee: Some(Decimal::from_f64(-0.0048).unwrap()), // Fee ('tu' only)
                 fee_currency: Some("ARB".to_string()),        // Fee currency ('tu' only)
-                cid: 12345678u64,                             // client order id
+                cid: cid,                             // client order id
             }),
         },
         dex: DexTradeInfo {
             network,
             venue: dex,
             tx_hash: Some(tx_hash_from_str(
-                "0xcba0d4fc27a32aaddece248d469beb430e29c1e6fecdd5db3383e1c8b212cdeb",
+                "0xd6fc2a4b5a4ca352f7e76c02f8c4609d3dbc57c2b95a1712334b09ed9dcb7f01",
             )),
             base_token_info: arb_token_info,
             quote_token_info: usdc_token_info,
             v3_fee: Some(V3_FEE),
         },
     };
-    notify_arbitrage_result(&lark, &dex_service, 123456u128, &pair).await;
+    notify_arbitrage_result(&lark, &dex_service, cid.into(), &pair).await;
 }

@@ -5,7 +5,7 @@ use std::ops::Add;
 use meta_model::ArbitrageSummary;
 use reqwest::{header, Client};
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Lark {
     url: String,
     client: Client,
