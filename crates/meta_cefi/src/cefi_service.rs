@@ -282,7 +282,7 @@ impl CefiService {
         amount: Decimal,
     ) {
         let pair = get_pair(base, quote);
-
+        info!("start submit cex order cex: {:?}, pair: {:?}, amount: {:?}", cex, pair, amount);
         match cex {
             CexExchange::BITFINEX => {
                 let symbol = format!("t{:?}{:?}", base, quote);

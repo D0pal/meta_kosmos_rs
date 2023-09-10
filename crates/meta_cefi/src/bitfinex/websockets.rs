@@ -271,7 +271,7 @@ impl WebSockets {
                     match self.rx.try_recv() {
                         Ok(msg) => match msg {
                             WsMessage::Text(text) => {
-                                // println!("ws write message {:?}", text);
+                                info!("socket write message {:?}", text);
                                 let ret = socket.0.write_message(Message::Text(text));
                                 match ret {
                                     Err(e) => eprintln!("{:?}", e),
