@@ -147,7 +147,31 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                 .await
                 .unwrap();
 
-            // let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+            let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<TxHash>();
+            {
+                // listending new on chain swap, notify if there is
+                let provider_clone = Arc::clone(&provider_ws);
+                let lark_clone = Arc::clone(&lark);
+                TOKIO_RUNTIME.spawn(async move {
+                    loop {
+                        let provider_clone_local = Arc::clone(&provider_clone);
+                        let maybe_hash = rx.recv().await;
+                        if let Some(hash) = maybe_hash {
+                            info!("receive onchain swap event with hash {:?}", hash);
+                            let ret = check_arbitrage_status(Arc::clone(&ARBITRAGES)).await;
+                            if let Some((cid, arbitrage_info)) = ret {
+                                notify_arbitrage_result(
+                                    &Arc::clone(&lark_clone),
+                                    provider_clone_local,
+                                    cid,
+                                    &arbitrage_info,
+                                )
+                                .await;
+                            }
+                        }
+                    }
+                });
+            }
 
             {
                 // back ground task listening my swap event
@@ -168,6 +192,11 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                 "block: {:?}, hash: {:?}, address: {:?}, log {:?}",
                                 meta.block_number, meta.transaction_hash, meta.address, swap_log
                             );
+                            let ret = tx.send(meta.transaction_hash);
+                            match ret {
+                                Err(e) => error!("error in send swap event {:?}", e),
+                                _ => {}
+                            }
                         }
                     }
                 });
@@ -257,7 +286,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                         let last_dex_sell_price = last_dex_sell_price.clone();
                         let last_dex_buy_price = last_dex_buy_price.clone();
                         let provider_ws_clone_sub = Arc::clone(&provider_ws);
-                        tokio::spawn(async move {
+                        TOKIO_RUNTIME.spawn(async move {
                             let mut new_block_stream =
                                 provider_ws_clone_sub.subscribe_blocks().await.unwrap();
                             let mut last_block: u64 = 0;
@@ -391,7 +420,8 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                 );
                             }
                             if let Some(dex_spread) = change.dex {
-                                let cefi_service_ptr = Arc::clone(&cefi_service).load(Ordering::Relaxed);
+                                let cefi_service_ptr =
+                                    Arc::clone(&cefi_service).load(Ordering::Relaxed);
                                 let ret = unsafe {
                                     (*cefi_service_ptr).get_spread(
                                         CexExchange::BITFINEX,
