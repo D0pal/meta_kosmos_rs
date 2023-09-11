@@ -140,6 +140,7 @@ pub async fn notify_arbitrage_result(
                 dex: dex_outcome,
             };
             lark.send_arbitrage_summary(summary).await;
+            std::process::exit(exitcode::DATAERR);
         }
         Err(e) => error!("error in analyze v3 tx {:?}", e),
     }
