@@ -667,6 +667,7 @@ async fn main() {
 }
 
 async fn push_flag(flag: bool) {
+    info!("push flag {:?}", flag);
     let mut _g = FLAGS.write().await;
     if _g.len() >= 2 {
         _g.pop_front();
@@ -698,6 +699,7 @@ pub async fn check_stop(flags: &Arc<RwLock<VecDeque<bool>>>) {
     }
 
     if stop {
+        error!("should stop");
         panic!("should stop");
     }
 }
