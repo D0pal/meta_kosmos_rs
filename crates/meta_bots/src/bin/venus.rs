@@ -531,7 +531,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
     }
 }
 
-async fn try_arbitrage<'a, M: Middleware>(
+async fn try_arbitrage<'a, M: Middleware + 'static>(
     instruction: ArbitrageInstruction,
     cefi_service_ptr: *mut CefiService,
     dex_service_ref: &DexService<M>,
@@ -600,8 +600,13 @@ async fn try_arbitrage<'a, M: Middleware>(
                     });
                     drop(_g);
                     push_hash(hash).await;
-                    tokio::time::sleep(Duration::from_secs(5)).await;
-                    check_stop(&dex_service_ref.client, &HASHES).await;
+                    {
+                        let client = Arc::clone(&dex_service_ref.client);
+                        TOKIO_RUNTIME.spawn(async move {
+                            tokio::time::sleep(Duration::from_secs(5)).await;
+                            check_stop(client, Arc::clone(&HASHES)).await;
+                        });
+                    }
                 }
                 Err(e) => error!("error in send dex order {:?}", e),
             }
@@ -670,10 +675,9 @@ async fn push_hash(hash: TxHash) {
     }
 }
 
-
 pub async fn check_stop<M: Middleware>(
-    provider: &Arc<M>,
-    hashes: &Arc<RwLock<VecDeque<(TxHash, Option<TransactionReceipt>)>>>,
+    provider: Arc<M>,
+    hashes: Arc<RwLock<VecDeque<(TxHash, Option<TransactionReceipt>)>>>,
 ) {
     info!("start check stop");
     let _g = hashes.read().await;
@@ -690,7 +694,7 @@ pub async fn check_stop<M: Middleware>(
                 Some(r) => {
                     info!("receipt already exist {:?}", r);
                     Some(r.to_owned())
-                },
+                }
                 None => {
                     let receipt_fetched = provider.get_transaction_receipt(*hash).await;
                     info!("fetched receipt for hash {:?}, receipt: {:?}", hash, receipt_fetched);
