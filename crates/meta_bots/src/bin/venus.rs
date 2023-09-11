@@ -173,6 +173,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                             loop {
                                 let ou_event = rx_order.recv();
                                 if let Ok(trade) = ou_event {
+                                    info!("receive trade execution event {:?}", trade);
                                     {
                                         let mut _g = arbitrages_clone.write().await;
                                         _g.entry(trade.cid.into()).and_modify(|e| {

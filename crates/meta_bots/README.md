@@ -20,3 +20,7 @@ cargo run -p meta_bots --bin venus --release -- -b ARB -q USD --network ARBI -d 
 rm venus.log
 nohup ./venus -b ARB -q USD --network ARBI -d UniswapV3 -c BITFINEX >venus.log 2>&1 &
 ```
+
+## TODO
+- websocket read, and write separate
+- te event may be partially filled
