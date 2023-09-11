@@ -3147,6 +3147,7 @@ dependencies = [
  "anyhow",
  "ethers 2.0.4",
  "eyre",
+ "futures",
  "hashbrown 0.13.2",
  "indicatif",
  "lazy_static",

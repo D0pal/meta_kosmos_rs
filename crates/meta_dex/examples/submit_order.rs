@@ -33,7 +33,7 @@ async fn main() {
     let provider_ws = provider_ws.interval(Duration::from_millis(200));
     let provider_ws = Arc::new(provider_ws);
 
-    let private_key = std::fs::read_to_string("/tmp/pk/venus").unwrap().trim().to_string();
+    let private_key = std::fs::read_to_string("/tmp/pk").unwrap().trim().to_string();
     let wallet: LocalWallet =
         private_key.parse::<LocalWallet>().unwrap().with_chain_id(rpc_info.chain_id);
     let wallet_address = wallet.address();

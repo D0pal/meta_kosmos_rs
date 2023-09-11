@@ -19,6 +19,7 @@ use meta_common::{
     enums::{CexExchange, ContractType, DexExchange, Network},
     models::{CurrentSpread, MarcketChange},
 };
+use meta_contracts::bindings::uniswap_v3_pool::SwapFilter;
 use meta_contracts::bindings::{
     quoter_v2::QuoterV2, QuoteExactInputSingleParams, QuoteExactOutputSingleParams,
 };
@@ -46,6 +47,7 @@ use tracing::{debug, error, info};
 
 lazy_static::lazy_static! {
     static ref TOKIO_RUNTIME: tokio::runtime::Runtime = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
+    static ref ARBITRAGES: Arc<RwLock<BTreeMap<CID, ArbitragePair>>> = Arc::new(RwLock::new(BTreeMap::new())); // key is request id
 }
 
 #[derive(Debug, Clone, Options)]
@@ -86,6 +88,8 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
         provider_ws.interval(Duration::from_millis(config.provider.ws_interval_milli.unwrap()));
     let provider_ws = Arc::new(provider_ws);
 
+    let last_block = provider_ws.get_block(BlockNumber::Latest).await?.unwrap().number.unwrap();
+
     let private_key = std::fs::read_to_string(config.account.private_key_path.unwrap())
         .unwrap()
         .trim()
@@ -93,13 +97,10 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
     let wallet: LocalWallet =
         private_key.parse::<LocalWallet>().unwrap().with_chain_id(rpc_info.chain_id);
     let wallet_address = wallet.address();
-    let wallet = SignerMiddleware::new(provider_ws.clone(), wallet);
+    let wallet = SignerMiddleware::new(Arc::clone(&provider_ws), wallet);
     let wallet = NonceManagerMiddleware::new(wallet, wallet_address);
     let wallet = Arc::new(wallet);
-    let dex_service = DexService::new(wallet.clone(), config.network, config.dex);
-
-    let arbitrages: Arc<RwLock<BTreeMap<CID, ArbitragePair>>> =
-        Arc::new(RwLock::new(BTreeMap::new())); // key is request id
+    let dex_service = DexService::new(Arc::clone(&wallet), config.network, config.dex);
 
     let lark = Arc::new(Lark::new(config.lark.webhook));
 
@@ -138,7 +139,39 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
             )
             .unwrap();
 
-            let quoter = QuoterV2::new(quoter_address.address, provider_ws.clone());
+            let quoter = QuoterV2::new(quoter_address.address, Arc::clone(&provider_ws));
+
+            let pool = dex_service
+                .dex_contracts
+                .get_v3_pool(base_token_address, quote_token_address, V3_FEE)
+                .await
+                .unwrap();
+
+            // let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+
+            {
+                // back ground task listening my swap event
+                TOKIO_RUNTIME.spawn(async move {
+                    let v3_pool_swap_filter = pool
+                        .event::<SwapFilter>()
+                        .from_block(last_block)
+                        .topic2(ValueOrArray::Value(H256::from(wallet_address)));
+
+                    let mut my_swap_stream =
+                        v3_pool_swap_filter.subscribe().await.unwrap().with_meta();
+                    loop {
+                        let next = my_swap_stream.next().await;
+                        if let Some(log) = next {
+                            let (swap_log, meta) = log.unwrap() as (SwapFilter, LogMeta);
+
+                            println!(
+                                "block: {:?}, hash: {:?}, address: {:?}, log {:?}",
+                                meta.block_number, meta.transaction_hash, meta.address, swap_log
+                            );
+                        }
+                    }
+                });
+            }
 
             match config.cex {
                 CexExchange::BITFINEX => {
@@ -167,38 +200,34 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
 
                     // receive cex trade execution info and update to arbitrages
                     {
-                        let arbitrages_clone = arbitrages.clone();
-                        let provider_ws_clone = provider_ws.clone();
+                        let arbitrages_map_cefi_trade = Arc::clone(&ARBITRAGES);
+                        let provider_ws_cefi_trade = Arc::clone(&provider_ws);
                         TOKIO_RUNTIME.spawn(async move {
                             loop {
                                 let ou_event = rx_order.recv();
                                 if let Ok(trade) = ou_event {
                                     info!("receive trade execution event {:?}", trade);
                                     {
-                                        let mut _g = arbitrages_clone.write().await;
+                                        let mut _g = arbitrages_map_cefi_trade.write().await;
                                         _g.entry(trade.cid.into()).and_modify(|e| {
                                             e.cex.trade_info = Some(trade);
                                         });
                                     };
                                     {
-                                        let lark_clone = lark.clone();
-                                        let map_clone = arbitrages_clone.clone();
-
-                                        let provider_ws_clone_local = provider_ws_clone.clone();
-                                        TOKIO_RUNTIME.spawn(async move {
-                                            info!("check and notify arbitrage result");
-                                            tokio::time::sleep(Duration::from_millis(2000)).await;
-                                            let ret = check_arbitrage_status(map_clone).await;
-                                            if let Some((cid, arbitrage_info)) = ret {
-                                                notify_arbitrage_result(
-                                                    &lark_clone,
-                                                    provider_ws_clone_local,
-                                                    cid,
-                                                    &arbitrage_info,
-                                                )
-                                                .await;
-                                            }
-                                        });
+                                        let lark_clone = Arc::clone(&lark);
+                                        let map_clone = Arc::clone(&arbitrages_map_cefi_trade);
+                                        let provider_ws_clone_local =
+                                            Arc::clone(&provider_ws_cefi_trade);
+                                        let ret = check_arbitrage_status(map_clone).await;
+                                        if let Some((cid, arbitrage_info)) = ret {
+                                            notify_arbitrage_result(
+                                                &lark_clone,
+                                                provider_ws_clone_local,
+                                                cid,
+                                                &arbitrage_info,
+                                            )
+                                            .await;
+                                        }
                                     }
                                 }
                             }
@@ -206,7 +235,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                     }
 
                     {
-                        let cefi_service = cefi_service.clone();
+                        let cefi_service = Arc::clone(&cefi_service);
                         thread::spawn(move || {
                             let cefi_service_ptr = cefi_service.load(Ordering::Relaxed);
                             unsafe {
@@ -227,7 +256,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                     {
                         let last_dex_sell_price = last_dex_sell_price.clone();
                         let last_dex_buy_price = last_dex_buy_price.clone();
-                        let provider_ws_clone_sub = provider_ws.clone();
+                        let provider_ws_clone_sub = Arc::clone(&provider_ws);
                         tokio::spawn(async move {
                             let mut new_block_stream =
                                 provider_ws_clone_sub.subscribe_blocks().await.unwrap();
@@ -362,7 +391,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                 );
                             }
                             if let Some(dex_spread) = change.dex {
-                                let cefi_service_ptr = cefi_service.clone().load(Ordering::Relaxed);
+                                let cefi_service_ptr = Arc::clone(&cefi_service).load(Ordering::Relaxed);
                                 let ret = unsafe {
                                     (*cefi_service_ptr).get_spread(
                                         CexExchange::BITFINEX,
@@ -413,9 +442,8 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                     };
 
                                     try_arbitrage(
-                                        arbitrages.clone(),
                                         instraction,
-                                        cefi_service.clone().load(Ordering::Relaxed),
+                                        Arc::clone(&cefi_service).load(Ordering::Relaxed),
                                         &dex_service,
                                     )
                                     .await;
@@ -452,9 +480,8 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                     };
 
                                     try_arbitrage(
-                                        arbitrages.clone(),
                                         instraction,
-                                        cefi_service.clone().load(Ordering::Relaxed),
+                                        Arc::clone(&cefi_service).load(Ordering::Relaxed),
                                         &dex_service,
                                     )
                                     .await;
@@ -472,7 +499,6 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
 }
 
 async fn try_arbitrage<'a, M: Middleware>(
-    arbitrages: Arc<RwLock<BTreeMap<CID, ArbitragePair>>>,
     instruction: ArbitrageInstruction,
     cefi_service_ptr: *mut CefiService,
     dex_service_ref: &DexService<M>,
@@ -488,7 +514,7 @@ async fn try_arbitrage<'a, M: Middleware>(
         instruction.cex.amount
     );
 
-    let mut _g = arbitrages.write().await;
+    let mut _g = ARBITRAGES.write().await;
 
     _g.insert(
         client_order_id,

@@ -223,7 +223,7 @@ pub struct CefiService {
     config: Option<CexConfig>,
     sender: Option<SyncSender<MarcketChange>>,
     order_sender: Option<SyncSender<TradeExecutionUpdate>>,
-    btf_sockets: BTreeMap<String, WebSockets>,
+    btf_sockets: BTreeMap<String, WebSockets>, // (read, write)
 }
 
 unsafe impl Send for CefiService {}
@@ -246,8 +246,8 @@ impl CefiService {
                 if !self.btf_sockets.contains_key(&pair) {
                     let handler =
                         BitfinexEventHandler::new(self.sender.clone(), self.order_sender.clone());
-                    let web_socket = WebSockets::new();
-                    self.btf_sockets.insert(pair.to_owned(), web_socket);
+                    let web_socket_reader = WebSockets::new();
+                    self.btf_sockets.insert(pair.to_owned(), web_socket_reader);
                     self.btf_sockets.entry(pair).and_modify(|web_socket| {
                         (*web_socket).add_event_handler(handler);
                         (*web_socket).connect().unwrap(); // check error
