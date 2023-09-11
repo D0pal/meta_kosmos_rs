@@ -49,7 +49,7 @@ lazy_static::lazy_static! {
     static ref TOKIO_RUNTIME: tokio::runtime::Runtime = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
     static ref ARBITRAGES: Arc<RwLock<BTreeMap<CID, ArbitragePair>>> = Arc::new(RwLock::new(BTreeMap::new())); // key is request id
     static ref GLOBAL_STOP: AtomicBool = AtomicBool::new(false); // default not stop
-    static ref FLAGS: Arc<RwLock<VecDeque<bool>>> = Arc::new(RwLock::new(VecDeque::new())); // true means everything is good, false means something wrong; consectutive 2 false, should stop
+    static ref HASHES: Arc<RwLock<VecDeque<(TxHash, Option<TransactionReceipt>)>>> = Arc::new(RwLock::new(VecDeque::new())); // true means everything is good, false means something wrong; consectutive 2 false, should stop
 }
 
 #[derive(Debug, Clone, Options)]
@@ -160,17 +160,6 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                         let maybe_hash = rx.recv().await;
                         if let Some(hash) = maybe_hash {
                             info!("receive onchain swap event with hash {:?}", hash);
-                            let receipt = provider_clone_local.get_transaction_receipt(hash).await;
-                            if let Ok(Some(r)) = receipt {
-                                if r.status == Some(1.into()) {
-                                    push_flag(true).await;
-                                } else {
-                                    push_flag(false).await;
-                                }
-                            } else {
-                                push_flag(false).await;
-                            }
-                            check_stop(&FLAGS).await;
 
                             let ret = check_arbitrage_status(Arc::clone(&ARBITRAGES)).await;
                             if let Some((cid, arbitrage_info)) = ret {
@@ -609,6 +598,10 @@ async fn try_arbitrage<'a, M: Middleware>(
                     _g.entry(client_order_id).and_modify(|e| {
                         e.dex.tx_hash = Some(hash);
                     });
+                    drop(_g);
+                    push_hash(hash).await;
+                    tokio::time::sleep(Duration::from_secs(5)).await;
+                    check_stop(&dex_service_ref.client, &HASHES).await;
                 }
                 Err(e) => error!("error in send dex order {:?}", e),
             }
@@ -666,19 +659,24 @@ async fn main() {
     }
 }
 
-async fn push_flag(flag: bool) {
-    info!("push flag {:?}", flag);
-    let mut _g = FLAGS.write().await;
-    if _g.len() >= 2 {
-        _g.pop_front();
+async fn push_hash(hash: TxHash) {
+    info!("push hash {:?}", hash);
+    {
+        let mut _g = HASHES.write().await;
+        if _g.len() >= 2 {
+            _g.pop_front();
+        }
+        _g.push_back((hash, None));
     }
-    _g.push_back(flag);
 }
 
-// return false, do not stop
-// return true, need to stop
-pub async fn check_stop(flags: &Arc<RwLock<VecDeque<bool>>>) {
-    let _g = flags.read().await;
+
+pub async fn check_stop<M: Middleware>(
+    provider: &Arc<M>,
+    hashes: &Arc<RwLock<VecDeque<(TxHash, Option<TransactionReceipt>)>>>,
+) {
+    info!("start check stop");
+    let _g = hashes.read().await;
     if _g.len() < 2 {
         return;
     }
@@ -687,12 +685,33 @@ pub async fn check_stop(flags: &Arc<RwLock<VecDeque<bool>>>) {
 
     for i in vec![0, 1] {
         let element = _g.get(i);
-        if element.is_none() {
-            stop = false;
-            break;
-        }
+        if let Some((hash, receipt_maybe)) = element {
+            let receipt = match receipt_maybe {
+                Some(r) => {
+                    info!("receipt already exist {:?}", r);
+                    Some(r.to_owned())
+                },
+                None => {
+                    let receipt_fetched = provider.get_transaction_receipt(*hash).await;
+                    info!("fetched receipt for hash {:?}, receipt: {:?}", hash, receipt_fetched);
+                    receipt_fetched.map_or(None, |r| r.map_or(None, |e| Some(e)))
+                }
+            };
 
-        if *element.unwrap() {
+            if let Some(ref r) = receipt {
+                {
+                    let mut _gm = hashes.write().await;
+                    let r_mut = _gm.get_mut(i);
+                    if let Some(e) = r_mut {
+                        e.1 = Some(r.to_owned());
+                    }
+                }
+                if r.status == Some(1.into()) {
+                    stop = false;
+                    break;
+                }
+            }
+        } else {
             stop = false;
             break;
         }

@@ -52,7 +52,7 @@ async fn main() {
         .submit_order(
             arb_token_info,
             usdc_token_info,
-            Decimal::from_f64(-1.2).unwrap(),
+            Decimal::from_f64(3.0).unwrap(),
             V3_FEE,
             wallet_address,
         )
