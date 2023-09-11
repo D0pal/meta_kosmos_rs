@@ -33,10 +33,10 @@ use meta_util::{
 };
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, VecDeque},
     path::PathBuf,
     sync::{
-        atomic::{AtomicPtr, Ordering},
+        atomic::{AtomicBool, AtomicPtr, Ordering},
         mpsc, Arc,
     },
     thread,
@@ -48,6 +48,8 @@ use tracing::{debug, error, info};
 lazy_static::lazy_static! {
     static ref TOKIO_RUNTIME: tokio::runtime::Runtime = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
     static ref ARBITRAGES: Arc<RwLock<BTreeMap<CID, ArbitragePair>>> = Arc::new(RwLock::new(BTreeMap::new())); // key is request id
+    static ref GLOBAL_STOP: AtomicBool = AtomicBool::new(false); // default not stop
+    static ref FLAGS: Arc<RwLock<VecDeque<bool>>> = Arc::new(RwLock::new(VecDeque::new())); // true means everything is good, false means something wrong; consectutive 2 false, should stop
 }
 
 #[derive(Debug, Clone, Options)]
@@ -158,6 +160,18 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                         let maybe_hash = rx.recv().await;
                         if let Some(hash) = maybe_hash {
                             info!("receive onchain swap event with hash {:?}", hash);
+                            let receipt = provider_clone_local.get_transaction_receipt(hash).await;
+                            if let Ok(Some(r)) = receipt {
+                                if r.status == Some(1.into()) {
+                                    push_flag(true).await;
+                                } else {
+                                    push_flag(false).await;
+                                }
+                            } else {
+                                push_flag(false).await;
+                            }
+                            check_stop(&FLAGS).await;
+
                             let ret = check_arbitrage_status(Arc::clone(&ARBITRAGES)).await;
                             if let Some((cid, arbitrage_info)) = ret {
                                 notify_arbitrage_result(
@@ -652,8 +666,45 @@ async fn main() {
     }
 }
 
+async fn push_flag(flag: bool) {
+    let mut _g = FLAGS.write().await;
+    if _g.len() >= 2 {
+        _g.pop_front();
+    }
+    _g.push_back(flag);
+}
+
+// return false, do not stop
+// return true, need to stop
+pub async fn check_stop(flags: &Arc<RwLock<VecDeque<bool>>>) {
+    let _g = flags.read().await;
+    if _g.len() < 2 {
+        return;
+    }
+
+    let mut stop = true;
+
+    for i in vec![0, 1] {
+        let element = _g.get(i);
+        if element.is_none() {
+            stop = false;
+            break;
+        }
+
+        if *element.unwrap() {
+            stop = false;
+            break;
+        }
+    }
+
+    if stop {
+        panic!("should stop");
+    }
+}
+
 #[cfg(test)]
 mod test {
+    use super::*;
 
     // #[test]
     // fn test_check_arbitrage_status() {
