@@ -8,10 +8,7 @@ use meta_integration::Lark;
 use meta_model::{ArbitrageOutcome, ArbitrageSummary};
 use meta_util::ether::get_network_scan_url;
 use rust_decimal::Decimal;
-use std::{
-    collections::BTreeMap,
-    sync::{Arc},
-};
+use std::{collections::BTreeMap, sync::Arc};
 use tokio::sync::RwLock;
 use tracing::error;
 
@@ -124,10 +121,15 @@ pub async fn notify_arbitrage_result(
             let base_token = dex_trade_info.base_token_info.token;
             let quote_token = dex_trade_info.quote_token_info.token;
             let mut dex_outcome = ArbitrageOutcome::default();
-            dex_outcome.base_amount = *parsed_tx.trade.get(&base_token).unwrap_or(&Decimal::default());
-            dex_outcome.quote_amount = *parsed_tx.trade.get(&quote_token).unwrap_or(&Decimal::default());
-            dex_outcome.price =
-                dex_outcome.base_amount.checked_div(dex_outcome.quote_amount).unwrap_or(&Decimal::default()).abs();
+            dex_outcome.base_amount =
+                *parsed_tx.trade.get(&base_token).unwrap_or(&Decimal::default());
+            dex_outcome.quote_amount =
+                *parsed_tx.trade.get(&quote_token).unwrap_or(&Decimal::default());
+            dex_outcome.price = dex_outcome
+                .base_amount
+                .checked_div(dex_outcome.quote_amount)
+                .unwrap_or(Decimal::default())
+                .abs();
             dex_outcome.fee_token = parsed_tx.fee.fee_token.into();
             dex_outcome.fee_amount = parsed_tx.fee.amount;
             dex_outcome.id = get_network_scan_url(dex_trade_info.network, hash);
