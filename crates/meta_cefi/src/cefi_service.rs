@@ -75,7 +75,6 @@ impl EventHandler for BitfinexEventHandler {
     }
 
     fn on_auth(&mut self, _event: NotificationEvent) {
-        println!("bitfinex on auth event {:?}", _event);
         debug!("bitfinex on auth event {:?}", _event);
     }
 
@@ -191,7 +190,7 @@ impl EventHandler for BitfinexEventHandler {
     }
 
     fn on_error(&mut self, message: Error) {
-        println!("{:?}", message);
+        error!("{:?}", message);
     }
 }
 

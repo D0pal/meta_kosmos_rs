@@ -6,13 +6,12 @@ use crate::bitfinex::{
     orders::OrderType,
 };
 use error_chain::bail;
-
 use serde_json::{from_str, json};
 use std::{
     net::TcpStream,
     sync::mpsc::{self, channel},
 };
-use tracing::info;
+use tracing::{error, info};
 use tungstenite::{
     connect, handshake::client::Response, protocol::WebSocket, stream::MaybeTlsStream, Message,
 };
@@ -274,11 +273,12 @@ impl WebSockets {
                                 info!("socket write message {:?}", text);
                                 let ret = socket.0.write_message(Message::Text(text));
                                 match ret {
-                                    Err(e) => eprintln!("{:?}", e),
+                                    Err(e) => error!("error in socket write {:?}", e),
                                     Ok(()) => {}
                                 }
                             }
                             WsMessage::Close => {
+                                info!("socket close");
                                 return socket.0.close(None).map_err(|e| e.into());
                             }
                         },
@@ -307,30 +307,10 @@ impl WebSockets {
                             } else if text.contains(CONF) {
                                 info!("got conf msg: {:?}", text);
                             } else {
-                                // if text.find(FUNDING_CREDIT_SNAPSHOT).is_some() {  // conflicts with fcs
-                                //     let fcs_event: DataEvent = from_str(&text)?;
-                                //     println!("fcs_event {:?}", fcs_event);
-                                // }
-                                // if text.find(CHECKSUM).is_some() {  // conflicts with fcs
-                                //     let event: DataEvent = from_str(&text)?;
-                                //     h.on_checksum(event);
-                                // }
-                                // let ret: Vec<&str> = text.split(',').collect();
-                                // let ele: Vec<&str> = ret.iter().skip(1).take(1).cloned().collect();
-
-                                // let event_type = ele[0];
-                                // println!("event type {:?}", event_type);
-                                // if event_type == "te" {
-                                //     let event: DataEvent::TradeExecutionEvent = from_str(&text)?;
-                                // }
 
                                 let event: DataEvent = from_str(&text)?;
                                 h.on_data_event(event);
-                                // if let DataEvent::HeartbeatEvent(a, b, c) = event {
-                                //     h.on_heart_beat(a, b, c);
-                                // } else {
-                                //     h.on_data_event(event);
-                                // }
+    
                             }
                         }
                     }

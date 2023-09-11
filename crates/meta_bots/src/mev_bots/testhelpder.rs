@@ -110,7 +110,7 @@ macro_rules! time_function {
         let start = std::time::Instant::now();
         let result = $x;
         let elapsed = start.elapsed();
-        println!("Elapsed time: {:?}", elapsed);
+        error!("Elapsed time: {:?}", elapsed);
         result
     }};
 }

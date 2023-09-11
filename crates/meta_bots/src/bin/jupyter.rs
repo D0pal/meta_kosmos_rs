@@ -1,21 +1,13 @@
 //! sandwidtch mev bot
 
-use ethers::prelude::{*};
-
+use ethers::prelude::*;
 use gumdrop::Options;
-
-use std::{
-    path::PathBuf,
-};
-
-
-
-use meta_bots::{JupyterConfig};
-use meta_common::enums::{Network};
-
-
+use meta_bots::JupyterConfig;
+use meta_common::enums::Network;
 use meta_tracing::init_tracing;
-use meta_util::{enums::dexs_from_str};
+use meta_util::enums::dexs_from_str;
+use std::path::PathBuf;
+use tracing::error;
 
 #[derive(Debug, Clone, Options)]
 struct Opts {
@@ -143,7 +135,7 @@ async fn main() {
             std::process::exit(exitcode::OK);
         }
         Err(e) => {
-            eprintln!("run Error: {}", e);
+            error!("run Error: {}", e);
             std::process::exit(exitcode::DATAERR);
         }
     }

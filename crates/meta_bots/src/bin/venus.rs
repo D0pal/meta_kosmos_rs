@@ -207,9 +207,9 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                     {
                         let cefi_service = cefi_service.clone();
                         thread::spawn(move || {
-                            let a = cefi_service.load(Ordering::Relaxed);
+                            let cefi_service_ptr = cefi_service.load(Ordering::Relaxed);
                             unsafe {
-                                (*a).subscribe_book(
+                                (*cefi_service_ptr).subscribe_book(
                                     CexExchange::BITFINEX,
                                     config.base_asset,
                                     config.quote_asset,
@@ -319,7 +319,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                                                     "send price chagne success"
                                                                 ),
                                                                 Err(e) => {
-                                                                    eprintln!("error in send dex price change, {:?}",e);
+                                                                    error!("error in send dex price change, {:?}",e);
                                                                     panic!("error in send dex price change, {:?}",e);
                                                                 }
                                                             }
@@ -361,9 +361,9 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                 );
                             }
                             if let Some(dex_spread) = change.dex {
-                                let a = cefi_service.clone().load(Ordering::Relaxed);
+                                let cefi_service_ptr = cefi_service.clone().load(Ordering::Relaxed);
                                 let ret = unsafe {
-                                    (*a).get_spread(
+                                    (*cefi_service_ptr).get_spread(
                                         CexExchange::BITFINEX,
                                         config.base_asset,
                                         config.quote_asset,
@@ -589,7 +589,7 @@ async fn main() {
             std::process::exit(exitcode::OK);
         }
         Err(e) => {
-            eprintln!("run Error: {}", e);
+            error!("run Error: {}", e);
             std::process::exit(exitcode::DATAERR);
         }
     }
