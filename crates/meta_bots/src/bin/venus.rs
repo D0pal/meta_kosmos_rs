@@ -598,11 +598,11 @@ async fn try_arbitrage<'a, M: Middleware + 'static>(
                     _g.entry(client_order_id).and_modify(|e| {
                         e.dex.tx_hash = Some(hash);
                     });
-                    drop(_g);
-                    push_hash(hash).await;
+
                     {
                         let client = Arc::clone(&dex_service_ref.client);
                         TOKIO_RUNTIME.spawn(async move {
+                            push_hash(hash).await;
                             tokio::time::sleep(Duration::from_secs(5)).await;
                             check_stop(client, Arc::clone(&HASHES)).await;
                         });
