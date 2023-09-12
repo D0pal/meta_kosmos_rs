@@ -603,7 +603,7 @@ async fn try_arbitrage<'a, M: Middleware + 'static>(
                         let client = Arc::clone(&dex_service_ref.client);
                         TOKIO_RUNTIME.spawn(async move {
                             push_hash(hash).await;
-                            tokio::time::sleep(Duration::from_secs(5)).await;
+                            tokio::time::sleep(Duration::from_secs(2)).await;
                             check_stop(client, Arc::clone(&HASHES)).await;
                         });
                     }
