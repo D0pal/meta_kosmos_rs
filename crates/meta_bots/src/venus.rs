@@ -86,7 +86,7 @@ pub async fn update_dex_transaction_finalised_number(
 pub async fn check_arbitrage_status(
     map: Arc<RwLock<BTreeMap<CID, ArbitragePair>>>,
 ) -> (bool, Option<(CID, ArbitragePair)>) {
-    info!("start check arbitrage status, map: {:?}", map);
+    info!("start check arbitrage status");
     let mut _g = map.read().await;
     let iter = _g.iter();
 
@@ -95,7 +95,9 @@ pub async fn check_arbitrage_status(
 
     for (key, val) in iter {
         // TODO: should use block nubmer rather than time
-        if time.signed_duration_since(val.dex.created).abs().num_seconds() > 1 {
+        let pending_ms = time.signed_duration_since(val.dex.created).abs().num_milliseconds();
+        info!("tx {:?} has been pending for {:?} ms. created {:?}, current {:?}", val.dex.tx_hash, pending_ms, val.dex.created, time);
+        if pending_ms > 1_000 {
             // tx sent, but still unknonw
             info!("tx is still unknown, current time {:?}, created {:?}", time, val.dex.created);
             pending_status_tx_count += 1;
