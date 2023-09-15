@@ -571,28 +571,29 @@ async fn try_arbitrage<'a, M: Middleware + 'static>(
         instruction.cex.amount
     );
 
-    let mut _g = ARBITRAGES.write().await;
-
-    let date_time = chrono::Utc::now();
-    _g.insert(
-        client_order_id,
-        ArbitragePair {
-            datetime: date_time,
-            base: instruction.cex.base_asset,
-            quote: instruction.cex.quote_asset,
-            cex: CexTradeInfo { venue: instruction.cex.venue, trade_info: None },
-            dex: DexTradeInfo {
-                network: instruction.dex.network,
-                venue: instruction.dex.venue,
-                tx_hash: None,
-                base_token_info: instruction.dex.base_token.clone(),
-                quote_token_info: instruction.dex.quote_token.clone(),
-                v3_fee: Some(instruction.dex.fee),
-                created: date_time,
-                finalised_block_number: None,
+    {
+        let mut _g = ARBITRAGES.write().await;
+        let date_time = chrono::Utc::now();
+        _g.insert(
+            client_order_id,
+            ArbitragePair {
+                datetime: date_time,
+                base: instruction.cex.base_asset,
+                quote: instruction.cex.quote_asset,
+                cex: CexTradeInfo { venue: instruction.cex.venue, trade_info: None },
+                dex: DexTradeInfo {
+                    network: instruction.dex.network,
+                    venue: instruction.dex.venue,
+                    tx_hash: None,
+                    base_token_info: instruction.dex.base_token.clone(),
+                    quote_token_info: instruction.dex.quote_token.clone(),
+                    v3_fee: Some(instruction.dex.fee),
+                    created: date_time,
+                    finalised_block_number: None,
+                },
             },
-        },
-    );
+        );
+    }
 
     match instruction.cex.venue {
         CexExchange::BITFINEX => unsafe {
@@ -621,6 +622,7 @@ async fn try_arbitrage<'a, M: Middleware + 'static>(
                 .await;
             match ret {
                 Ok(hash) => {
+                    let mut _g = ARBITRAGES.write().await;
                     info!("send dex order success {:?}", hash);
                     _g.entry(client_order_id).and_modify(|e| {
                         e.dex.tx_hash = Some(hash);
