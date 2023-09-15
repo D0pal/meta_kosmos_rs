@@ -7,7 +7,7 @@ use meta_address::{enums::Asset, get_dex_address, get_rpc_info, get_token_info, 
 use meta_bots::{
     venus::{
         check_arbitrage_status, notify_arbitrage_result, ArbitrageInstruction, ArbitragePair,
-        CexInstruction, CexTradeInfo, DexInstruction, DexTradeInfo, CID,
+        CexInstruction, CexTradeInfo, DexInstruction, DexTradeInfo, CID, update_dex_transaction_finalised_number,
     },
     VenusConfig,
 };
@@ -147,7 +147,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                 .await
                 .unwrap();
 
-            let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<TxHash>();
+            let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<(TxHash, u64)>();
             {
                 // listending new on chain swap, notify if there is
                 let provider_clone = Arc::clone(&provider_ws);
@@ -156,7 +156,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                     loop {
                         let provider_clone_local = Arc::clone(&provider_clone);
                         let maybe_hash = rx.recv().await;
-                        if let Some(hash) = maybe_hash {
+                        if let Some((hash, number)) = maybe_hash {
                             info!("receive onchain swap event with hash {:?}", hash);
 
                             let ret = check_arbitrage_status(Arc::clone(&ARBITRAGES)).await;
@@ -193,11 +193,12 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                         if let Some(log) = next {
                             let (swap_log, meta) = log.unwrap() as (SwapFilter, LogMeta);
 
-                            println!(
+                            info!(
                                 "block: {:?}, hash: {:?}, address: {:?}, log {:?}",
                                 meta.block_number, meta.transaction_hash, meta.address, swap_log
                             );
-                            let ret = tx.send(meta.transaction_hash);
+                            update_dex_transaction_finalised_number(Arc::clone(&ARBITRAGES), meta.transaction_hash, meta.block_number.as_u64()).await;
+                            let ret = tx.send((meta.transaction_hash, meta.block_number.as_u64()));
                             match ret {
                                 Err(e) => error!("error in send swap event {:?}", e),
                                 _ => {}
@@ -570,7 +571,8 @@ async fn try_arbitrage<'a, M: Middleware + 'static>(
                 base_token_info: instruction.dex.base_token.clone(),
                 quote_token_info: instruction.dex.quote_token.clone(),
                 v3_fee: Some(instruction.dex.fee),
-                created: date_time
+                created: date_time,
+                finalised_block_number: None,
             },
         },
     );
@@ -662,7 +664,6 @@ async fn main() {
         }
     }
 }
-
 
 #[cfg(test)]
 mod test {

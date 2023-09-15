@@ -10,7 +10,7 @@ use meta_util::ether::get_network_scan_url;
 use rust_decimal::Decimal;
 use std::{collections::BTreeMap, sync::Arc};
 use tokio::sync::RwLock;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 
 #[derive(Debug, Clone, Default)]
 pub struct CexTradeInfo {
@@ -23,6 +23,7 @@ pub struct DexTradeInfo {
     pub network: Network,
     pub venue: DexExchange,
     pub tx_hash: Option<TxHash>,
+    pub finalised_block_number: Option<u64>,
     pub base_token_info: TokenInfo,
     pub quote_token_info: TokenInfo,
     pub v3_fee: Option<u32>,
@@ -65,6 +66,23 @@ pub struct ArbitrageInstruction {
     pub dex: DexInstruction,
 }
 
+pub async fn update_dex_transaction_finalised_number(
+    map: Arc<RwLock<BTreeMap<CID, ArbitragePair>>>,
+    hash: TxHash,
+    number: u64,
+) {
+    let mut _g = map.write().await;
+    let mut iter = _g.iter_mut();
+
+    for (key, val) in iter {
+        if val.dex.tx_hash.eq(&Some(hash)) {
+            info!("update {:?} to finalized nubmer {:?}", hash, number);
+            (val).dex.finalised_block_number = Some(number);
+            return;
+        }
+    }
+}
+
 pub async fn check_arbitrage_status(
     map: Arc<RwLock<BTreeMap<CID, ArbitragePair>>>,
 ) -> Option<(bool, CID, ArbitragePair)> {
@@ -81,10 +99,14 @@ pub async fn check_arbitrage_status(
             break None;
         } else {
             let (key, val) = cur.unwrap();
-           
+
             // TODO: should use block nubmer rather than time
-            if time.signed_duration_since(val.dex.created).abs().num_seconds() > 1 {   // tx sent, but still unknonw
-                info!("tx is still unknown, current time {:?}, created {:?}", time, val.dex.created);
+            if time.signed_duration_since(val.dex.created).abs().num_seconds() > 1 {
+                // tx sent, but still unknonw
+                info!(
+                    "tx is still unknown, current time {:?}, created {:?}",
+                    time, val.dex.created
+                );
                 pending_status_tx_count += 1;
             }
 
@@ -92,7 +114,7 @@ pub async fn check_arbitrage_status(
                 break Some((true, CID::default(), ArbitragePair::default()));
             }
 
-            if val.cex.trade_info.is_some() && val.dex.tx_hash.is_some() {
+            if val.cex.trade_info.is_some() && val.dex.finalised_block_number.is_some() {
                 break Some((false, *key, val.clone()));
             } else {
                 continue;
