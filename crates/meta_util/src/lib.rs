@@ -15,6 +15,9 @@ pub fn int_from_hex_str(input: &str) -> u64 {
 }
 
 pub fn get_price_delta_in_bp(bid: Decimal, ask: Decimal) -> Decimal {
+    if bid.eq(&ask) {
+        return Decimal::default();
+    }
     let change = bid
         .checked_sub(ask)
         .unwrap()

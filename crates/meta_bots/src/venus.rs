@@ -77,15 +77,15 @@ pub async fn check_arbitrage_status(
     loop {
         let cur = iter.next();
         if cur.is_none() {
+            info!("no arbitrage to check");
             break None;
         } else {
             let (key, val) = cur.unwrap();
-            // tx sent, but still unknonw
-            if val.dex.tx_hash.is_none() {
-                info!("current time {:?}, created {:?}", time, val.dex.created);
-                if time.signed_duration_since(val.dex.created).abs().num_seconds() > 1 {
-                    pending_status_tx_count += 1;
-                }
+           
+            // TODO: should use block nubmer rather than time
+            if time.signed_duration_since(val.dex.created).abs().num_seconds() > 1 {   // tx sent, but still unknonw
+                info!("tx is still unknown, current time {:?}, created {:?}", time, val.dex.created);
+                pending_status_tx_count += 1;
             }
 
             if pending_status_tx_count >= 2 {
