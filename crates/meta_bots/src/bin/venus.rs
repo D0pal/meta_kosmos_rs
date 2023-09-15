@@ -6,8 +6,9 @@ use gumdrop::Options;
 use meta_address::{enums::Asset, get_dex_address, get_rpc_info, get_token_info, TokenInfo};
 use meta_bots::{
     venus::{
-        check_arbitrage_status, notify_arbitrage_result, ArbitrageInstruction, ArbitragePair,
-        CexInstruction, CexTradeInfo, DexInstruction, DexTradeInfo, CID, update_dex_transaction_finalised_number,
+        check_arbitrage_status, notify_arbitrage_result, update_dex_transaction_finalised_number,
+        ArbitrageInstruction, ArbitragePair, CexInstruction, CexTradeInfo, DexInstruction,
+        DexTradeInfo, CID,
     },
     VenusConfig,
 };
@@ -36,7 +37,7 @@ use std::{
     collections::{BTreeMap, VecDeque},
     path::PathBuf,
     sync::{
-        atomic::{AtomicBool, AtomicPtr, Ordering},
+        atomic::{AtomicBool, AtomicPtr, AtomicU32, Ordering},
         mpsc, Arc,
     },
     thread,
@@ -48,6 +49,7 @@ use tracing::{debug, error, info};
 lazy_static::lazy_static! {
     static ref TOKIO_RUNTIME: tokio::runtime::Runtime = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
     static ref ARBITRAGES: Arc<RwLock<BTreeMap<CID, ArbitragePair>>> = Arc::new(RwLock::new(BTreeMap::new())); // key is request id
+    static ref TOTAL_PENDING_TRADES: AtomicU32 = AtomicU32::new(0);
 }
 
 #[derive(Debug, Clone, Options)]
@@ -197,7 +199,12 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                 "block: {:?}, hash: {:?}, address: {:?}, log {:?}",
                                 meta.block_number, meta.transaction_hash, meta.address, swap_log
                             );
-                            update_dex_transaction_finalised_number(Arc::clone(&ARBITRAGES), meta.transaction_hash, meta.block_number.as_u64()).await;
+                            update_dex_transaction_finalised_number(
+                                Arc::clone(&ARBITRAGES),
+                                meta.transaction_hash,
+                                meta.block_number.as_u64(),
+                            )
+                            .await;
                             let ret = tx.send((meta.transaction_hash, meta.block_number.as_u64()));
                             match ret {
                                 Err(e) => error!("error in send swap event {:?}", e),
@@ -243,6 +250,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                 if let Ok(trade) = ou_event {
                                     info!("receive trade execution event {:?}", trade);
                                     {
+                                        TOTAL_PENDING_TRADES.fetch_sub(1, Ordering::SeqCst);
                                         let mut _g = arbitrages_map_cefi_trade.write().await;
                                         _g.entry(trade.cid.into()).and_modify(|e| {
                                             e.cex.trade_info = Some(trade);
@@ -543,6 +551,13 @@ async fn try_arbitrage<'a, M: Middleware + 'static>(
     cefi_service_ptr: *mut CefiService,
     dex_service_ref: &DexService<M>,
 ) {
+    let total = TOTAL_PENDING_TRADES.fetch_add(1, Ordering::SeqCst);
+    info!("total pending trades number {:?}", total);
+
+    if total > 5 {
+        error!("tatal pending number of trades are too much: {:?}, stop", total);
+        return;
+    }
     let client_order_id = get_current_ts().as_millis();
 
     info!("start arbitrage with instruction {:?}", instruction);
