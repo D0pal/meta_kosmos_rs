@@ -13,8 +13,9 @@ use meta_bots::{
     VenusConfig,
 };
 use meta_cefi::{
-    bitfinex::wallet::TradeExecutionUpdate,
+    bitfinex::wallet::{TradeExecutionUpdate, WalletSnapshot},
     cefi_service::{AccessKey, CefiService, CexConfig},
+    cex_currency_to_asset,
 };
 use meta_common::{
     enums::{CexExchange, ContractType, DexExchange, Network},
@@ -53,6 +54,9 @@ lazy_static::lazy_static! {
     static ref TOTAL_PENDING_TRADES: AtomicU32 = AtomicU32::new(0);
 }
 
+pub const MIN_ASSET_BALANCE_MULTIPLIER: usize = 5;
+static mut MIN_BASE_ASSET_BALANCE_AMT: Decimal = Decimal::ZERO;
+
 #[derive(Debug, Clone, Options)]
 struct Opts {
     help: bool,
@@ -86,19 +90,19 @@ async fn handle_trade_update(lark: Arc<Lark>, provider: Arc<Provider<Ws>>) {
         std::process::exit(exitcode::DATAERR);
     }
     if let Some((cid, arbitrage_info)) = ret {
-        notify_arbitrage_result(
-            Arc::clone(&ARBITRAGES),
-            lark,
-            provider,
-            cid,
-            &arbitrage_info,
-        )
-        .await;
+        notify_arbitrage_result(Arc::clone(&ARBITRAGES), lark, provider, cid, &arbitrage_info)
+            .await;
     }
 }
 
 async fn run(config: VenusConfig) -> anyhow::Result<()> {
     debug!("run venus app with config: {:?}", config);
+    unsafe {
+        MIN_BASE_ASSET_BALANCE_AMT = Decimal::from_usize(MIN_ASSET_BALANCE_MULTIPLIER)
+            .unwrap()
+            .checked_mul(config.base_asset_quote_amt)
+            .unwrap();
+    }
     let rpc_info = get_rpc_info(config.network).unwrap();
 
     let rpc_provider = config.provider.provider.expect("need rpc provider");
@@ -230,6 +234,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                     // for receiving spread update
                     let (tx, rx) = mpsc::sync_channel::<MarcketChange>(1000);
                     let (tx_order, rx_order) = mpsc::sync_channel::<TradeExecutionUpdate>(100);
+                    let (tx_wu, rx_wu) = mpsc::sync_channel::<WalletSnapshot>(100);
 
                     let mut map = BTreeMap::new();
                     let ak = config.bitfinex.unwrap();
@@ -245,6 +250,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                         Some(cex_config),
                         Some(tx.clone()),
                         Some(tx_order.clone()),
+                        Some(tx_wu.clone()),
                     );
 
                     let cefi_service = &mut cefi_service as *mut CefiService;
@@ -268,25 +274,10 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                     };
                                     {
                                         let lark_clone = Arc::clone(&lark);
-                                        let map_clone = Arc::clone(&arbitrages_map_cefi_trade);
                                         let provider_ws_clone_local =
                                             Arc::clone(&provider_ws_cefi_trade);
-                                        let (should_stop, ret) =
-                                            check_arbitrage_status(map_clone).await;
-                                        if should_stop {
-                                            error!("should stop");
-                                            std::process::exit(exitcode::DATAERR);
-                                        }
-                                        if let Some((cid, arbitrage_info)) = ret {
-                                            notify_arbitrage_result(
-                                                Arc::clone(&ARBITRAGES),
-                                                lark_clone,
-                                                provider_ws_clone_local,
-                                                cid,
-                                                &arbitrage_info,
-                                            )
+                                        handle_trade_update(lark_clone, provider_ws_clone_local)
                                             .await;
-                                        }
                                     }
                                 }
                             }
@@ -308,9 +299,45 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                     }
 
                     let (last_dex_sell_price, last_dex_buy_price) = (
-                        Arc::new(RwLock::new(Decimal::default())),
-                        Arc::new(RwLock::new(Decimal::default())),
+                        Arc::new(RwLock::new(Decimal::ZERO)),
+                        Arc::new(RwLock::new(Decimal::ZERO)),
                     );
+
+                    // handle cex wallet update event
+                    {
+                        let arbitrages_map_cefi_trade = Arc::clone(&ARBITRAGES);
+                        let provider_ws_cefi_trade = Arc::clone(&provider_ws);
+                        let dex_price = Arc::clone(&last_dex_buy_price);
+                        TOKIO_RUNTIME.spawn(async move {
+                            loop {
+                                let wu_event = rx_wu.recv();
+                                if let Ok(wu) = wu_event {
+                                    info!("receive wallet update event {:?}", wu);
+                                    let asset = cex_currency_to_asset(config.cex, &wu.currency);
+                                    if asset.eq(&config.base_asset) {
+                                        unsafe { if wu.balance.le(&MIN_BASE_ASSET_BALANCE_AMT) {
+                                            warn!("asset {:?} balance {:?} is below threshold {:?}", asset, wu.balance, MIN_BASE_ASSET_BALANCE_AMT);
+                                            std::process::exit(exitcode::DATAERR);
+                                        } }
+                                    }
+
+                                    if asset.eq(&config.quote_asset) {
+                                        let _g = dex_price.read().await;
+                                        if _g.is_sign_positive() { // if price is zero, still in setup stage 
+                                            unsafe {
+                                                let min_quote_amt = _g.checked_mul(MIN_BASE_ASSET_BALANCE_AMT).unwrap();
+                                                if wu.balance.le(&min_quote_amt) {
+                                                    warn!("asset {:?} balance {:?} is below threshold {:?}", asset, wu.balance, min_quote_amt);
+                                                    std::process::exit(exitcode::DATAERR);
+                                                }
+                                            }
+                                        }
+                                        drop(_g);
+                                    }
+                                }
+                            }
+                        });
+                    }
 
                     {
                         let last_dex_sell_price = last_dex_sell_price.clone();

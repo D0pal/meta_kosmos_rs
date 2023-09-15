@@ -1,7 +1,7 @@
 use chrono::prelude::*;
 use ethers::prelude::*;
 use meta_address::{enums::Asset, TokenInfo};
-use meta_cefi::bitfinex::wallet::TradeExecutionUpdate;
+use meta_cefi::{bitfinex::wallet::TradeExecutionUpdate, cex_currency_to_asset};
 use meta_common::enums::{CexExchange, DexExchange, Network};
 use meta_dex::DexService;
 use meta_integration::Lark;
@@ -162,7 +162,7 @@ pub async fn notify_arbitrage_result(
                     .exec_price
                     .saturating_mul(cex_outcome.base_amount)
                     .saturating_mul(Decimal::NEGATIVE_ONE);
-                cex_outcome.fee_token = info.fee_currency.unwrap().parse::<Asset>().unwrap();
+                cex_outcome.fee_token = cex_currency_to_asset(cex_trade_info.venue, &info.fee_currency.unwrap()) ;
                 cex_outcome.fee_amount = info.fee.unwrap();
                 cex_outcome.id = cid.to_string();
             }

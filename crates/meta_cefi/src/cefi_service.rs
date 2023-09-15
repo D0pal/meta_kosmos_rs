@@ -3,7 +3,7 @@ use crate::bitfinex::{
     common::*,
     errors::*,
     events::{DataEvent, NotificationEvent, SEQUENCE},
-    wallet::{TradeExecutionUpdate},
+    wallet::{TradeExecutionUpdate, WalletSnapshot},
     websockets::{EventHandler, EventType, WebSockets},
 };
 use meta_address::enums::Asset;
@@ -21,6 +21,7 @@ use tracing::{debug, error, info, warn};
 pub struct BitfinexEventHandler {
     sender: Option<SyncSender<MarcketChange>>, // send market change
     trade_execution_sender: Option<SyncSender<TradeExecutionUpdate>>, // tu event, contains fee information
+    wu_sender: Option<SyncSender<WalletSnapshot>>,
     order_book: Option<OrderBook>,
     sequence: u32,
 }
@@ -28,9 +29,16 @@ pub struct BitfinexEventHandler {
 impl BitfinexEventHandler {
     pub fn new(
         sender: Option<SyncSender<MarcketChange>>,
+        wu_sender: Option<SyncSender<WalletSnapshot>>,
         order_sender: Option<SyncSender<TradeExecutionUpdate>>,
     ) -> Self {
-        Self { order_book: None, sequence: 0, sender, trade_execution_sender: order_sender }
+        Self {
+            order_book: None,
+            sequence: 0,
+            sender,
+            trade_execution_sender: order_sender,
+            wu_sender,
+        }
     }
 
     fn check_sequence(&mut self, seq: u32) {
@@ -109,9 +117,15 @@ impl EventHandler for BitfinexEventHandler {
         } else if let DataEvent::NewOrderOnReq(_, _, _, seq) = event {
             debug!("handle on req event {:?}", event);
             self.check_sequence(seq);
-        } else if let DataEvent::WalletUpdateEvent(_, _, _, seq, _) = event {
-            debug!("handle on wu event {:?}", event);
+        } else if let DataEvent::WalletUpdateEvent(_, _, wu, seq, _) = event {
+            debug!("handle on wu event {:?}", wu);
             self.check_sequence(seq);
+            match self.wu_sender {
+                Some(ref tx) => {
+                    let _ = tx.send(wu);
+                }
+                None => warn!("no wu sender"),
+            };
         } else if let DataEvent::TradeExecutionEvent(_, ty, e, seq, _) = event {
             debug!("handle on trade execution update event type {:?}, {:?}", ty, e);
             self.check_sequence(seq);
@@ -222,8 +236,9 @@ pub struct OrderBook {
 pub struct CefiService {
     config: Option<CexConfig>,
     sender: Option<SyncSender<MarcketChange>>,
-    order_sender: Option<SyncSender<TradeExecutionUpdate>>,
-    btf_sockets: BTreeMap<String, WebSockets>, // (read, write)
+    order_sender: Option<SyncSender<TradeExecutionUpdate>>, // send order update event
+    wu_sender: Option<SyncSender<WalletSnapshot>>,
+    btf_sockets: BTreeMap<String, WebSockets>, // (pair, socket)
 }
 
 unsafe impl Send for CefiService {}
@@ -234,8 +249,9 @@ impl CefiService {
         config: Option<CexConfig>,
         sender: Option<SyncSender<MarcketChange>>,
         order_sender: Option<SyncSender<TradeExecutionUpdate>>,
+        wu_sender: Option<SyncSender<WalletSnapshot>>,
     ) -> Self {
-        Self { config, sender, btf_sockets: BTreeMap::new(), order_sender }
+        Self { config, sender, btf_sockets: BTreeMap::new(), order_sender, wu_sender }
     }
 
     pub fn subscribe_book(&mut self, cex: CexExchange, base: Asset, quote: Asset) {
@@ -244,8 +260,11 @@ impl CefiService {
             CexExchange::BITFINEX => {
                 let ak = self.config.as_ref().unwrap().keys.as_ref().unwrap().get(&cex).unwrap();
                 if !self.btf_sockets.contains_key(&pair) {
-                    let handler =
-                        BitfinexEventHandler::new(self.sender.clone(), self.order_sender.clone());
+                    let handler = BitfinexEventHandler::new(
+                        self.sender.clone(),
+                        self.wu_sender.clone(),
+                        self.order_sender.clone(),
+                    );
                     let web_socket_reader = WebSockets::new();
                     self.btf_sockets.insert(pair.to_owned(), web_socket_reader);
                     self.btf_sockets.entry(pair).and_modify(|web_socket| {
