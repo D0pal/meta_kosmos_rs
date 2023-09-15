@@ -130,6 +130,7 @@ pub async fn notify_arbitrage_result(
     cid: CID,
     arbitrage_info: &ArbitragePair,
 ) {
+    info!("start notify arbitrage result {:?}", arbitrage_info);
     {
         let mut _g = arbitrage_map.write().await;
         _g.remove(&cid);

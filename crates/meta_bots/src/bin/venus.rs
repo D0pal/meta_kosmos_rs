@@ -162,6 +162,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                             info!("receive onchain swap event with hash {:?}", hash);
 
                             let ret = check_arbitrage_status(Arc::clone(&ARBITRAGES)).await;
+                            info!("arbitrage status: {:?}", ret);
                             if let Some((should_stop, cid, arbitrage_info)) = ret {
                                 if should_stop {
                                     panic!("shoud stop");
@@ -262,6 +263,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                         let provider_ws_clone_local =
                                             Arc::clone(&provider_ws_cefi_trade);
                                         let ret = check_arbitrage_status(map_clone).await;
+                                        info!("arbitrage status: {:?}", ret);
                                         if let Some((should_stop, cid, arbitrage_info)) = ret {
                                             if should_stop {
                                                 panic!("should stop");
