@@ -19,11 +19,16 @@ pub struct CexTradeInfo {
 }
 
 #[derive(Debug, Clone, Default)]
+pub struct SwapFinalisedInfo {
+    pub block_number: u64,
+}
+
+#[derive(Debug, Clone, Default)]
 pub struct DexTradeInfo {
     pub network: Network,
     pub venue: DexExchange,
     pub tx_hash: Option<TxHash>,
-    pub finalised_block_number: Option<u64>,
+    pub finalised_info: Option<SwapFinalisedInfo>,
     pub base_token_info: TokenInfo,
     pub quote_token_info: TokenInfo,
     pub v3_fee: Option<u32>,
@@ -40,6 +45,8 @@ pub struct ArbitragePair {
 }
 
 pub type CID = u128; //client order id
+
+pub type ARBITRAGE_INFO = Arc<RwLock<BTreeMap<CID, ArbitragePair>>>;
 
 #[derive(Debug)]
 pub struct CexInstruction {
@@ -66,26 +73,30 @@ pub struct ArbitrageInstruction {
     pub dex: DexInstruction,
 }
 
-pub async fn update_dex_transaction_finalised_number(
-    map: Arc<RwLock<BTreeMap<CID, ArbitragePair>>>,
+/// update the swap info when onchain transaction is finalised (success/revert)
+pub async fn update_dex_swap_finalised_info(
+    map: ARBITRAGE_INFO,
     hash: TxHash,
-    number: u64,
+    swap_info: SwapFinalisedInfo,
 ) {
     let mut _g = map.write().await;
     let mut iter = _g.iter_mut();
 
     for (key, val) in iter {
         if val.dex.tx_hash.eq(&Some(hash)) {
-            info!("update {:?} to finalized nubmer {:?}", hash, number);
-            (val).dex.finalised_block_number = Some(number);
+            info!("update {:?} with finalised info {:?}", hash, swap_info);
+            (val).dex.finalised_info = Some(swap_info);
             return;
         }
     }
 }
 
-pub async fn check_arbitrage_status(
-    map: Arc<RwLock<BTreeMap<CID, ArbitragePair>>>,
-) -> (bool, Option<(CID, ArbitragePair)>) {
+/// check whether certain number of trades' status have been unknown for too long. stop process if that's so
+/// check whether an arbitrage has been successful; return the info if that's so.
+/// # Return
+/// - should_stop: whether should stop the process
+/// - the arbitrage pair info to be notified
+pub async fn check_arbitrage_status(map: ARBITRAGE_INFO) -> (bool, Option<(CID, ArbitragePair)>) {
     info!("start check arbitrage status");
     let mut _g = map.read().await;
     let iter = _g.iter();
@@ -108,7 +119,7 @@ pub async fn check_arbitrage_status(
             return (true, None);
         }
 
-        if val.cex.trade_info.is_some() && val.dex.finalised_block_number.is_some() {
+        if val.cex.trade_info.is_some() && val.dex.finalised_info.is_some() {
             return (false, Some((*key, val.clone())));
         }
     }
@@ -117,7 +128,7 @@ pub async fn check_arbitrage_status(
 
 pub async fn notify_arbitrage_result(
     arbitrage_map: Arc<RwLock<BTreeMap<CID, ArbitragePair>>>,
-    lark: &Lark,
+    lark: Arc<Lark>,
     provider: Arc<Provider<Ws>>,
     cid: CID,
     arbitrage_info: &ArbitragePair,

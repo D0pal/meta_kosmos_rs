@@ -22,7 +22,7 @@ nohup ./venus -b ARB -q USD --network ARBI -d UniswapV3 -c BITFINEX >venus.log 2
 ```
 
 ## TODO
-- global stop [cefi/defi wallet balance, consective onchain failure]
+- global stop [cefi/defi wallet balance]
 - blockchain transaction may fail
 - websocket read, and write separate
 - te event may be partially filled

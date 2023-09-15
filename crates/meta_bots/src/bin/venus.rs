@@ -6,9 +6,9 @@ use gumdrop::Options;
 use meta_address::{enums::Asset, get_dex_address, get_rpc_info, get_token_info, TokenInfo};
 use meta_bots::{
     venus::{
-        check_arbitrage_status, notify_arbitrage_result, update_dex_transaction_finalised_number,
+        check_arbitrage_status, notify_arbitrage_result, update_dex_swap_finalised_info,
         ArbitrageInstruction, ArbitragePair, CexInstruction, CexTradeInfo, DexInstruction,
-        DexTradeInfo, CID,
+        DexTradeInfo, SwapFinalisedInfo, CID,
     },
     VenusConfig,
 };
@@ -77,6 +77,25 @@ struct Opts {
 }
 
 pub const V3_FEE: u32 = 500u32;
+
+/// will be invoked when a new cex trade or dex swap occurs
+async fn handle_trade_update(lark: Arc<Lark>, provider: Arc<Provider<Ws>>) {
+    let (should_stop, ret) = check_arbitrage_status(Arc::clone(&ARBITRAGES)).await;
+    if should_stop {
+        error!("should stop");
+        std::process::exit(exitcode::DATAERR);
+    }
+    if let Some((cid, arbitrage_info)) = ret {
+        notify_arbitrage_result(
+            Arc::clone(&ARBITRAGES),
+            lark,
+            provider,
+            cid,
+            &arbitrage_info,
+        )
+        .await;
+    }
+}
 
 async fn run(config: VenusConfig) -> anyhow::Result<()> {
     debug!("run venus app with config: {:?}", config);
@@ -150,9 +169,10 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                 .await
                 .unwrap();
 
-            let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel::<(TxHash, u64)>();
+            let (tx, mut rx) =
+                tokio::sync::mpsc::unbounded_channel::<(TxHash, SwapFinalisedInfo)>();
             {
-                // listending new on chain swap, notify if there is
+                // consume onchain swap event
                 let provider_clone = Arc::clone(&provider_ws);
                 let lark_clone = Arc::clone(&lark);
                 TOKIO_RUNTIME.spawn(async move {
@@ -161,30 +181,15 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                         let maybe_hash = rx.recv().await;
                         if let Some((hash, number)) = maybe_hash {
                             info!("receive onchain swap event with hash {:?}", hash);
-
-                            let (should_stop, ret) =
-                                check_arbitrage_status(Arc::clone(&ARBITRAGES)).await;
-                            if should_stop {
-                                error!("should stop");
-                                std::process::exit(exitcode::DATAERR);
-                            }
-                            if let Some((cid, arbitrage_info)) = ret {
-                                notify_arbitrage_result(
-                                    Arc::clone(&ARBITRAGES),
-                                    &Arc::clone(&lark_clone),
-                                    provider_clone_local,
-                                    cid,
-                                    &arbitrage_info,
-                                )
+                            handle_trade_update(Arc::clone(&lark_clone), provider_clone_local)
                                 .await;
-                            }
                         }
                     }
                 });
             }
 
             {
-                // back ground task listening my swap event
+                // subscribing onchain swap event
                 TOKIO_RUNTIME.spawn(async move {
                     let v3_pool_swap_filter = pool
                         .event::<SwapFilter>()
@@ -202,13 +207,15 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                 "block: {:?}, hash: {:?}, address: {:?}, log {:?}",
                                 meta.block_number, meta.transaction_hash, meta.address, swap_log
                             );
-                            update_dex_transaction_finalised_number(
+                            let swap_info =
+                                SwapFinalisedInfo { block_number: meta.block_number.as_u64() };
+                            update_dex_swap_finalised_info(
                                 Arc::clone(&ARBITRAGES),
                                 meta.transaction_hash,
-                                meta.block_number.as_u64(),
+                                swap_info.clone(),
                             )
                             .await;
-                            let ret = tx.send((meta.transaction_hash, meta.block_number.as_u64()));
+                            let ret = tx.send((meta.transaction_hash, swap_info));
                             match ret {
                                 Err(e) => error!("error in send swap event {:?}", e),
                                 _ => {}
@@ -273,7 +280,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                         if let Some((cid, arbitrage_info)) = ret {
                                             notify_arbitrage_result(
                                                 Arc::clone(&ARBITRAGES),
-                                                &lark_clone,
+                                                lark_clone,
                                                 provider_ws_clone_local,
                                                 cid,
                                                 &arbitrage_info,
@@ -591,7 +598,7 @@ async fn try_arbitrage<'a, M: Middleware + 'static>(
                     quote_token_info: instruction.dex.quote_token.clone(),
                     v3_fee: Some(instruction.dex.fee),
                     created: date_time,
-                    finalised_block_number: None,
+                    finalised_info: None,
                 },
             },
         );
