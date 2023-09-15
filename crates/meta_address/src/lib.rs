@@ -24,6 +24,12 @@ impl Contract {
     }
 }
 
+impl Default for Token {
+    fn default() -> Self {
+        Token::WETH
+    }
+}
+
 #[derive(Clone, Debug, Deserialize)]
 struct PersistedTokenInfo {
     pub decimals: u8,
@@ -34,7 +40,7 @@ struct PersistedTokenInfo {
     pub code_hash: Option<String>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 #[impl_contract_code()]
 pub struct TokenInfo {
     pub network: Network,

@@ -92,6 +92,5 @@ fn build_enums() -> anyhow::Result<TokenStream> {
             }
         }
 
-
     })
 }

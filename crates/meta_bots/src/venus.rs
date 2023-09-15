@@ -10,15 +10,15 @@ use meta_util::ether::get_network_scan_url;
 use rust_decimal::Decimal;
 use std::{collections::BTreeMap, sync::Arc};
 use tokio::sync::RwLock;
-use tracing::error;
+use tracing::{error, info};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct CexTradeInfo {
     pub venue: CexExchange,
     pub trade_info: Option<TradeExecutionUpdate>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct DexTradeInfo {
     pub network: Network,
     pub venue: DexExchange,
@@ -29,7 +29,7 @@ pub struct DexTradeInfo {
     pub created: chrono::DateTime<Utc>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct ArbitragePair {
     pub datetime: DateTime<Utc>,
     pub base: Asset,
@@ -68,6 +68,7 @@ pub struct ArbitrageInstruction {
 pub async fn check_arbitrage_status(
     map: Arc<RwLock<BTreeMap<CID, ArbitragePair>>>,
 ) -> Option<(bool, CID, ArbitragePair)> {
+    info!("start check arbitrage status");
     let mut _g = map.read().await;
     let mut iter = _g.iter();
 
@@ -81,13 +82,18 @@ pub async fn check_arbitrage_status(
             let (key, val) = cur.unwrap();
             // tx sent, but still unknonw
             if val.dex.tx_hash.is_none() {
+                info!("current time {:?}, created {:?}", time, val.dex.created);
                 if time.signed_duration_since(val.dex.created).abs().num_seconds() > 1 {
                     pending_status_tx_count += 1;
                 }
             }
 
+            if pending_status_tx_count >= 2 {
+                break Some((true, CID::default(), ArbitragePair::default()));
+            }
+
             if val.cex.trade_info.is_some() && val.dex.tx_hash.is_some() {
-                break Some((pending_status_tx_count >= 2, *key, val.clone()));
+                break Some((false, *key, val.clone()));
             } else {
                 continue;
             }
