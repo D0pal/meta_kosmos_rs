@@ -8,8 +8,11 @@ edition = "2021"
 [dependencies]
 meta_common = { path = "../meta_common" }
 ethers.workspace=true
+# ether
+revm.workspace=true
 # Data
 serde.workspace=true
 serde_json.workspace=true
 hex.workspace=true
 rust_decimal.workspace=true
+lazy_static.workspace=true

@@ -1,7 +1,7 @@
+use crate::binance::errors::{Error, ErrorKind, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{from_value, Value};
 use std::convert::TryFrom;
-use crate::binance::errors::{Error, ErrorKind, Result};
 
 #[derive(Deserialize, Clone)]
 pub struct Empty {}
@@ -51,18 +51,10 @@ pub struct Symbol {
 pub enum Filters {
     #[serde(rename = "PRICE_FILTER")]
     #[serde(rename_all = "camelCase")]
-    PriceFilter {
-        min_price: String,
-        max_price: String,
-        tick_size: String,
-    },
+    PriceFilter { min_price: String, max_price: String, tick_size: String },
     #[serde(rename = "PERCENT_PRICE")]
     #[serde(rename_all = "camelCase")]
-    PercentPrice {
-        multiplier_up: String,
-        multiplier_down: String,
-        avg_price_mins: Option<f64>,
-    },
+    PercentPrice { multiplier_up: String, multiplier_down: String, avg_price_mins: Option<f64> },
     #[serde(rename = "PERCENT_PRICE_BY_SIDE")]
     #[serde(rename_all = "camelCase")]
     PercentPriceBySide {
@@ -74,11 +66,7 @@ pub enum Filters {
     },
     #[serde(rename = "LOT_SIZE")]
     #[serde(rename_all = "camelCase")]
-    LotSize {
-        min_qty: String,
-        max_qty: String,
-        step_size: String,
-    },
+    LotSize { min_qty: String, max_qty: String, step_size: String },
     #[serde(rename = "MIN_NOTIONAL")]
     #[serde(rename_all = "camelCase")]
     MinNotional {
@@ -112,11 +100,7 @@ pub enum Filters {
     MaxPosition { max_position: String },
     #[serde(rename = "MARKET_LOT_SIZE")]
     #[serde(rename_all = "camelCase")]
-    MarketLotSize {
-        min_qty: String,
-        max_qty: String,
-        step_size: String,
-    },
+    MarketLotSize { min_qty: String, max_qty: String, step_size: String },
     #[serde(rename = "TRAILING_DELTA")]
     #[serde(rename_all = "camelCase")]
     TrailingData {
@@ -966,10 +950,7 @@ pub struct KlineSummary {
 }
 
 fn get_value(row: &[Value], index: usize, name: &'static str) -> Result<Value> {
-    Ok(row
-        .get(index)
-        .ok_or_else(|| ErrorKind::KlineValueMissingError(index, name))?
-        .clone())
+    Ok(row.get(index).ok_or_else(|| ErrorKind::KlineValueMissingError(index, name))?.clone())
 }
 
 impl TryFrom<&Vec<Value>> for KlineSummary {
@@ -1301,7 +1282,7 @@ pub struct DepositAddress {
 pub(crate) mod string_or_float {
     use std::fmt;
 
-    use serde::{de, Serializer, Deserialize, Deserializer};
+    use serde::{de, Deserialize, Deserializer, Serializer};
 
     pub fn serialize<T, S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1338,7 +1319,7 @@ pub(crate) mod string_or_float {
 pub(crate) mod string_or_float_opt {
     use std::fmt;
 
-    use serde::{Serializer, Deserialize, Deserializer};
+    use serde::{Deserialize, Deserializer, Serializer};
 
     pub fn serialize<T, S>(value: &Option<T>, serializer: S) -> Result<S::Ok, S::Error>
     where
@@ -1362,16 +1343,14 @@ pub(crate) mod string_or_float_opt {
             Float(f64),
         }
 
-        Ok(Some(crate::binance::model::string_or_float::deserialize(
-            deserializer,
-        )?))
+        Ok(Some(crate::binance::model::string_or_float::deserialize(deserializer)?))
     }
 }
 
 pub(crate) mod string_or_bool {
     use std::fmt;
 
-    use serde::{de, Serializer, Deserialize, Deserializer};
+    use serde::{de, Deserialize, Deserializer, Serializer};
 
     pub fn serialize<T, S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
     where

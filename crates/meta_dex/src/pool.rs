@@ -1,7 +1,4 @@
-use std::{
-    hash::{Hash, Hasher},
-    str::FromStr,
-};
+use std::hash::{Hash, Hasher};
 
 use ethers::prelude::*;
 use meta_common::enums::PoolVariant;
@@ -24,19 +21,10 @@ impl Pool {
         swap_fee: U256,
         pool_variant: PoolVariant,
     ) -> Pool {
-        let (token_0, token_1) = if token_a < token_b {
-            (token_a, token_b)
-        } else {
-            (token_b, token_a)
-        };
+        let (token_0, token_1) =
+            if token_a < token_b { (token_a, token_b) } else { (token_b, token_a) };
 
-        Pool {
-            address,
-            token_0,
-            token_1,
-            swap_fee,
-            pool_variant,
-        }
+        Pool { address, token_0, token_1, swap_fee, pool_variant }
     }
 }
 

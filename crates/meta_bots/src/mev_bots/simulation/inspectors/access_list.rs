@@ -33,7 +33,7 @@ impl AccessListInspector {
         let precompiles: Vec<rAddress> = Precompiles::latest()
             .addresses()
             .into_iter()
-            .map(|addy| rAddress::from(addy))
+            .map(rAddress::from)
             .collect();
 
         let from: rAddress = from.0.into();
@@ -41,11 +41,7 @@ impl AccessListInspector {
 
         AccessListInspector {
             // exclude precomiples, from, and to addresses
-            excluded: vec![from, to]
-                .iter()
-                .chain(precompiles.iter())
-                .copied()
-                .collect(),
+            excluded: [from, to].iter().chain(precompiles.iter()).copied().collect(),
             access_list: HashMap::default(),
         }
     }
@@ -62,13 +58,7 @@ impl AccessListInspector {
         self.access_list
             .into_iter()
             .map(|(address, slots)| {
-                (
-                    address,
-                    slots
-                        .into_iter()
-                        .map(|s| rU256::from_be_bytes(s.0))
-                        .collect(),
-                )
+                (address, slots.into_iter().map(|s| rU256::from_be_bytes(s.0)).collect())
             })
             .collect()
     }
@@ -82,7 +72,7 @@ where
         &mut self,
         interpreter: &mut Interpreter,
         _data: &mut EVMData<'_, DB>,
-        _is_static: bool,
+        // _is_static: bool,
     ) -> InstructionResult {
         let pc = interpreter.program_counter();
         let op = interpreter.contract.bytecode.bytecode()[pc];

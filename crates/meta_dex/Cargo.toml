@@ -15,13 +15,16 @@ meta_contracts= {path="../meta_contracts"}
 ethers.workspace=true
 # async
 tokio.workspace=true
+futures.workspace=true
 # data
 lazy_static.workspace=true
 hashbrown.workspace=true
+rust_decimal.workspace=true
 # tracing
 tracing.workspace=true
 # error
 eyre.workspace=true
+anyhow.workspace=true
 thiserror.workspace=true
 # misc
 indicatif.workspace=true

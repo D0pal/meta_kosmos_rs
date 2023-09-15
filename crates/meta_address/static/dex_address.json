@@ -32,7 +32,7 @@
                 "created_blk_num": 0
             },
             "UniV3SwapRouterV2": {
-                "address": "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+                "address": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
                 "created_blk_num": 13804681
             },
             "UniV3QuoterV2": {
@@ -52,7 +52,7 @@
                 "created_blk_num": 0
             },
             "UniV3SwapRouterV2": {
-                "address": "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+                "address": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
                 "created_blk_num": 13804681
             },
             "UniV3QuoterV2": {

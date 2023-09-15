@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
-use meta_util::ether::{calculate_next_block_base_fee};
 use ethers::prelude::*;
+use meta_util::ether::calculate_next_block_base_fee;
 
 #[derive(Debug, Clone, Default)]
 pub struct BlockInfo {
@@ -13,11 +13,7 @@ pub struct BlockInfo {
 impl BlockInfo {
     // Create a new `BlockInfo` instance
     pub fn new(number: U64, timestamp: U256, base_fee: U256) -> Self {
-        Self {
-            number,
-            timestamp,
-            base_fee,
-        }
+        Self { number, timestamp, base_fee }
     }
 
     // Find the next block ahead of `prev_block`
@@ -26,11 +22,7 @@ impl BlockInfo {
         let timestamp = prev_block.timestamp + 12;
         let base_fee = calculate_next_block_base_fee(prev_block);
 
-        Self {
-            number,
-            timestamp,
-            base_fee,
-        }
+        Self { number, timestamp, base_fee }
     }
 }
 
@@ -68,10 +60,7 @@ impl BlockOracle {
 
         let next_block = BlockInfo::new(number, timestamp, base_fee);
 
-        Ok(BlockOracle {
-            latest_block,
-            next_block,
-        })
+        Ok(BlockOracle { latest_block, next_block })
     }
 
     // Updates block's number

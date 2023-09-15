@@ -4,19 +4,14 @@ use ethers::{
     prelude::*,
     utils::{Anvil, AnvilInstance},
 };
+
 use meta_contracts::{
     bindings::{
-        flash_bots_router::{FlashBotsRouter, UniswapWethParams},
-        uniswap_v2_pair::{SwapFilter, UniswapV2Pair, UniswapV2PairEvents},
-        erc20::ERC20
-    },
-    wrappers::{
-        calculate_price_diff, get_atomic_arb_call_params, Erc20Wrapper, UniswapV2,
-        UniswapV2PairWrapper,
+        erc20::ERC20,
+        uniswap_v2_pair::{UniswapV2Pair},
     },
 };
 use meta_dex::prelude::{BlockInfo, Pool};
-use meta_common::enums::{PoolVariant};
 use meta_util::ether::hash::u256_to_h256_be;
 
 // use crate::{
@@ -115,7 +110,7 @@ macro_rules! time_function {
         let start = std::time::Instant::now();
         let result = $x;
         let elapsed = start.elapsed();
-        println!("Elapsed time: {:?}", elapsed);
+        error!("Elapsed time: {:?}", elapsed);
         result
     }};
 }

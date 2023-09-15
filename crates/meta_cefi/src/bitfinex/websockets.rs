@@ -1,27 +1,29 @@
-use crate::bitfinex::auth;
-use crate::bitfinex::common::{CONF_FLAG_SEQ_ALL, CONF_OB_CHECKSUM};
-use crate::bitfinex::errors::*;
-use crate::bitfinex::events::*;
-use crate::bitfinex::orders::OrderType;
+use crate::bitfinex::{
+    auth,
+    common::{CONF_FLAG_SEQ_ALL, CONF_OB_CHECKSUM},
+    errors::*,
+    events::*,
+    orders::OrderType,
+};
 use error_chain::bail;
-use meta_util::time::get_current_ts;
 use serde_json::{from_str, json};
-use std::net::TcpStream;
-use std::sync::mpsc::{self, channel};
-use std::time::Instant;
-use tracing::{debug, info};
+use std::{
+    net::TcpStream,
+    sync::mpsc::{self, channel},
+};
+use tracing::{error, info};
 use tungstenite::{
     connect, handshake::client::Response, protocol::WebSocket, stream::MaybeTlsStream, Message,
 };
 use url::Url;
 
-static INFO: &'static str = "info";
-static SUBSCRIBED: &'static str = "subscribed";
-static AUTH: &'static str = "auth";
-static CONF: &'static str = "conf";
-static CHECKSUM: &'static str = "cs";
-static FUNDING_CREDIT_SNAPSHOT: &'static str = "fcs";
-static WEBSOCKET_URL: &'static str = "wss://api.bitfinex.com/ws/2";
+static INFO: &str = "info";
+static SUBSCRIBED: &str = "subscribed";
+static AUTH: &str = "auth";
+static CONF: &str = "conf";
+static CHECKSUM: &str = "cs";
+static FUNDING_CREDIT_SNAPSHOT: &str = "fcs";
+static WEBSOCKET_URL: &str = "wss://api.bitfinex.com/ws/2";
 static DEAD_MAN_SWITCH_FLAG: u8 = 4;
 
 pub trait EventHandler {
@@ -59,13 +61,13 @@ unsafe impl Sync for WebSockets {}
 impl WebSockets {
     pub fn new() -> WebSockets {
         let (tx, rx) = channel::<WsMessage>();
-        let sender = Sender { tx: tx };
+        let sender = Sender { tx };
 
-        WebSockets { socket: None, sender: sender, rx: rx, event_handler: None }
+        WebSockets { socket: None, sender, rx, event_handler: None }
     }
 
     pub fn connect(&mut self) -> Result<()> {
-        let wss: String = format!("{}", WEBSOCKET_URL);
+        let wss: String = WEBSOCKET_URL.to_string();
         let url = Url::parse(&wss)?;
 
         match connect(url) {
@@ -203,12 +205,14 @@ impl WebSockets {
         }
     }
 
-    pub fn submit_order<S, F>(&mut self, symbol: S, qty: F)
+    pub fn submit_order<S, F>(&mut self, client_order_id: u128, symbol: S, qty: F)
     where
         S: Into<String>,
         F: Into<String>,
     {
-        let cid = get_current_ts().as_millis();
+        let symbol_str: String = symbol.into();
+        let qty_str: String = qty.into();
+        info!("websockets submit order symbol: {:?}, qty {:?}", symbol_str, qty_str);
         let msg = json!(
         [
             0,
@@ -216,10 +220,11 @@ impl WebSockets {
             null,
             {
                 "gid": 0,
-                "cid": cid,
+                "cid": client_order_id,
                 "type": OrderType::EXCHANGE_MARKET.to_string(),
-                "symbol": symbol.into(),
-                "amount": qty.into(),
+                "symbol": symbol_str,
+                "amount": qty_str
+                // "meta":option
             }
         ]);
 
@@ -252,12 +257,10 @@ impl WebSockets {
     }
 
     fn format_symbol(&mut self, symbol: String, et: EventType) -> String {
-        let local_symbol = match et {
+        match et {
             EventType::Funding => format!("f{}", symbol),
             EventType::Trading => format!("t{}", symbol),
-        };
-
-        local_symbol
+        }
     }
 
     pub fn event_loop(&mut self) -> Result<()> {
@@ -267,14 +270,15 @@ impl WebSockets {
                     match self.rx.try_recv() {
                         Ok(msg) => match msg {
                             WsMessage::Text(text) => {
-                                println!("ws write message {:?}", text);
+                                info!("socket write message {:?}", text);
                                 let ret = socket.0.write_message(Message::Text(text));
                                 match ret {
-                                    Err(e) => eprintln!("{:?}", e),
+                                    Err(e) => error!("error in socket write {:?}", e),
                                     Ok(()) => {}
                                 }
                             }
                             WsMessage::Close => {
+                                info!("socket close");
                                 return socket.0.close(None).map_err(|e| e.into());
                             }
                         },
@@ -291,33 +295,22 @@ impl WebSockets {
                     Message::Text(text) => {
                         // println!("got msg: {:?}", text);
                         if let Some(ref mut h) = self.event_handler {
-                            if text.find(INFO) != None {
+                            if text.contains(INFO) {
                                 let event: NotificationEvent = from_str(&text)?;
                                 h.on_connect(event);
-                            } else if text.find(SUBSCRIBED) != None {
+                            } else if text.contains(SUBSCRIBED) {
                                 let event: NotificationEvent = from_str(&text)?;
                                 h.on_subscribed(event);
-                            } else if text.find(AUTH).is_some() {
+                            } else if text.contains(AUTH) {
                                 let event: NotificationEvent = from_str(&text)?;
                                 h.on_auth(event);
-                            } else if text.find(CONF).is_some() {
+                            } else if text.contains(CONF) {
                                 info!("got conf msg: {:?}", text);
                             } else {
-                                // if text.find(FUNDING_CREDIT_SNAPSHOT).is_some() {  // conflicts with fcs
-                                //     let fcs_event: DataEvent = from_str(&text)?;
-                                //     println!("fcs_event {:?}", fcs_event);
-                                // }
-                                // if text.find(CHECKSUM).is_some() {  // conflicts with fcs
-                                //     let event: DataEvent = from_str(&text)?;
-                                //     h.on_checksum(event);
-                                // }
+
                                 let event: DataEvent = from_str(&text)?;
                                 h.on_data_event(event);
-                                // if let DataEvent::HeartbeatEvent(a, b, c) = event {
-                                //     h.on_heart_beat(a, b, c);
-                                // } else {
-                                //     h.on_data_event(event);
-                                // }
+    
                             }
                         }
                     }

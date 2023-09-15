@@ -1,4 +1,4 @@
-use meta_util::{int_from_hex_str, time::get_current_ts};
+use meta_util::int_from_hex_str;
 use reqwest::header;
 use serde::{Deserialize, Serialize};
 
@@ -97,7 +97,7 @@ impl Club48Client {
 
 #[cfg(test)]
 mod test_client {
-    use meta_util::{time::get_current_ts, int_from_hex_str};
+    use meta_util::time::get_current_ts;
     use std::vec;
 
     use super::Club48Client;

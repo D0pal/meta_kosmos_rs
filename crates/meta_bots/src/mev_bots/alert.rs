@@ -1,8 +1,8 @@
 use ethers::prelude::*;
-use meta_common::enums::PoolVariant;
+
 use revm::interpreter::OpCode;
 use std::collections::HashMap;
-use tracing::{error, info};
+use tracing::{error};
 
 use super::{OptimalRecipe, LARK_WEBHOOK};
 

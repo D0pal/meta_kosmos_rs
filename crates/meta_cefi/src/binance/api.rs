@@ -1,8 +1,4 @@
-
-use crate::binance::client::Client;
-use crate::binance::config::Config;
-use crate::binance::general::General;
-use crate::binance::market::Market;
+use crate::binance::{client::Client, config::Config, general::General, market::Market};
 
 #[allow(clippy::all)]
 pub enum API {
@@ -66,8 +62,6 @@ impl From<API> for String {
                 Spot::MyTrades => "/api/v3/myTrades",
                 Spot::UserDataStream => "/api/v3/userDataStream",
             },
-
-
         })
     }
 }
@@ -75,7 +69,9 @@ impl From<API> for String {
 pub trait Binance {
     fn new(api_key: Option<String>, secret_key: Option<String>) -> Self;
     fn new_with_config(
-        api_key: Option<String>, secret_key: Option<String>, config: &Config,
+        api_key: Option<String>,
+        secret_key: Option<String>,
+        config: &Config,
     ) -> Self;
 }
 
@@ -85,15 +81,13 @@ impl Binance for General {
     }
 
     fn new_with_config(
-        api_key: Option<String>, secret_key: Option<String>, config: &Config,
+        api_key: Option<String>,
+        secret_key: Option<String>,
+        config: &Config,
     ) -> General {
-        General {
-            client: Client::new(api_key, secret_key, config.rest_api_endpoint.clone()),
-        }
+        General { client: Client::new(api_key, secret_key, config.rest_api_endpoint.clone()) }
     }
 }
-
-
 
 impl Binance for Market {
     fn new(api_key: Option<String>, secret_key: Option<String>) -> Market {
@@ -101,7 +95,9 @@ impl Binance for Market {
     }
 
     fn new_with_config(
-        api_key: Option<String>, secret_key: Option<String>, config: &Config,
+        api_key: Option<String>,
+        secret_key: Option<String>,
+        config: &Config,
     ) -> Market {
         Market {
             client: Client::new(api_key, secret_key, config.rest_api_endpoint.clone()),
@@ -109,10 +105,3 @@ impl Binance for Market {
         }
     }
 }
-
-
-
-
-
-
-

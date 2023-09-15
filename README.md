@@ -8,7 +8,7 @@ cargo test --package meta_address --lib -- tests::test_token_addr --exact --noca
 ## lint
 ```
 cargo +nightly fmt
-cargo fix
+cargo clippy --fix
 ```
 
 ## scripts

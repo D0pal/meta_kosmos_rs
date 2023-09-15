@@ -17,11 +17,7 @@ pub enum DatabaseError {
     #[error("Failed to get account for {0:?}: {0:?}")]
     GetAccount(revm::primitives::Address, Arc<eyre::Error>),
     #[error("Failed to get storage for {0:?} at {1:?}: {2:?}")]
-    GetStorage(
-        revm::primitives::Address,
-        revm::primitives::U256,
-        Arc<eyre::Error>,
-    ),
+    GetStorage(revm::primitives::Address, revm::primitives::U256, Arc<eyre::Error>),
     #[error("Failed to get block hash for {0}: {1:?}")]
     GetBlockHash(revm::primitives::U256, Arc<eyre::Error>),
 }

@@ -4,6 +4,7 @@ cex = "BITFINEX"
 quote_asset = "USD"
 base_asset = "ARB"
 base_asset_quote_amt = "200"
+spread_diff_threshold = 1
 
 [log]
 file_name_prefix = "meta_kosmos_venus"
@@ -20,3 +21,7 @@ provider="Quick"
 
 [account]
 private_key_path = "/tmp/pk/venus"
+
+[bitfinex]
+api_key = ""
+api_secret = ""

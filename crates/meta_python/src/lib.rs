@@ -1,4 +1,4 @@
-use ohio_alchemy::{EvmSimulator, ReplayTransactionResult};
+use meta_alchemy::{EvmSimulator, ReplayTransactionResult};
 use meta_util::ether::tx_hash_from_str;
 use pyo3::prelude::*;
 use std::{borrow::BorrowMut, sync::Arc};
@@ -76,7 +76,7 @@ impl RustBackend {
 }
 
 #[pymodule]
-fn ohio_python(_py: Python, m: &PyModule) -> PyResult<()> {
+fn meta_python(_py: Python, m: &PyModule) -> PyResult<()> {
     #[pyclass]
     struct OhioWrapperPy {
         inner: Arc<Mutex<RustBackend>>,

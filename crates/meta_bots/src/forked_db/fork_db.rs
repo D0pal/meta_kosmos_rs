@@ -12,7 +12,7 @@ use revm::{
 
 use super::{
     database_error::{DatabaseError, DatabaseResult},
-    global_backend::{BackendFetchRequest},
+    global_backend::BackendFetchRequest,
 };
 
 #[derive(Clone, Debug)]
@@ -106,9 +106,7 @@ impl Database for ForkDB {
         };
 
         // keep record of fetched storage (can unwrap safely as cacheDB always returns true)
-        self.db
-            .insert_account_storage(address, index, storage_val)
-            .unwrap();
+        self.db.insert_account_storage(address, index, storage_val).unwrap();
 
         Ok(storage_val)
     }

@@ -12,10 +12,7 @@ pub fn build_swap_v2_data(
     ]).unwrap());
 
     braindance_contract
-        .encode(
-            "calculateSwapV2",
-            (amount_in, target_pool, startend_token, intermediary_token),
-        )
+        .encode("calculateSwapV2", (amount_in, target_pool, startend_token, intermediary_token))
         .unwrap()
 }
 
@@ -31,9 +28,6 @@ pub fn build_swap_v3_data(
     ]).unwrap());
 
     braindance_contract
-        .encode(
-            "calculateSwapV3",
-            (amount_in, target_pool, startend_token, intermediary_token),
-        )
+        .encode("calculateSwapV3", (amount_in, target_pool, startend_token, intermediary_token))
         .unwrap()
 }

@@ -1,9 +1,8 @@
-use std::fmt;
-
-use ethers::prelude::{AbiError, ContractError};
-use ethers::providers::{Provider, ProviderError, Ws};
-use ethers::signers::WalletError;
-use ethers::types::H160;
+use ethers::{
+    prelude::*,
+    providers::{Provider, ProviderError, Ws},
+    types::H160,
+};
 use thiserror::Error;
 use tokio::task::JoinError;
 
@@ -22,4 +21,15 @@ pub enum PairSyncError {
     JoinError(#[from] JoinError),
     #[error("Pair for ${0}/${1} does not exist in provided dexes")]
     PairDoesNotExistInDexes(H160, H160),
+}
+#[derive(Error, Debug)]
+pub enum OrderError<M: Middleware> {
+    #[error("send on chain tx error")]
+    SendTxError,
+
+    #[error("error in find receipt")]
+    UnableFetchTxReceiptError,
+
+    #[error(transparent)]
+    ContractError(#[from] ContractError<M>),
 }

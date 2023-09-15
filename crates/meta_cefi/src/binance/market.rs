@@ -1,15 +1,15 @@
-use crate::binance::util::build_request;
-use crate::binance::model::{
-    AggTrade, AveragePrice, BookTickers, KlineSummaries, KlineSummary, OrderBook, PriceStats,
-    Prices, SymbolPrice, Tickers,
+use crate::binance::{
+    api::{Spot, API},
+    client::Client,
+    errors::Result,
+    model::{
+        AggTrade, AveragePrice, BookTickers, KlineSummaries, KlineSummary, OrderBook, PriceStats,
+        Prices, SymbolPrice, Tickers,
+    },
+    util::build_request,
 };
-use crate::binance::client::Client;
-use crate::binance::errors::Result;
-use std::collections::BTreeMap;
 use serde_json::Value;
-use crate::binance::api::API;
-use crate::binance::api::Spot;
-use std::convert::TryInto;
+use std::{collections::BTreeMap, convert::TryInto};
 
 #[derive(Clone)]
 pub struct Market {
@@ -108,7 +108,12 @@ impl Market {
     /// If you provide start_time, you also need to provide end_time.
     /// If from_id, start_time and end_time are omitted, the most recent trades are fetched.
     pub fn get_agg_trades<S1, S2, S3, S4, S5>(
-        &self, symbol: S1, from_id: S2, start_time: S3, end_time: S4, limit: S5,
+        &self,
+        symbol: S1,
+        from_id: S2,
+        start_time: S3,
+        end_time: S4,
+        limit: S5,
     ) -> Result<Vec<AggTrade>>
     where
         S1: Into<String>,
@@ -143,7 +148,12 @@ impl Market {
     // Returns up to 'limit' klines for given symbol and interval ("1m", "5m", ...)
     // https://github.com/binance-exchange/binance-official-api-docs/blob/master/rest-api.md#klinecandlestick-data
     pub fn get_klines<S1, S2, S3, S4, S5>(
-        &self, symbol: S1, interval: S2, limit: S3, start_time: S4, end_time: S5,
+        &self,
+        symbol: S1,
+        interval: S2,
+        limit: S3,
+        start_time: S4,
+        end_time: S5,
     ) -> Result<KlineSummaries>
     where
         S1: Into<String>,
@@ -172,9 +182,7 @@ impl Market {
         let data: Vec<Vec<Value>> = self.client.get(API::Spot(Spot::Klines), Some(request))?;
 
         let klines = KlineSummaries::AllKlineSummaries(
-            data.iter()
-                .map(|row| row.try_into())
-                .collect::<Result<Vec<KlineSummary>>>()?,
+            data.iter().map(|row| row.try_into()).collect::<Result<Vec<KlineSummary>>>()?,
         );
 
         Ok(klines)

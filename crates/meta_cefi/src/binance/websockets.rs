@@ -1,19 +1,23 @@
-use crate::binance::errors::Result;
-use crate::binance::config::Config;
-use crate::binance::model::{
-    AccountUpdateEvent, AggrTradesEvent, BalanceUpdateEvent, BookTickerEvent, DayTickerEvent,
-    DepthOrderBookEvent, KlineEvent, OrderBook, OrderTradeEvent, TradeEvent, DiffOrderBookEvent,
+use crate::binance::{
+    config::Config,
+    errors::Result,
+    model::{
+        AccountUpdateEvent, AggrTradesEvent, BalanceUpdateEvent, BookTickerEvent, DayTickerEvent,
+        DepthOrderBookEvent, DiffOrderBookEvent, KlineEvent, OrderBook, OrderTradeEvent,
+        TradeEvent,
+    },
 };
 use error_chain::bail;
-use url::Url;
 use serde::{Deserialize, Serialize};
+use url::Url;
 
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::net::TcpStream;
-use tungstenite::{connect, Message};
-use tungstenite::protocol::WebSocket;
-use tungstenite::stream::MaybeTlsStream;
-use tungstenite::handshake::client::Response;
+use std::{
+    net::TcpStream,
+    sync::atomic::{AtomicBool, Ordering},
+};
+use tungstenite::{
+    connect, handshake::client::Response, protocol::WebSocket, stream::MaybeTlsStream, Message,
+};
 
 #[allow(clippy::all)]
 enum WebsocketAPI {
@@ -26,10 +30,9 @@ impl WebsocketAPI {
     fn params(self, subscription: &str) -> String {
         match self {
             WebsocketAPI::Default => format!("wss://stream.binance.com:9443/ws/{}", subscription),
-            WebsocketAPI::MultiStream => format!(
-                "wss://stream.binance.com:9443/stream?streams={}",
-                subscription
-            ),
+            WebsocketAPI::MultiStream => {
+                format!("wss://stream.binance.com:9443/stream?streams={}", subscription)
+            }
             WebsocketAPI::Custom(url) => format!("{}/{}", url, subscription),
         }
     }
@@ -79,10 +82,7 @@ impl<'a> WebSockets<'a> {
     where
         Callback: FnMut(WebsocketEvent) -> Result<()> + 'a,
     {
-        WebSockets {
-            socket: None,
-            handler: Box::new(handler),
-        }
+        WebSockets { socket: None, handler: Box::new(handler) }
     }
 
     pub fn connect(&mut self, subscription: &str) -> Result<()> {

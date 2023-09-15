@@ -7,7 +7,5 @@ pub fn address_to_str(addr: &Address) -> String {
 }
 
 pub fn address_from_str(addr: &str) -> Address {
-    Address::from_str(addr)
-        .to_owned()
-        .expect("cannot convert string to address")
+    Address::from_str(addr).to_owned().expect("cannot convert string to address")
 }

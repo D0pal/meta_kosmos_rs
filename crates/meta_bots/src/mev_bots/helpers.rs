@@ -1,27 +1,31 @@
-use ethers::abi::{self, parse_abi, ParamType};
-use ethers::prelude::BaseContract;
-use ethers::types::transaction::eip2930::{AccessList, AccessListItem};
-use ethers::types::{Address, BigEndianHash, Bytes, H256, U256};
-use ethers::utils::parse_ether;
+use ethers::{
+    abi::{self, parse_abi, ParamType},
+    prelude::BaseContract,
+    types::{
+        transaction::eip2930::{AccessList, AccessListItem},
+        Address, BigEndianHash, Bytes, H256, U256,
+    },
+    utils::parse_ether,
+};
 use meta_address::get_bot_contract_info;
 use meta_common::{
     enums::{BotType, Network},
     traits::ContractCode,
 };
 use meta_dex::prelude::BlockInfo;
-use revm::primitives::{ExecutionResult, Output, TransactTo};
 use revm::{
-    primitives::{Address as rAddress, Bytecode, U256 as rU256},
+    primitives::{
+        Address as rAddress, Bytecode, ExecutionResult, Output, TransactTo, B256, U256 as rU256,
+    },
     EVM,
 };
 use std::str::FromStr;
 
 use crate::forked_db::{ForkDB, ForkFactory};
 
-use super::simulation::SimulationError;
 use super::{
-    BRAINDANCE_STARTING_BALANCE, DEV_BRAINDANCE_ADDRESS, DEV_BRAINDANCE_CONTRAOLLER_ADDRESS,
-    DEV_CALLER_ADDRESS,
+    simulation::SimulationError, BRAINDANCE_STARTING_BALANCE, DEV_BRAINDANCE_ADDRESS,
+    DEV_BRAINDANCE_CONTRAOLLER_ADDRESS, DEV_CALLER_ADDRESS,
 };
 
 // Setup braindance for current fork factory by injecting braindance
@@ -40,7 +44,7 @@ pub fn attach_braindance_module(
 
     // Get balance mapping of braindance contract inside of weth contract
     let slot: U256 = ethers::utils::keccak256(abi::encode(&[
-        abi::Token::Address((*DEV_BRAINDANCE_ADDRESS).0.into()),
+        abi::Token::Address(DEV_BRAINDANCE_ADDRESS.0.into()),
         abi::Token::Uint(U256::from(3)),
     ]))
     .into();
@@ -69,7 +73,12 @@ pub fn inject_sando(
     // give searcher some balance to pay for gas fees
     let searcher = searcher_address;
     let gas_money = parse_ether(100).unwrap();
-    let account = revm::primitives::AccountInfo::new(gas_money.into(), 0, Bytecode::default());
+    let account = revm::primitives::AccountInfo::new(
+        gas_money.into(),
+        0,
+        B256::default(),
+        Bytecode::default(),
+    );
     fork_factory.insert_account_info(searcher.0.into(), account);
 
     // setup sandwich contract
@@ -77,6 +86,7 @@ pub fn inject_sando(
     let account = revm::primitives::AccountInfo::new(
         rU256::from(0),
         0,
+        B256::default(),
         Bytecode::new_raw(
             get_bot_contract_info(BotType::SANDWIDTH_HUFF, network)
                 .unwrap()
@@ -115,16 +125,25 @@ fn inject_braindance_code(network: Network, fork_factory: &mut ForkFactory) {
     let account = revm::primitives::AccountInfo::new(
         rU256::from(0),
         0,
+        B256::default(),
         Bytecode::new_raw(
-            get_bot_contract_info(BotType::BRAIN_DANCE_SOL, network).unwrap().get_byte_code_and_hash().0.0,
+            get_bot_contract_info(BotType::BRAIN_DANCE_SOL, network)
+                .unwrap()
+                .get_byte_code_and_hash()
+                .0
+                 .0,
         ),
     );
-    fork_factory.insert_account_info((*DEV_BRAINDANCE_ADDRESS).0.into(), account);
+    fork_factory.insert_account_info(DEV_BRAINDANCE_ADDRESS.0.into(), account);
 
     // setup braindance contract controller
-    let account =
-        revm::primitives::AccountInfo::new(parse_ether(69).unwrap().into(), 0, Bytecode::default());
-    fork_factory.insert_account_info((*DEV_BRAINDANCE_CONTRAOLLER_ADDRESS).0.into(), account);
+    let account = revm::primitives::AccountInfo::new(
+        parse_ether(69).unwrap().into(),
+        0,
+        B256::default(),
+        Bytecode::default(),
+    );
+    fork_factory.insert_account_info(DEV_BRAINDANCE_CONTRAOLLER_ADDRESS.0.into(), account);
 }
 
 // Setup evm blockstate
@@ -165,7 +184,7 @@ pub fn get_amount_out_evm(
 ) -> Result<U256, SimulationError> {
     // get reserves
     evm.env.tx.transact_to = TransactTo::Call(target_pool.0.into());
-    evm.env.tx.caller = (*DEV_CALLER_ADDRESS).0.into();
+    evm.env.tx.caller = DEV_CALLER_ADDRESS.0.into();
     evm.env.tx.value = rU256::ZERO;
     evm.env.tx.data = Bytes::from_str("0x0902f1ac").unwrap().0; // getReserves()
     let result = match evm.transact_ref() {
@@ -182,7 +201,7 @@ pub fn get_amount_out_evm(
     };
 
     let tokens = abi::decode(
-        &vec![ParamType::Uint(128), ParamType::Uint(128), ParamType::Uint(32)],
+        &[ParamType::Uint(128), ParamType::Uint(128), ParamType::Uint(32)],
         &output,
     )
     .unwrap();
@@ -225,7 +244,7 @@ pub fn get_balance_of_evm(
 
     evm.env.tx.transact_to = TransactTo::Call(token.0.into());
     evm.env.tx.data = erc20.encode("balanceOf", owner).unwrap().0;
-    evm.env.tx.caller = (*DEV_CALLER_ADDRESS).0.into();
+    evm.env.tx.caller = DEV_CALLER_ADDRESS.0.into();
     evm.env.tx.gas_price = next_block.base_fee.into();
     evm.env.tx.gas_limit = 700000;
     evm.env.tx.value = rU256::ZERO;
@@ -247,8 +266,8 @@ pub fn get_balance_of_evm(
     };
 
     match erc20.decode_output("balanceOf", &output) {
-        Ok(tokens) => return Ok(tokens),
-        Err(e) => return Err(SimulationError::AbiError(e)),
+        Ok(tokens) => Ok(tokens),
+        Err(e) => Err(SimulationError::AbiError(e)),
     }
 }
 
@@ -269,7 +288,7 @@ pub fn convert_access_list(access_list: Vec<(rAddress, Vec<rU256>)>) -> AccessLi
             storage_keys: keys
                 .iter()
                 .map(|k| {
-                    let slot_u256: U256 = k.clone().into();
+                    let slot_u256: U256 = (*k).into();
                     let slot_h256: H256 = H256::from_uint(&slot_u256);
                     slot_h256
                 })

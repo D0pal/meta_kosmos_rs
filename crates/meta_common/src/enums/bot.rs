@@ -1,5 +1,5 @@
+use serde::Deserialize;
 use strum::{AsRefStr, EnumCount, EnumIter, EnumString, EnumVariantNames};
-use serde::{Deserialize};
 
 #[derive(
     Clone,
@@ -26,5 +26,5 @@ pub enum BotType {
     SANDWIDTH_HUFF,
 
     #[strum(ascii_case_insensitive, serialize = "BRAIN_DANCE_SOL")]
-    BRAIN_DANCE_SOL
+    BRAIN_DANCE_SOL,
 }

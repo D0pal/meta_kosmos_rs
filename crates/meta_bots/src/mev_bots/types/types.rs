@@ -20,7 +20,6 @@ pub struct OptimalRecipe {
     pub state_diffs: BTreeMap<H160, AccountDiff>,
 }
 
-
 impl OptimalRecipe {
     // Create a new `OptimalRecipe` instance
     pub fn new(
@@ -80,7 +79,7 @@ impl OptimalRecipe {
         for (i, x) in self.meats.iter().enumerate() {
             s.push_str(&format!("{:?}", x.hash));
             if i != self.meats.len() - 1 {
-                s.push_str(",");
+                s.push(',');
             }
         }
         s.push(']');

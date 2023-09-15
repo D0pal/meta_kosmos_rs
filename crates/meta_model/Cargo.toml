@@ -1,0 +1,20 @@
+[package]
+name = "meta_model"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+meta_common= {path="../meta_common"}
+meta_util= {path="../meta_util"}
+meta_address= {path="../meta_address"}
+# Data
+serde.workspace=true
+serde_json.workspace=true
+strum.workspace=true
+strum_macros.workspace=true
+hex.workspace=true
+lazy_static.workspace=true
+ethers.workspace=true
+rust_decimal.workspace=true

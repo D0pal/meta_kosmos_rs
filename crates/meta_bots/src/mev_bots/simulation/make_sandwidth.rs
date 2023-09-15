@@ -102,11 +102,11 @@ async fn juiced_quadratic_search(
     mut lower_bound: U256,
     mut upper_bound: U256,
     next_block: &BlockInfo,
-    mut fork_factory: &mut ForkFactory,
+    fork_factory: &mut ForkFactory,
     network: Network,
     weth_address: Address,
-    sandwidth_contract_address: Address,
-    searcher_address: Address,
+    _sandwidth_contract_address: Address,
+    _searcher_address: Address,
 ) -> Result<U256, SimulationError> {
     //
     //            [EXAMPLE WITH 10 BOUND INTERVALS]
@@ -125,7 +125,7 @@ async fn juiced_quadratic_search(
     //  * Search again with bounds set to adjacent index of highest
     //
 
-    attach_braindance_module(network, &mut fork_factory, weth_address);
+    attach_braindance_module(network, fork_factory, weth_address);
 
     #[cfg(test)]
     {
@@ -148,8 +148,8 @@ async fn juiced_quadratic_search(
     let tolerance = (tolerance * ((upper_bound + lower_bound) / 2)) / base;
 
     // initialize variables for search
-    let left_interval_lower = |i: usize, intervals: &Vec<U256>| intervals[i - 1].clone() + 1;
-    let right_interval_upper = |i: usize, intervals: &Vec<U256>| intervals[i + 1].clone() - 1;
+    let left_interval_lower = |i: usize, intervals: &Vec<U256>| intervals[i - 1] + 1;
+    let right_interval_upper = |i: usize, intervals: &Vec<U256>| intervals[i + 1] - 1;
     let should_loop_terminate = |lower_bound: U256, upper_bound: U256| -> bool {
         let search_range = match upper_bound.checked_sub(lower_bound) {
             Some(range) => range,
@@ -202,7 +202,7 @@ async fn juiced_quadratic_search(
         println!("sim revenue: {:?}", revenues);
         // find interval that produces highest revenue
         let (highest_revenue_index, _highest_revenue) =
-            revenues.iter().enumerate().max_by(|(_, a), (_, b)| a.cmp(&b)).unwrap();
+            revenues.iter().enumerate().max_by(|(_, a), (_, b)| a.cmp(b)).unwrap();
 
         highest_sando_input = intervals[highest_revenue_index];
 
@@ -265,7 +265,7 @@ fn sanity_check(
     // setup evm simulation
     let mut evm = revm::EVM::new();
     evm.database(fork_db);
-    setup_block_state(&mut evm, &next_block);
+    setup_block_state(&mut evm, next_block);
 
     let searcher = searcher_address;
     let sandwich_contract = sandwidth_contract_address;
@@ -320,7 +320,7 @@ fn sanity_check(
     // get access list
     let mut access_list_inspector = AccessListInspector::new(searcher, sandwich_contract);
     evm.inspect_ref(&mut access_list_inspector)
-        .map_err(|e| SimulationError::FrontrunEvmError(e))
+        .map_err(SimulationError::FrontrunEvmError)
         .unwrap();
     let frontrun_access_list = access_list_inspector.into_access_list();
     evm.env.tx.access_list = frontrun_access_list.clone();
@@ -438,7 +438,7 @@ fn sanity_check(
     // create access list
     let mut access_list_inspector = AccessListInspector::new(searcher, sandwich_contract);
     evm.inspect_ref(&mut access_list_inspector)
-        .map_err(|e| SimulationError::FrontrunEvmError(e))
+        .map_err(SimulationError::FrontrunEvmError)
         .unwrap();
     let backrun_access_list = access_list_inspector.into_access_list();
     evm.env.tx.access_list = backrun_access_list.clone();
@@ -537,8 +537,8 @@ async fn evaluate_sandwich_revenue(
         ),
     };
 
-    evm.env.tx.caller = (*DEV_BRAINDANCE_CONTRAOLLER_ADDRESS);
-    evm.env.tx.transact_to = TransactTo::Call((*DEV_BRAINDANCE_ADDRESS).0.into());
+    evm.env.tx.caller = *DEV_BRAINDANCE_CONTRAOLLER_ADDRESS;
+    evm.env.tx.transact_to = TransactTo::Call(DEV_BRAINDANCE_ADDRESS.0.into());
     evm.env.tx.data = frontrun_data.0;
     evm.env.tx.gas_limit = 700000;
     evm.env.tx.gas_price = next_block.base_fee.into();
@@ -620,8 +620,8 @@ async fn evaluate_sandwich_revenue(
         ),
     };
 
-    evm.env.tx.caller = (*DEV_BRAINDANCE_CONTRAOLLER_ADDRESS);
-    evm.env.tx.transact_to = TransactTo::Call((*DEV_BRAINDANCE_ADDRESS).0.into());
+    evm.env.tx.caller = *DEV_BRAINDANCE_CONTRAOLLER_ADDRESS;
+    evm.env.tx.transact_to = TransactTo::Call(DEV_BRAINDANCE_ADDRESS.0.into());
     evm.env.tx.data = backrun_data.0;
     evm.env.tx.gas_limit = 700000;
     evm.env.tx.gas_price = next_block.base_fee.into();
@@ -669,8 +669,8 @@ mod test {
         },
     };
     use ethers::prelude::*;
-    use meta_address::{get_bot_contract_info, get_rpc_info, get_token_address};
-    use meta_common::{enums::Network, constants::address_from_str};
+    use meta_address::{get_bot_contract_info, get_rpc_info, get_token_info};
+    use meta_common::{constants::address_from_str, enums::Network};
     use meta_dex::sandwidth::SandwichMaker;
     use std::{fmt::format, str::FromStr, sync::Arc};
     use tokio::{runtime::Runtime, time::Instant};
@@ -688,10 +688,11 @@ mod test {
             get_bot_contract_info(meta_common::enums::BotType::SANDWIDTH_HUFF, network).unwrap();
         let weth_address = get_token_address(meta_common::enums::Token::WETH, network).unwrap();
         let ws_provider = testhelpder::create_ws().await;
-        let private_key = std::fs::read_to_string(format!("/tmp/pk/sandwidth_searcher_{}", network))
-            .unwrap()
-            .trim()
-            .to_string();
+        let private_key =
+            std::fs::read_to_string(format!("/tmp/pk/sandwidth_searcher_{}", network))
+                .unwrap()
+                .trim()
+                .to_string();
         let wallet_local: Arc<LocalWallet> =
             Arc::new(private_key.parse::<LocalWallet>().unwrap().with_chain_id(rpc_info.chainId));
 

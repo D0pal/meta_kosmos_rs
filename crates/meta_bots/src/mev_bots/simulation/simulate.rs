@@ -4,7 +4,7 @@ use futures::stream::FuturesUnordered;
 use meta_dex::pool::Pool;
 use revm::{
     db::{CacheDB, EmptyDB},
-    primitives::{AccountInfo, Bytecode},
+    primitives::{AccountInfo, Bytecode, B256},
 };
 use std::{
     collections::{btree_map::Entry, BTreeMap},
@@ -88,7 +88,7 @@ pub fn extract_pools(
 ) -> Option<Vec<SandwichablePool>> {
     // capture all addresses that have a state change and are also a pool
     let touched_pools: Vec<Pool> =
-        state_diffs.keys().filter_map(|e| all_pools.get(e).map(|p| (*p.value()).clone())).collect();
+        state_diffs.keys().filter_map(|e| all_pools.get(e).map(|p| (*p.value()))).collect();
 
     // find direction of swap based on state diff (does weth have state changes?)
     let weth_state_diff = &state_diffs.get(&weth_address)?.storage;
@@ -169,7 +169,12 @@ pub async fn to_cache_db(
     println!("start while loop");
     while let Some(result) = futures.next().await {
         let (acc_diff, address, nonce, balance, code) = result?;
-        let info = AccountInfo::new(balance.into(), nonce.as_u64(), Bytecode::new_raw(code.0));
+        let info = AccountInfo::new(
+            balance.into(),
+            nonce.as_u64(),
+            B256::default(),
+            Bytecode::new_raw(code.0),
+        );
         println!("start insert account info");
         cache_db.insert_account_info(address.0.into(), info);
         println!("end insert account info");

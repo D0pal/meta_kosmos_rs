@@ -1,5 +1,4 @@
-use crate::forked_db::DatabaseError;
-use crate::mev_bots::simulation::inspectors::is_sando_safu::OpCode;
+use crate::{forked_db::DatabaseError, mev_bots::simulation::inspectors::is_sando_safu::OpCode};
 use ethers::prelude::AbiError;
 
 #[derive(Debug)]

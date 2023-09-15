@@ -14,7 +14,7 @@ pub enum PackedToken<'a> {
 }
 
 /// Pack a single `SolidityDataType` into bytes
-fn pack<'a>(data_type: &'a PackedToken) -> Vec<u8> {
+fn pack(data_type: &PackedToken) -> Vec<u8> {
     let mut res = Vec::new();
     match data_type {
         PackedToken::String(s) => {
@@ -53,7 +53,6 @@ fn pack<'a>(data_type: &'a PackedToken) -> Vec<u8> {
     };
     res
 }
-
 
 pub fn encode_packed(items: &[PackedToken]) -> (Vec<u8>, String) {
     let res = items.iter().fold(Vec::new(), |mut acc, i| {

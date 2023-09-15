@@ -1,7 +1,8 @@
-use revm::interpreter::{opcode, Interpreter};
-use revm::interpreter::{CallInputs, CreateInputs, Gas, InstructionResult};
-use revm::primitives::{Bytes, B160};
-use revm::{Database, EVMData, Inspector};
+use revm::{
+    interpreter::{opcode, CallInputs, CreateInputs, Gas, InstructionResult, Interpreter},
+    primitives::{Bytes, B160},
+    Database, EVMData, Inspector,
+};
 
 #[derive(Debug)]
 pub enum IsSandoSafu {
@@ -42,11 +43,7 @@ pub struct SalmonellaInspectoooor {
 impl SalmonellaInspectoooor {
     // create new salmonella inspector
     pub fn new() -> Self {
-        Self {
-            suspicious_opcodes: Vec::new(),
-            gas_opcode_counter: 0,
-            call_opcode_counter: 0,
-        }
+        Self { suspicious_opcodes: Vec::new(), gas_opcode_counter: 0, call_opcode_counter: 0 }
     }
 
     // checks if opportunity is safu
@@ -64,7 +61,7 @@ impl SalmonellaInspectoooor {
             suspicious_opcodes.insert(0, gas_opcode);
         }
 
-        match self.suspicious_opcodes.len() == 0 {
+        match self.suspicious_opcodes.is_empty() {
             true => IsSandoSafu::Safu,
             false => IsSandoSafu::NotSafu(suspicious_opcodes),
         }
@@ -76,7 +73,7 @@ impl<DB: Database> Inspector<DB> for SalmonellaInspectoooor {
         &mut self,
         _interp: &mut Interpreter,
         _data: &mut EVMData<'_, DB>,
-        _is_static: bool,
+        // _is_static: bool,
     ) -> InstructionResult {
         InstructionResult::Continue
     }
@@ -87,7 +84,7 @@ impl<DB: Database> Inspector<DB> for SalmonellaInspectoooor {
         &mut self,
         interp: &mut Interpreter,
         _data: &mut EVMData<'_, DB>,
-        _is_static: bool,
+        // _is_static: bool,
     ) -> InstructionResult {
         let executed_opcode = interp.current_opcode();
 
@@ -131,7 +128,7 @@ impl<DB: Database> Inspector<DB> for SalmonellaInspectoooor {
         &mut self,
         _interp: &mut Interpreter,
         _data: &mut EVMData<'_, DB>,
-        _is_static: bool,
+        // _is_static: bool,
         _eval: InstructionResult,
     ) -> InstructionResult {
         InstructionResult::Continue
@@ -141,7 +138,7 @@ impl<DB: Database> Inspector<DB> for SalmonellaInspectoooor {
         &mut self,
         _data: &mut EVMData<'_, DB>,
         _inputs: &mut CallInputs,
-        _is_static: bool,
+        // _is_static: bool,
     ) -> (InstructionResult, Gas, Bytes) {
         (InstructionResult::Continue, Gas::new(0), Bytes::new())
     }
@@ -153,7 +150,7 @@ impl<DB: Database> Inspector<DB> for SalmonellaInspectoooor {
         remaining_gas: Gas,
         ret: InstructionResult,
         out: Bytes,
-        _is_static: bool,
+        // _is_static: bool,
     ) -> (InstructionResult, Gas, Bytes) {
         (ret, remaining_gas, out)
     }

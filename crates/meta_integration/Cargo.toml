@@ -1,0 +1,18 @@
+[package]
+name = "meta_integration"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+meta_common = {path = "../meta_common"}
+meta_util = {path = "../meta_util"}
+meta_model = {path = "../meta_model"}
+meta_address = {path = "../meta_address"}
+reqwest.workspace=true
+serde.workspace=true
+serde_json.workspace=true
+tokio = { version = "1", features = ["full"] }
+rust_decimal.workspace=true
+chrono.workspace=true

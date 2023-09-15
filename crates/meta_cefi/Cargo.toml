@@ -26,6 +26,7 @@ serde_json.workspace=true
 rust_decimal.workspace=true
 strum.workspace=true
 strum_macros.workspace=true
+uuid.workspace=true
 # crypto
 hmac = "0.12.1"
 sha2 = "0.10.6"
