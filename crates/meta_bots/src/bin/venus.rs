@@ -36,6 +36,7 @@ use rust_decimal::{prelude::FromPrimitive, Decimal};
 use std::{
     collections::{BTreeMap, VecDeque},
     path::PathBuf,
+    process,
     sync::{
         atomic::{AtomicBool, AtomicPtr, AtomicU32, Ordering},
         mpsc, Arc,
@@ -165,9 +166,9 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                 check_arbitrage_status(Arc::clone(&ARBITRAGES)).await;
                             if should_stop {
                                 error!("should stop");
-                                panic!("shoud stop");
+                                std::process::exit(exitcode::DATAERR);
                             }
-                            if let Some(( cid, arbitrage_info)) = ret {
+                            if let Some((cid, arbitrage_info)) = ret {
                                 notify_arbitrage_result(
                                     Arc::clone(&ARBITRAGES),
                                     &Arc::clone(&lark_clone),
@@ -267,7 +268,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                             check_arbitrage_status(map_clone).await;
                                         if should_stop {
                                             error!("should stop");
-                                            panic!("should stop");
+                                            std::process::exit(exitcode::DATAERR);
                                         }
                                         if let Some((cid, arbitrage_info)) = ret {
                                             notify_arbitrage_result(
