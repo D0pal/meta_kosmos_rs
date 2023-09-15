@@ -96,13 +96,14 @@ pub async fn check_arbitrage_status(
     for (key, val) in iter {
         // TODO: should use block nubmer rather than time
         let pending_ms = time.signed_duration_since(val.dex.created).abs().num_milliseconds();
-        info!("tx {:?} has been pending for {:?} ms. created {:?}, current {:?}", val.dex.tx_hash, pending_ms, val.dex.created, time);
+        info!(
+            "tx {:?} has been pending for {:?} ms. created {:?}, current {:?}",
+            val.dex.tx_hash, pending_ms, val.dex.created, time
+        );
         if pending_ms > 1_000 {
-            // tx sent, but still unknonw
-            info!("tx is still unknown, current time {:?}, created {:?}", time, val.dex.created);
             pending_status_tx_count += 1;
         }
-
+        info!("pending_status_tx_count: {:?}", pending_status_tx_count);
         if pending_status_tx_count >= 2 {
             return (true, None);
         }

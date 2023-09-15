@@ -164,6 +164,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                             let (should_stop, ret) =
                                 check_arbitrage_status(Arc::clone(&ARBITRAGES)).await;
                             if should_stop {
+                                error!("should stop");
                                 panic!("shoud stop");
                             }
                             if let Some(( cid, arbitrage_info)) = ret {
@@ -265,6 +266,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                         let (should_stop, ret) =
                                             check_arbitrage_status(map_clone).await;
                                         if should_stop {
+                                            error!("should stop");
                                             panic!("should stop");
                                         }
                                         if let Some((cid, arbitrage_info)) = ret {
