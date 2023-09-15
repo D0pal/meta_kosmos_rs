@@ -44,7 +44,7 @@ use std::{
     time::Duration,
 };
 use tokio::sync::RwLock;
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, warn};
 
 lazy_static::lazy_static! {
     static ref TOKIO_RUNTIME: tokio::runtime::Runtime = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
@@ -161,12 +161,12 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                         if let Some((hash, number)) = maybe_hash {
                             info!("receive onchain swap event with hash {:?}", hash);
 
-                            let ret = check_arbitrage_status(Arc::clone(&ARBITRAGES)).await;
-                            info!("arbitrage status: {:?}", ret);
-                            if let Some((should_stop, cid, arbitrage_info)) = ret {
-                                if should_stop {
-                                    panic!("shoud stop");
-                                }
+                            let (should_stop, ret) =
+                                check_arbitrage_status(Arc::clone(&ARBITRAGES)).await;
+                            if should_stop {
+                                panic!("shoud stop");
+                            }
+                            if let Some(( cid, arbitrage_info)) = ret {
                                 notify_arbitrage_result(
                                     Arc::clone(&ARBITRAGES),
                                     &Arc::clone(&lark_clone),
@@ -262,12 +262,12 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                         let map_clone = Arc::clone(&arbitrages_map_cefi_trade);
                                         let provider_ws_clone_local =
                                             Arc::clone(&provider_ws_cefi_trade);
-                                        let ret = check_arbitrage_status(map_clone).await;
-                                        info!("arbitrage status: {:?}", ret);
-                                        if let Some((should_stop, cid, arbitrage_info)) = ret {
-                                            if should_stop {
-                                                panic!("should stop");
-                                            }
+                                        let (should_stop, ret) =
+                                            check_arbitrage_status(map_clone).await;
+                                        if should_stop {
+                                            panic!("should stop");
+                                        }
+                                        if let Some((cid, arbitrage_info)) = ret {
                                             notify_arbitrage_result(
                                                 Arc::clone(&ARBITRAGES),
                                                 &lark_clone,
@@ -553,13 +553,12 @@ async fn try_arbitrage<'a, M: Middleware + 'static>(
     cefi_service_ptr: *mut CefiService,
     dex_service_ref: &DexService<M>,
 ) {
-    let total = TOTAL_PENDING_TRADES.fetch_add(1, Ordering::SeqCst);
-    info!("total pending trades number {:?}", total);
-
+    let total = TOTAL_PENDING_TRADES.load(Ordering::Relaxed);
     if total > 5 {
-        error!("tatal pending number of trades are too much: {:?}, stop", total);
+        warn!("total pending number of trades are {:?}, skip trade for now", total);
         return;
     }
+    let total = TOTAL_PENDING_TRADES.fetch_add(1, Ordering::SeqCst);
     let client_order_id = get_current_ts().as_millis();
 
     info!("start arbitrage with instruction {:?}", instruction);

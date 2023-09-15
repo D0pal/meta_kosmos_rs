@@ -85,42 +85,31 @@ pub async fn update_dex_transaction_finalised_number(
 
 pub async fn check_arbitrage_status(
     map: Arc<RwLock<BTreeMap<CID, ArbitragePair>>>,
-) -> Option<(bool, CID, ArbitragePair)> {
-    info!("start check arbitrage status");
+) -> (bool, Option<(CID, ArbitragePair)>) {
+    info!("start check arbitrage status, map: {:?}", map);
     let mut _g = map.read().await;
-    let mut iter = _g.iter();
+    let iter = _g.iter();
 
     let mut pending_status_tx_count = 0;
     let time = chrono::Utc::now();
-    loop {
-        let cur = iter.next();
-        if cur.is_none() {
-            info!("no arbitrage to check");
-            break None;
-        } else {
-            let (key, val) = cur.unwrap();
 
-            // TODO: should use block nubmer rather than time
-            if time.signed_duration_since(val.dex.created).abs().num_seconds() > 1 {
-                // tx sent, but still unknonw
-                info!(
-                    "tx is still unknown, current time {:?}, created {:?}",
-                    time, val.dex.created
-                );
-                pending_status_tx_count += 1;
-            }
+    for (key, val) in iter {
+        // TODO: should use block nubmer rather than time
+        if time.signed_duration_since(val.dex.created).abs().num_seconds() > 1 {
+            // tx sent, but still unknonw
+            info!("tx is still unknown, current time {:?}, created {:?}", time, val.dex.created);
+            pending_status_tx_count += 1;
+        }
 
-            if pending_status_tx_count >= 2 {
-                break Some((true, CID::default(), ArbitragePair::default()));
-            }
+        if pending_status_tx_count >= 2 {
+            return (true, None);
+        }
 
-            if val.cex.trade_info.is_some() && val.dex.finalised_block_number.is_some() {
-                break Some((false, *key, val.clone()));
-            } else {
-                continue;
-            }
+        if val.cex.trade_info.is_some() && val.dex.finalised_block_number.is_some() {
+            return (false, Some((*key, val.clone())));
         }
     }
+    return (false, None);
 }
 
 pub async fn notify_arbitrage_result(
