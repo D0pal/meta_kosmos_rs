@@ -313,27 +313,31 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                 let wu_event = rx_wu.recv();
                                 if let Ok(wu) = wu_event {
                                     info!("receive wallet update event {:?}", wu);
-                                    let asset = cex_currency_to_asset(config.cex, &wu.currency);
-                                    if asset.eq(&config.base_asset) {
-                                        unsafe { if wu.balance.le(&MIN_BASE_ASSET_BALANCE_AMT) {
-                                            warn!("asset {:?} balance {:?} is below threshold {:?}", asset, wu.balance, MIN_BASE_ASSET_BALANCE_AMT);
-                                            std::process::exit(exitcode::DATAERR);
-                                        } }
-                                    }
-
-                                    if asset.eq(&config.quote_asset) {
-                                        let _g = dex_price.read().await;
-                                        if _g.is_sign_positive() { // if price is zero, still in setup stage 
-                                            unsafe {
-                                                let min_quote_amt = _g.checked_mul(MIN_BASE_ASSET_BALANCE_AMT).unwrap();
-                                                if wu.balance.le(&min_quote_amt) {
-                                                    warn!("asset {:?} balance {:?} is below threshold {:?}", asset, wu.balance, min_quote_amt);
-                                                    std::process::exit(exitcode::DATAERR);
+                                    // TODO: use enum
+                                    if wu.wallet_type.eq("exchange") {
+                                        let asset = cex_currency_to_asset(config.cex, &wu.currency);
+                                        if asset.eq(&config.base_asset) {
+                                            unsafe { if wu.balance.le(&MIN_BASE_ASSET_BALANCE_AMT) {
+                                                warn!("asset {:?} balance {:?} is below threshold {:?}", asset, wu.balance, MIN_BASE_ASSET_BALANCE_AMT);
+                                                std::process::exit(exitcode::DATAERR);
+                                            } }
+                                        }
+    
+                                        if asset.eq(&config.quote_asset) {
+                                            let _g = dex_price.read().await;
+                                            if _g.is_sign_positive() { // if price is zero, still in setup stage 
+                                                unsafe {
+                                                    let min_quote_amt = _g.checked_mul(MIN_BASE_ASSET_BALANCE_AMT).unwrap();
+                                                    if wu.balance.le(&min_quote_amt) {
+                                                        warn!("asset {:?} balance {:?} is below threshold {:?}", asset, wu.balance, min_quote_amt);
+                                                        std::process::exit(exitcode::DATAERR);
+                                                    }
                                                 }
                                             }
+                                            drop(_g);
                                         }
-                                        drop(_g);
                                     }
+                                    
                                 }
                             }
                         });
