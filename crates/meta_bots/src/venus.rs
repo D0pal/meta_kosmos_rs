@@ -26,6 +26,7 @@ pub struct DexTradeInfo {
     pub base_token_info: TokenInfo,
     pub quote_token_info: TokenInfo,
     pub v3_fee: Option<u32>,
+    pub created: chrono::DateTime<Utc>,
 }
 
 #[derive(Debug, Clone)]
@@ -66,17 +67,27 @@ pub struct ArbitrageInstruction {
 
 pub async fn check_arbitrage_status(
     map: Arc<RwLock<BTreeMap<CID, ArbitragePair>>>,
-) -> Option<(CID, ArbitragePair)> {
+) -> Option<(bool, CID, ArbitragePair)> {
     let mut _g = map.read().await;
     let mut iter = _g.iter();
+
+    let mut pending_status_tx_count = 0;
+    let time = chrono::Utc::now();
     loop {
         let cur = iter.next();
         if cur.is_none() {
             break None;
         } else {
             let (key, val) = cur.unwrap();
+            // tx sent, but still unknonw
+            if val.dex.tx_hash.is_none() {
+                if time.signed_duration_since(val.dex.created).abs().num_seconds() > 1 {
+                    pending_status_tx_count += 1;
+                }
+            }
+
             if val.cex.trade_info.is_some() && val.dex.tx_hash.is_some() {
-                break Some((*key, val.clone()));
+                break Some((pending_status_tx_count >= 2, *key, val.clone()));
             } else {
                 continue;
             }
@@ -85,11 +96,17 @@ pub async fn check_arbitrage_status(
 }
 
 pub async fn notify_arbitrage_result(
+    arbitrage_map: Arc<RwLock<BTreeMap<CID, ArbitragePair>>>,
     lark: &Lark,
     provider: Arc<Provider<Ws>>,
     cid: CID,
     arbitrage_info: &ArbitragePair,
 ) {
+    {
+        let mut _g = arbitrage_map.write().await;
+        _g.remove(&cid);
+    }
+
     let dex_service =
         DexService::new(provider.clone(), arbitrage_info.dex.network, arbitrage_info.dex.venue);
     let dex_trade_info = arbitrage_info.dex.clone();

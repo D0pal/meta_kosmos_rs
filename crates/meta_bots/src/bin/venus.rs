@@ -48,8 +48,6 @@ use tracing::{debug, error, info};
 lazy_static::lazy_static! {
     static ref TOKIO_RUNTIME: tokio::runtime::Runtime = tokio::runtime::Builder::new_multi_thread().enable_all().build().unwrap();
     static ref ARBITRAGES: Arc<RwLock<BTreeMap<CID, ArbitragePair>>> = Arc::new(RwLock::new(BTreeMap::new())); // key is request id
-    static ref GLOBAL_STOP: AtomicBool = AtomicBool::new(false); // default not stop
-    static ref HASHES: Arc<RwLock<VecDeque<(TxHash, Option<TransactionReceipt>)>>> = Arc::new(RwLock::new(VecDeque::new())); // true means everything is good, false means something wrong; consectutive 2 false, should stop
 }
 
 #[derive(Debug, Clone, Options)]
@@ -162,8 +160,12 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                             info!("receive onchain swap event with hash {:?}", hash);
 
                             let ret = check_arbitrage_status(Arc::clone(&ARBITRAGES)).await;
-                            if let Some((cid, arbitrage_info)) = ret {
+                            if let Some((should_stop, cid, arbitrage_info)) = ret {
+                                if should_stop {
+                                    panic!("shoud stop");
+                                }
                                 notify_arbitrage_result(
+                                    Arc::clone(&ARBITRAGES),
                                     &Arc::clone(&lark_clone),
                                     provider_clone_local,
                                     cid,
@@ -251,8 +253,12 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                         let provider_ws_clone_local =
                                             Arc::clone(&provider_ws_cefi_trade);
                                         let ret = check_arbitrage_status(map_clone).await;
-                                        if let Some((cid, arbitrage_info)) = ret {
+                                        if let Some((should_stop, cid, arbitrage_info)) = ret {
+                                            if should_stop {
+                                                panic!("should stop");
+                                            }
                                             notify_arbitrage_result(
+                                                Arc::clone(&ARBITRAGES),
                                                 &lark_clone,
                                                 provider_ws_clone_local,
                                                 cid,
@@ -549,10 +555,11 @@ async fn try_arbitrage<'a, M: Middleware + 'static>(
 
     let mut _g = ARBITRAGES.write().await;
 
+    let date_time = chrono::Utc::now();
     _g.insert(
         client_order_id,
         ArbitragePair {
-            datetime: chrono::Utc::now(),
+            datetime: date_time,
             base: instruction.cex.base_asset,
             quote: instruction.cex.quote_asset,
             cex: CexTradeInfo { venue: instruction.cex.venue, trade_info: None },
@@ -563,6 +570,7 @@ async fn try_arbitrage<'a, M: Middleware + 'static>(
                 base_token_info: instruction.dex.base_token.clone(),
                 quote_token_info: instruction.dex.quote_token.clone(),
                 v3_fee: Some(instruction.dex.fee),
+                created: date_time
             },
         },
     );
@@ -598,15 +606,6 @@ async fn try_arbitrage<'a, M: Middleware + 'static>(
                     _g.entry(client_order_id).and_modify(|e| {
                         e.dex.tx_hash = Some(hash);
                     });
-
-                    {
-                        let client = Arc::clone(&dex_service_ref.client);
-                        TOKIO_RUNTIME.spawn(async move {
-                            push_hash(hash).await;
-                            tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
-                            check_stop(client, Arc::clone(&HASHES)).await;
-                        });
-                    }
                 }
                 Err(e) => error!("error in send dex order {:?}", e),
             }
@@ -664,68 +663,6 @@ async fn main() {
     }
 }
 
-async fn push_hash(hash: TxHash) {
-    info!("push hash {:?}", hash);
-    {
-        let mut _g = HASHES.write().await;
-        if _g.len() >= 2 {
-            _g.pop_front();
-        }
-        _g.push_back((hash, None));
-    }
-}
-
-pub async fn check_stop<M: Middleware>(
-    provider: Arc<M>,
-    hashes: Arc<RwLock<VecDeque<(TxHash, Option<TransactionReceipt>)>>>,
-) {
-    info!("start check stop");
-    let _g = hashes.read().await;
-    if _g.len() < 2 {
-        return;
-    }
-
-    let mut stop = true;
-
-    for i in vec![0, 1] {
-        let element = _g.get(i);
-        if let Some((hash, receipt_maybe)) = element {
-            let receipt = match receipt_maybe {
-                Some(r) => {
-                    info!("receipt already exist {:?}", r);
-                    Some(r.to_owned())
-                }
-                None => {
-                    let receipt_fetched = provider.get_transaction_receipt(*hash).await;
-                    info!("fetched receipt for hash {:?}, receipt: {:?}", hash, receipt_fetched);
-                    receipt_fetched.map_or(None, |r| r.map_or(None, |e| Some(e)))
-                }
-            };
-
-            if let Some(ref r) = receipt {
-                {
-                    let mut _gm = hashes.write().await;
-                    let r_mut = _gm.get_mut(i);
-                    if let Some(e) = r_mut {
-                        e.1 = Some(r.to_owned());
-                    }
-                }
-                if r.status == Some(1.into()) {
-                    stop = false;
-                    break;
-                }
-            }
-        } else {
-            stop = false;
-            break;
-        }
-    }
-
-    if stop {
-        error!("should stop");
-        panic!("should stop");
-    }
-}
 
 #[cfg(test)]
 mod test {
