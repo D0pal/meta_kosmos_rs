@@ -882,6 +882,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e496a50fda8aacccc86d7529e2c1e0892dbd0f898a6b5645b5561b89c3210efa"
 
 [[package]]
+name = "core_affinity"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "622892f5635ce1fc38c8f16dfc938553ed64af482edb5e150bf4caedbfcb2304"
+dependencies = [
+ "libc",
+ "num_cpus",
+ "winapi",
+]
+
+[[package]]
 name = "cpufeatures"
 version = "0.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3087,6 +3098,8 @@ dependencies = [
 name = "meta_cefi"
 version = "0.1.0"
 dependencies = [
+ "core_affinity",
+ "crossbeam-channel",
  "error-chain",
  "eyre",
  "hashbrown 0.13.2",
@@ -3097,6 +3110,7 @@ dependencies = [
  "meta_common",
  "meta_tracing",
  "meta_util",
+ "once_cell",
  "reqwest",
  "ring",
  "rust_decimal",

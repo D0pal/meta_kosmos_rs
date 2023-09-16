@@ -12,6 +12,13 @@ pub fn cex_currency_to_asset(cex: CexExchange, currency: &str) -> Asset {
     }
 }
 
+pub fn get_cex_pair(cex: CexExchange, base: Asset, quote: Asset) -> String {
+    match cex {
+        CexExchange::BITFINEX => format!("t{:?}{:?}", base, quote),
+        _ => unimplemented!(),
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;

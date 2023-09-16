@@ -27,6 +27,7 @@ rust_decimal.workspace=true
 strum.workspace=true
 strum_macros.workspace=true
 uuid.workspace=true
+once_cell.workspace=true
 # crypto
 hmac = "0.12.1"
 sha2 = "0.10.6"
@@ -37,3 +38,6 @@ tracing.workspace=true
 eyre.workspace=true
 thiserror.workspace=true
 error-chain = { version = "0.12.4", default-features = false }
+# cpu
+core_affinity.workspace=true
+crossbeam-channel.workspace=true

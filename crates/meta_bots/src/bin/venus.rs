@@ -289,7 +289,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                         thread::spawn(move || {
                             let cefi_service_ptr = cefi_service.load(Ordering::Relaxed);
                             unsafe {
-                                (*cefi_service_ptr).subscribe_book(
+                                (*cefi_service_ptr).connect_pair(
                                     CexExchange::BITFINEX,
                                     config.base_asset,
                                     config.quote_asset,

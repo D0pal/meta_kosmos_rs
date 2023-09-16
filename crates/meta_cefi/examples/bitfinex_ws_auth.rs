@@ -1,7 +1,8 @@
 // let guard = init_tracing(app_config.log.into());
+use core_affinity::CoreId;
 use meta_address::enums::Asset;
 use meta_cefi::{
-    bitfinex::wallet::{OrderUpdateEvent, TradeExecutionUpdate},
+    bitfinex::wallet::{OrderUpdateEvent, TradeExecutionUpdate, WalletSnapshot},
     cefi_service::{AccessKey, CefiService, CexConfig},
 };
 use meta_common::enums::CexExchange;
@@ -9,6 +10,7 @@ use meta_tracing::{init_tracing, TraceConfig};
 use meta_util::time::get_current_ts;
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 use std::{
+    cell::RefCell,
     collections::BTreeMap,
     sync::{atomic::AtomicPtr, Arc},
     thread,
@@ -16,6 +18,10 @@ use std::{
 };
 use tracing::Level;
 use uuid::Uuid;
+
+lazy_static::lazy_static! {
+    pub static ref CORE_IDS: Vec<CoreId> = core_affinity::get_core_ids().unwrap();
+}
 
 fn main() {
     let config = TraceConfig {
@@ -34,39 +40,50 @@ fn main() {
     let cex_config = CexConfig { keys: Some(map) };
 
     let (tx_order, mut rx_order) = std::sync::mpsc::sync_channel::<TradeExecutionUpdate>(100);
-    let mut cefi_service = CefiService::new(Some(cex_config), None, Some(tx_order));
+    let (tx_wu, mut rx_wu) = std::sync::mpsc::sync_channel::<WalletSnapshot>(100);
+    let mut cefi_service = CefiService::new(Some(cex_config), None, Some(tx_order), Some(tx_wu));
 
-    let cefi_service = &mut cefi_service as *mut CefiService;
-    let cefi_service = Arc::new(AtomicPtr::new(cefi_service));
+    // let cefi_service = &mut cefi_service as *mut CefiService;
+    let cefi_service = RefCell::new(cefi_service);
 
-    thread::spawn(move || loop {
-        let ou_event = rx_order.recv();
-        println!("receive order update event {:?}", ou_event);
+    thread::spawn(move || {
+        for id in 0..CORE_IDS.len() {
+            let rets = core_affinity::set_for_current(CORE_IDS[id]);
+            println!("pin core success: {:?}", rets);
+
+            if rets {
+                break;
+            }
+        }
+        std::process::exit(1);
+
+        loop {
+            let ou_event = rx_order.recv();
+            println!("receive order update event {:?}", ou_event);
+        }
     });
 
-    let _handle = {
-        let cefi_service_clone = cefi_service.clone();
-        thread::spawn(move || {
-            let a = cefi_service_clone.load(std::sync::atomic::Ordering::Relaxed);
-            unsafe {
-                (*a).subscribe_book(CexExchange::BITFINEX, Asset::ARB, Asset::USD);
-            }
-        })
-    };
+    {
+        let mut cefi_service_local = cefi_service.borrow_mut();
+        cefi_service_local.connect_pair(CexExchange::BITFINEX, Asset::ARB, Asset::USD);
+        thread::sleep(Duration::from_secs(5));
+    }
 
-    // handle.join();
-    thread::sleep(Duration::from_secs(5));
     let request_id = get_current_ts().as_millis();
-    let a = cefi_service.load(std::sync::atomic::Ordering::Relaxed);
-    unsafe {
-        (*a).submit_order(
+
+    {
+        let mut cefi_service_2 = cefi_service.borrow_mut();
+        (cefi_service_2).submit_order(
             request_id,
             CexExchange::BITFINEX,
             Asset::ARB,
             Asset::USD,
-            Decimal::from_f64(-200f64).unwrap(),
+            Decimal::from_f64(16f64).unwrap(),
         );
     }
-    thread::sleep(Duration::from_secs(5));
+
+    loop {
+
+    }
     std::process::exit(1);
 }

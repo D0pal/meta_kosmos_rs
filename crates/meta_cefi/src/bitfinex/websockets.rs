@@ -5,11 +5,18 @@ use crate::bitfinex::{
     events::*,
     orders::OrderType,
 };
+use crossbeam_channel::{
+    unbounded as CrossChannel, Receiver as CrossReceiver, Sender as CrossSender, TryRecvError,
+};
 use error_chain::bail;
 use serde_json::{from_str, json};
 use std::{
     net::TcpStream,
-    sync::mpsc::{self, channel},
+    sync::mpsc::{self, channel, sync_channel, Receiver},
+};
+use std::{
+    rc::Rc,
+    sync::{Arc, RwLock},
 };
 use tracing::{error, info};
 use tungstenite::{
@@ -42,44 +49,138 @@ pub enum EventType {
     Trading,
 }
 
-#[derive(Debug)]
-enum WsMessage {
+#[derive(Debug, Clone)]
+pub enum WsMessage {
     Close,
     Text(String),
 }
 
 pub struct WebSockets {
-    socket: Option<(WebSocket<MaybeTlsStream<TcpStream>>, Response)>,
+    // socket: Option<(WebSocket<MaybeTlsStream<TcpStream>>, Response)>,
     sender: Sender,
-    rx: mpsc::Receiver<WsMessage>,
-    pub event_handler: Option<Box<dyn EventHandler>>,
+    // rx: mpsc::Receiver<WsMessage>,
+    pub event_handler: Option<Arc<RwLock<Box<dyn EventHandler>>>>,
 }
 
-unsafe impl Send for WebSockets {}
-unsafe impl Sync for WebSockets {}
+unsafe impl Send for SocketBackhand {}
+unsafe impl Sync for SocketBackhand {}
 
-impl WebSockets {
-    pub fn new() -> WebSockets {
-        let (tx, rx) = channel::<WsMessage>();
-        let sender = Sender { tx };
+pub struct SocketBackhand {
+    rx: CrossReceiver<WsMessage>,
+    pub socket: WebSocket<MaybeTlsStream<TcpStream>>,
+    event_handler: Option<Arc<RwLock<Box<dyn EventHandler>>>>,
+}
 
-        WebSockets { socket: None, sender, rx, event_handler: None }
+impl SocketBackhand {
+    pub fn new(
+        socket: WebSocket<MaybeTlsStream<TcpStream>>,
+        rx: CrossReceiver<WsMessage>,
+        event_handler: Option<Arc<RwLock<Box<dyn EventHandler>>>>,
+    ) -> Self {
+        Self { rx, socket, event_handler }
     }
 
-    pub fn connect(&mut self) -> Result<()> {
-        let wss: String = WEBSOCKET_URL.to_string();
-        let url = Url::parse(&wss)?;
-
-        match connect(url) {
-            Ok(answer) => {
-                self.socket = Some(answer);
-                Ok(())
+    pub fn event_loop(&mut self) -> Result<()> {
+        loop {
+            loop {
+                match self.rx.try_recv() {
+                    Ok(msg) => match msg {
+                        WsMessage::Text(text) => {
+                            info!("socket write message {:?}", text);
+                            let ret = self.socket.write_message(Message::Text(text));
+                            match ret {
+                                Err(e) => error!("error in socket write {:?}", e),
+                                Ok(()) => {}
+                            }
+                        }
+                        WsMessage::Close => {
+                            info!("socket close");
+                            return self.socket.close(None).map_err(|e| e.into());
+                        }
+                    },
+                    Err(TryRecvError::Disconnected) => {
+                        bail!("Disconnected")
+                    }
+                    Err(TryRecvError::Empty) => {
+                        break;
+                    }
+                }
             }
-            Err(e) => {
-                bail!(format!("Error during handshake {}", e))
+
+            let message = self.socket.read_message()?;
+
+            match message {
+                Message::Text(text) => {
+                    // println!("got msg: {:?}", text);
+                    if let Some(ref mut h) = self.event_handler {
+                        let mut _g_ret = h.write();
+                        match _g_ret {
+                            Ok(mut _g) => {
+                                if text.contains(INFO) {
+                                    let event: NotificationEvent = from_str(&text)?;
+                                    _g.on_connect(event);
+                                } else if text.contains(SUBSCRIBED) {
+                                    let event: NotificationEvent = from_str(&text)?;
+                                    _g.on_subscribed(event);
+                                } else if text.contains(AUTH) {
+                                    let event: NotificationEvent = from_str(&text)?;
+                                    _g.on_auth(event);
+                                } else if text.contains(CONF) {
+                                    info!("got conf msg: {:?}", text);
+                                } else {
+                                    let event: DataEvent = from_str(&text)?;
+                                    _g.on_data_event(event);
+                                }
+                            }
+                            Err(e) => {
+                                error!("error in acquire wirte lock");
+                                std::process::exit(1);
+                            }
+                        }
+                    }
+                }
+                Message::Binary(_) => {}
+                Message::Ping(_) | Message::Pong(_) => {}
+                Message::Close(e) => {
+                    bail!(format!("Disconnected {:?}", e));
+                }
+                _ => {}
             }
         }
     }
+}
+
+impl WebSockets {
+    pub fn new(hander: Box<dyn EventHandler>) -> (WebSockets, SocketBackhand)
+// where
+    //     H: EventHandler + 'static,
+    {
+        let wss: String = WEBSOCKET_URL.to_string();
+        let url = Url::parse(&wss).unwrap();
+
+        match connect(url) {
+            Ok(answer) => {
+                let (tx, rx) = CrossChannel::<WsMessage>();
+                let sender = Sender { tx };
+
+                let handler_box = Arc::new(RwLock::new(hander));
+                // let handler: &'static Arc<RwLock<Box<dyn EventHandler>>> = &handler_box;
+                let handle_clone = Arc::clone(&handler_box);
+                let backhand = SocketBackhand::new(answer.0, rx, Some(handle_clone));
+                let websockets =
+                    WebSockets { sender, event_handler: Some(Arc::clone(&handler_box)) };
+                (websockets, backhand)
+            }
+            Err(e) => {
+                error!("error in connect socket {:?}", e);
+                std::process::exit(1);
+            }
+        }
+    }
+
+    // pub fn connect(&mut self) -> Result<()> {
+
+    // }
 
     // { event: 'conf', flags: CONF_FLAG_SEQ_ALL + CONF_OB_CHECKSUM }
     /// set configuration, defaults to seq and checksum
@@ -91,16 +192,16 @@ impl WebSockets {
         });
 
         if let Err(error_msg) = self.sender.send(&msg.to_string()) {
-            self.error_hander(error_msg);
+            error!("conf error: {:?}", error_msg);
         }
     }
 
-    pub fn add_event_handler<H>(&mut self, handler: H)
-    where
-        H: EventHandler + 'static,
-    {
-        self.event_handler = Some(Box::new(handler));
-    }
+    // pub fn add_event_handler<H>(&mut self, handler: H)
+    // where
+    //     H: EventHandler + 'static,
+    // {
+    //     self.event_handler = Some(Box::new(handler));
+    // }
 
     /// Authenticates the connection.
     ///
@@ -132,7 +233,7 @@ impl WebSockets {
         });
 
         if let Err(error_msg) = self.sender.send(&msg.to_string()) {
-            self.error_hander(error_msg);
+            error!("auth error: {:?}", error_msg);
         }
 
         Ok(())
@@ -146,7 +247,7 @@ impl WebSockets {
         let msg = json!({"event": "subscribe", "channel": "ticker", "symbol": local_symbol });
 
         if let Err(error_msg) = self.sender.send(&msg.to_string()) {
-            self.error_hander(error_msg);
+            error!("subscribe_ticker error: {:?}", error_msg);
         }
     }
 
@@ -158,7 +259,7 @@ impl WebSockets {
         let msg = json!({"event": "subscribe", "channel": "trades", "symbol": local_symbol });
 
         if let Err(error_msg) = self.sender.send(&msg.to_string()) {
-            self.error_hander(error_msg);
+            error!("subscribe_trades error: {:?}", error_msg);
         }
     }
 
@@ -170,7 +271,7 @@ impl WebSockets {
         let msg = json!({"event": "subscribe", "channel": "candles", "key": key });
 
         if let Err(error_msg) = self.sender.send(&msg.to_string()) {
-            self.error_hander(error_msg);
+            error!("subscribe_candles error: {:?}", error_msg);
         }
     }
 
@@ -201,7 +302,7 @@ impl WebSockets {
         });
 
         if let Err(error_msg) = self.sender.send(&msg.to_string()) {
-            self.error_hander(error_msg);
+            error!("subscribe_books error: {:?}", error_msg);
         }
     }
 
@@ -229,7 +330,8 @@ impl WebSockets {
         ]);
 
         if let Err(error_msg) = self.sender.send(&msg.to_string()) {
-            self.error_hander(error_msg);
+            // self.error_hander(error_msg);
+            error!("submit_order error: {:?}", error_msg);
         }
     }
 
@@ -246,15 +348,15 @@ impl WebSockets {
         });
 
         if let Err(error_msg) = self.sender.send(&msg.to_string()) {
-            self.error_hander(error_msg);
+            error!("subscribe_raw_books error: {:?}", error_msg);
         }
     }
 
-    fn error_hander(&mut self, error_msg: Error) {
-        if let Some(ref mut h) = self.event_handler {
-            h.on_error(error_msg);
-        }
-    }
+    // fn error_hander(&mut self, error_msg: Error) {
+    //     if let Some(ref mut h) = self.event_handler {
+    //         h.on_error(error_msg);
+    //     }
+    // }
 
     fn format_symbol(&mut self, symbol: String, et: EventType) -> String {
         match et {
@@ -262,73 +364,11 @@ impl WebSockets {
             EventType::Trading => format!("t{}", symbol),
         }
     }
-
-    pub fn event_loop(&mut self) -> Result<()> {
-        loop {
-            if let Some(ref mut socket) = self.socket {
-                loop {
-                    match self.rx.try_recv() {
-                        Ok(msg) => match msg {
-                            WsMessage::Text(text) => {
-                                info!("socket write message {:?}", text);
-                                let ret = socket.0.write_message(Message::Text(text));
-                                match ret {
-                                    Err(e) => error!("error in socket write {:?}", e),
-                                    Ok(()) => {}
-                                }
-                            }
-                            WsMessage::Close => {
-                                info!("socket close");
-                                return socket.0.close(None).map_err(|e| e.into());
-                            }
-                        },
-                        Err(mpsc::TryRecvError::Disconnected) => {
-                            bail!("Disconnected")
-                        }
-                        Err(mpsc::TryRecvError::Empty) => break,
-                    }
-                }
-
-                let message = socket.0.read_message()?;
-
-                match message {
-                    Message::Text(text) => {
-                        // println!("got msg: {:?}", text);
-                        if let Some(ref mut h) = self.event_handler {
-                            if text.contains(INFO) {
-                                let event: NotificationEvent = from_str(&text)?;
-                                h.on_connect(event);
-                            } else if text.contains(SUBSCRIBED) {
-                                let event: NotificationEvent = from_str(&text)?;
-                                h.on_subscribed(event);
-                            } else if text.contains(AUTH) {
-                                let event: NotificationEvent = from_str(&text)?;
-                                h.on_auth(event);
-                            } else if text.contains(CONF) {
-                                info!("got conf msg: {:?}", text);
-                            } else {
-
-                                let event: DataEvent = from_str(&text)?;
-                                h.on_data_event(event);
-    
-                            }
-                        }
-                    }
-                    Message::Binary(_) => {}
-                    Message::Ping(_) | Message::Pong(_) => {}
-                    Message::Close(e) => {
-                        bail!(format!("Disconnected {:?}", e));
-                    }
-                    _ => {}
-                }
-            }
-        }
-    }
 }
 
 #[derive(Clone)]
 pub struct Sender {
-    tx: mpsc::Sender<WsMessage>,
+    tx: CrossSender<WsMessage>,
 }
 
 impl Sender {

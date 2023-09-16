@@ -75,6 +75,9 @@ indicatif = "0.17.1"
 chrono = "0.4.30"
 # CLI
 gumdrop = "0.8.0"
+# cpu
+core_affinity = "0.8.1"
+crossbeam-channel = "0.5.8"
 
 
 [patch.crates-io]

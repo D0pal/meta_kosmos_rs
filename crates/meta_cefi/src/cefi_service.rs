@@ -1,10 +1,13 @@
-use crate::bitfinex::{
-    book::TradingOrderBookLevel,
-    common::*,
-    errors::*,
-    events::{DataEvent, NotificationEvent, SEQUENCE},
-    wallet::{TradeExecutionUpdate, WalletSnapshot},
-    websockets::{EventHandler, EventType, WebSockets},
+use crate::{
+    bitfinex::{
+        book::TradingOrderBookLevel,
+        common::*,
+        errors::*,
+        events::{DataEvent, NotificationEvent, SEQUENCE},
+        wallet::{TradeExecutionUpdate, WalletSnapshot},
+        websockets::{EventHandler, EventType, WebSockets},
+    },
+    get_cex_pair,
 };
 use meta_address::enums::Asset;
 use meta_common::{
@@ -13,9 +16,18 @@ use meta_common::{
 };
 use rust_decimal::Decimal;
 use serde::Deserialize;
-use std::{collections::BTreeMap, sync::mpsc::SyncSender};
-
+use std::{
+    collections::BTreeMap,
+    sync::{atomic::AtomicPtr, mpsc::SyncSender, Arc, RwLock},
+};
+extern crate core_affinity;
+use core_affinity::CoreId;
 use tracing::{debug, error, info, warn};
+use lazy_static::lazy_static;
+
+lazy_static! {
+    pub static ref CORE_IDS: Vec<CoreId> = core_affinity::get_core_ids().unwrap();
+}
 
 #[derive(Clone, Debug)]
 pub struct BitfinexEventHandler {
@@ -235,10 +247,10 @@ pub struct OrderBook {
 
 pub struct CefiService {
     config: Option<CexConfig>,
-    sender: Option<SyncSender<MarcketChange>>,
-    order_sender: Option<SyncSender<TradeExecutionUpdate>>, // send order update event
-    wu_sender: Option<SyncSender<WalletSnapshot>>,
-    btf_sockets: BTreeMap<String, WebSockets>, // (pair, socket)
+    sender_market_change_event: Option<SyncSender<MarcketChange>>,
+    sender_order_event: Option<SyncSender<TradeExecutionUpdate>>, // send order update event
+    sender_wu_event: Option<SyncSender<WalletSnapshot>>,
+    btf_sockets: BTreeMap<String, (Arc<RwLock<WebSockets>>, Arc<RwLock<WebSockets>>)>, // (pair, (reader, writter))
 }
 
 unsafe impl Send for CefiService {}
@@ -247,45 +259,96 @@ unsafe impl Sync for CefiService {}
 impl CefiService {
     pub fn new(
         config: Option<CexConfig>,
-        sender: Option<SyncSender<MarcketChange>>,
-        order_sender: Option<SyncSender<TradeExecutionUpdate>>,
-        wu_sender: Option<SyncSender<WalletSnapshot>>,
+        sender_market_change_event: Option<SyncSender<MarcketChange>>,
+        sender_order_event: Option<SyncSender<TradeExecutionUpdate>>,
+        sender_wu_event: Option<SyncSender<WalletSnapshot>>,
     ) -> Self {
-        Self { config, sender, btf_sockets: BTreeMap::new(), order_sender, wu_sender }
+        Self {
+            config,
+            sender_market_change_event,
+            btf_sockets: BTreeMap::new(),
+            sender_order_event,
+            sender_wu_event,
+        }
     }
 
-    pub fn subscribe_book(&mut self, cex: CexExchange, base: Asset, quote: Asset) {
+    pub fn connect_pair(&mut self, cex: CexExchange, base: Asset, quote: Asset) {
         let pair = get_pair(base, quote);
         match cex {
             CexExchange::BITFINEX => {
                 let ak = self.config.as_ref().unwrap().keys.as_ref().unwrap().get(&cex).unwrap();
                 if !self.btf_sockets.contains_key(&pair) {
-                    let handler = BitfinexEventHandler::new(
-                        self.sender.clone(),
-                        self.wu_sender.clone(),
-                        self.order_sender.clone(),
+                    let sender_market_change_event_reader = self.sender_market_change_event.clone();
+                    let sender_wu_event_reader = self.sender_wu_event.clone();
+                    let sender_order_event_reader = self.sender_order_event.clone();
+                    let handler_reader = BitfinexEventHandler::new(
+                        sender_market_change_event_reader,
+                        sender_wu_event_reader,
+                        sender_order_event_reader,
                     );
-                    let web_socket_reader = WebSockets::new();
-                    self.btf_sockets.insert(pair.to_owned(), web_socket_reader);
-                    self.btf_sockets.entry(pair).and_modify(|web_socket| {
-                        (*web_socket).add_event_handler(handler);
-                        (*web_socket).connect().unwrap(); // check error
-                        (*web_socket).auth(
-                            ak.api_key.to_string(),
-                            ak.api_secret.to_string(),
-                            false,
-                            &[],
-                        ); // check error
-                        (*web_socket).conf();
-                        (*web_socket).subscribe_books(
-                            get_bitfinex_trade_symbol(base, quote),
-                            EventType::Trading,
-                            P0,
-                            "F0",
-                            100,
-                        );
-                        (*web_socket).event_loop().unwrap(); // check error
-                    });
+
+                    let sender_market_change_event_writter =
+                        self.sender_market_change_event.clone();
+                    let sender_wu_event_writter = self.sender_wu_event.clone();
+                    let sender_order_event_writter = self.sender_order_event.clone();
+                    let handler_writter = BitfinexEventHandler::new(
+                        sender_market_change_event_writter,
+                        sender_wu_event_writter,
+                        sender_order_event_writter,
+                    );
+
+                    let (
+                        (mut socket_reader, mut socket_reader_backhand),
+                        (mut socket_writter, mut socket_writter_backhand),
+                    ) = (
+                        WebSockets::new(Box::new(handler_reader)),
+                        WebSockets::new(Box::new(handler_writter)),
+                    );
+
+                    (socket_reader).auth(
+                        ak.api_key.to_string(),
+                        ak.api_secret.to_string(),
+                        false,
+                        &[],
+                    ); // check error
+                    (socket_reader).conf();
+                    (socket_reader).subscribe_books(
+                        get_bitfinex_trade_symbol(base, quote),
+                        EventType::Trading,
+                        P0,
+                        "F0",
+                        100,
+                    );
+
+                    {
+                        std::thread::spawn(move || {
+                            core_affinity::set_for_current(CORE_IDS[1]);
+                            socket_reader_backhand.event_loop().unwrap()
+                        });
+                    }
+
+                    (socket_writter).auth(
+                        ak.api_key.to_string(),
+                        ak.api_secret.to_string(),
+                        false,
+                        &[],
+                    ); // check error
+                    (socket_writter).conf();
+
+                    {
+                        std::thread::spawn(move || {
+                            core_affinity::set_for_current(CORE_IDS[2]);
+                            (socket_writter_backhand).event_loop().unwrap(); // check error
+                        });
+                    }
+                    let (socket_reader_ptr, socket_writter_ptr) = (
+                        Arc::new(RwLock::new(socket_reader)),
+                        Arc::new(RwLock::new(socket_writter)),
+                    );
+
+                    self.btf_sockets
+                        .insert(pair.to_owned(), (socket_reader_ptr, socket_writter_ptr));
+                    // self.btf_sockets.entry(pair).and_modify(|(socket_reader, socket_writter)| {});
                 }
             }
         }
@@ -303,11 +366,19 @@ impl CefiService {
         info!("start submit cex order cex: {:?}, pair: {:?}, amount: {:?}", cex, pair, amount);
         match cex {
             CexExchange::BITFINEX => {
-                let symbol = format!("t{:?}{:?}", base, quote);
+                let symbol = get_cex_pair(cex, base, quote);
                 if self.btf_sockets.contains_key(&pair) {
-                    self.btf_sockets.entry(pair).and_modify(|web_socket| {
-                        (*web_socket).submit_order(client_order_id, symbol, amount.to_string());
-                    });
+                    let (_, socket_writter) = self.btf_sockets.get(&pair).unwrap();
+                    let mut _g_ret = socket_writter.write();
+                    match _g_ret {
+                        Ok(mut _g) => {
+                            (_g).submit_order(client_order_id, symbol, amount.to_string())
+                        }
+                        Err(e) => {
+                            error!("error in acquire write lock");
+                            std::process::exit(1);
+                        }
+                    }
                 }
             }
         }
@@ -321,20 +392,42 @@ impl CefiService {
             CexExchange::BITFINEX => {
                 if self.btf_sockets.contains_key(&pair) {
                     let web_socket = self.btf_sockets.get(&pair);
-                    if let Some(socket) = web_socket {
-                        if let Some(ref handler) = (socket).event_handler {
-                            let btf_handler =
-                                (handler.as_any()).downcast_ref::<BitfinexEventHandler>();
+                    if let Some((socket_reader, _)) = web_socket {
+                        let socket_reader_ret = socket_reader.read();
+                        match socket_reader_ret {
+                            Ok(_g) => {
+                                if let Some(ref handler) = (_g).event_handler {
+                                    let _g_ret = handler.read();
+                                    match _g_ret {
+                                        Ok(_g) => {
+                                            let btf_handler = (_g.as_any())
+                                                .downcast_ref::<BitfinexEventHandler>();
 
-                            if let Some(btf) = btf_handler {
-                                if let Some(ref ob) = btf.order_book {
-                                    if let Some((_, ask_level)) = ob.asks.first_key_value() {
-                                        best_ask = ask_level.price;
-                                    }
-                                    if let Some((_, bid_level)) = ob.bids.last_key_value() {
-                                        best_bid = bid_level.price;
+                                            if let Some(btf) = btf_handler {
+                                                if let Some(ref ob) = btf.order_book {
+                                                    if let Some((_, ask_level)) =
+                                                        ob.asks.first_key_value()
+                                                    {
+                                                        best_ask = ask_level.price;
+                                                    }
+                                                    if let Some((_, bid_level)) =
+                                                        ob.bids.last_key_value()
+                                                    {
+                                                        best_bid = bid_level.price;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        Err(e) => {
+                                            error!("acquie lock error {:?}", e);
+                                            std::process::exit(1);
+                                        }
                                     }
                                 }
+                            }
+                            Err(e) => {
+                                error!("unable to acquire read lock");
+                                std::process::exit(1);
                             }
                         }
                     }
