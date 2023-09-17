@@ -7,7 +7,7 @@ fn main() {
 
     let btf = Bitfinex::new(Some(AK), Some(SK));
     // get_wallet_balance(&btf, vec![Asset::ARB, Asset::USD]);
-    submit_order(&btf);
+    get_summary(&btf);
 
     // let start = Instant::now();
 
@@ -16,6 +16,10 @@ fn main() {
     // let now = std::time::Instant::now();
     // std::thread::sleep(Duration::from_secs(10));
     // println!("elapsed {:?}", now.elapsed());
+}
+
+fn get_summary(bitfinex: &Bitfinex) {
+    bitfinex.account.get_summary();
 }
 
 fn get_wallet_balance(bitfinex: &Bitfinex, assets: Vec<Asset>) {

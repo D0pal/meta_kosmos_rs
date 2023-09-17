@@ -71,7 +71,7 @@ fn main() {
             CexExchange::BITFINEX,
             Asset::ARB,
             Asset::USD,
-            Decimal::from_f64(-10f64).unwrap(),
+            Decimal::from_f64(0.5f64).unwrap(),
         );
     }
 

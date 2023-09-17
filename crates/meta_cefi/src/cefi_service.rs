@@ -251,7 +251,8 @@ pub struct CefiService {
     sender_market_change_event: Option<SyncSender<MarcketChange>>,
     sender_order_event: Option<SyncSender<TradeExecutionUpdate>>, // send order update event
     sender_wu_event: Option<SyncSender<WalletSnapshot>>,
-    btf_sockets: BTreeMap<String, Arc<RwLock<WebSockets>>>, // (pair, (reader))
+    bitfinex_sockets: BTreeMap<String, Arc<RwLock<WebSockets>>>, // (pair, (socket))
+    binance_sockets: BTreeMap<String, Arc<RwLock<WebSockets>>>,  // (pair, (socket))
 }
 
 unsafe impl Send for CefiService {}
@@ -267,7 +268,8 @@ impl CefiService {
         Self {
             config,
             sender_market_change_event,
-            btf_sockets: BTreeMap::new(),
+            bitfinex_sockets: BTreeMap::new(),
+            binance_sockets: BTreeMap::new(),
             sender_order_event,
             sender_wu_event,
         }
@@ -278,7 +280,7 @@ impl CefiService {
         match cex {
             CexExchange::BITFINEX => {
                 let ak = self.config.as_ref().unwrap().keys.as_ref().unwrap().get(&cex).unwrap();
-                if !self.btf_sockets.contains_key(&pair) {
+                if !self.bitfinex_sockets.contains_key(&pair) {
                     let sender_market_change_event_reader = self.sender_market_change_event.clone();
                     let sender_wu_event_reader = self.sender_wu_event.clone();
                     let sender_order_event_reader = self.sender_order_event.clone();
@@ -318,9 +320,55 @@ impl CefiService {
 
                     let socket_reader_ptr = Arc::new(RwLock::new(socket_reader));
 
-                    self.btf_sockets.insert(pair.to_owned(), socket_reader_ptr);
+                    self.bitfinex_sockets.insert(pair.to_owned(), socket_reader_ptr);
                     // self.btf_sockets.entry(pair).and_modify(|(socket_reader, socket_writter)| {});
                 }
+            }
+            CexExchange::BINANCE => {
+                // let ak = self.config.as_ref().unwrap().keys.as_ref().unwrap().get(&cex).unwrap();
+                // if !self.btf_sockets.contains_key(&pair) {
+                //     let sender_market_change_event_reader = self.sender_market_change_event.clone();
+                //     let sender_wu_event_reader = self.sender_wu_event.clone();
+                //     let sender_order_event_reader = self.sender_order_event.clone();
+                //     let handler_reader = BitfinexEventHandler::new(
+                //         sender_market_change_event_reader,
+                //         sender_wu_event_reader,
+                //         sender_order_event_reader,
+                //     );
+
+                //     let ((mut socket_reader, mut socket_reader_backhand)) =
+                //         (WebSockets::new(Box::new(handler_reader)));
+
+                //     (socket_reader).auth(
+                //         ak.api_key.to_string(),
+                //         ak.api_secret.to_string(),
+                //         false,
+                //         &[],
+                //     ); // check error
+                //     (socket_reader).conf();
+                //     (socket_reader).subscribe_books(
+                //         get_bitfinex_trade_symbol(base, quote),
+                //         EventType::Trading,
+                //         P0,
+                //         "F0",
+                //         100,
+                //     );
+
+                //     {
+                //         std::thread::spawn(move || {
+                //             let success = core_affinity::set_for_current(CORE_IDS[1]);
+                //             if !success {
+                //                 warn!("bind core failure");
+                //             }
+                //             socket_reader_backhand.event_loop().unwrap();
+                //         });
+                //     }
+
+                //     let socket_reader_ptr = Arc::new(RwLock::new(socket_reader));
+
+                //     self.btf_sockets.insert(pair.to_owned(), socket_reader_ptr);
+                //     // self.btf_sockets.entry(pair).and_modify(|(socket_reader, socket_writter)| {});
+                // }
             }
         }
     }
@@ -342,8 +390,8 @@ impl CefiService {
         match cex {
             CexExchange::BITFINEX => {
                 let symbol = get_cex_pair(cex, base, quote);
-                if self.btf_sockets.contains_key(&pair) {
-                    let socket_reader = self.btf_sockets.get(&pair).unwrap();
+                if self.bitfinex_sockets.contains_key(&pair) {
+                    let socket_reader = self.bitfinex_sockets.get(&pair).unwrap();
                     let mut _g_ret = socket_reader.write();
                     match _g_ret {
                         Ok(mut _g) => {
@@ -355,7 +403,8 @@ impl CefiService {
                         }
                     }
                 }
-            }
+            },
+            CexExchange::BINANCE => unimplemented!()
         }
     }
 
@@ -365,8 +414,8 @@ impl CefiService {
         let mut best_bid = Decimal::default();
         match cex {
             CexExchange::BITFINEX => {
-                if self.btf_sockets.contains_key(&pair) {
-                    let web_socket = self.btf_sockets.get(&pair);
+                if self.bitfinex_sockets.contains_key(&pair) {
+                    let web_socket = self.bitfinex_sockets.get(&pair);
                     if let Some(socket_reader) = web_socket {
                         let socket_reader_ret = socket_reader.read();
                         match socket_reader_ret {
@@ -407,7 +456,8 @@ impl CefiService {
                         }
                     }
                 }
-            }
+            },
+            CexExchange::BINANCE => unimplemented!()
         }
         if best_ask.is_zero() || best_bid.is_zero() {
             None

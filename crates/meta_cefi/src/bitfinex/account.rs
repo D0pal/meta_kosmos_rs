@@ -105,6 +105,15 @@ impl Account {
         Account { client: Client::new(api_key, secret_key) }
     }
 
+
+    pub fn get_summary(&self)  {
+        let payload: String = format!("{}", "{}");
+        let data = self.client.post_signed("summary".into(), payload);
+        // let wallets: Vec<Wallet> = from_str(data.as_str())?;
+        println!("summary {:?}", data);
+        // Ok(wallets)
+    }
+
     pub fn get_wallets(&self) -> Result<Vec<Wallet>> {
         let payload: String = format!("{}", "{}");
         let data = self.client.post_signed("wallets".into(), payload)?;

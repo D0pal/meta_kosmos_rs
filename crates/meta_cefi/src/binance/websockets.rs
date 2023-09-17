@@ -40,7 +40,7 @@ impl WebsocketAPI {
 
 #[allow(clippy::large_enum_variant)]
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub enum WebsocketEvent {
+pub enum BinanceWebsocketEvent {
     AccountUpdate(AccountUpdateEvent),
     BalanceUpdate(BalanceUpdateEvent),
     OrderTrade(OrderTradeEvent),
@@ -55,9 +55,9 @@ pub enum WebsocketEvent {
     BookTicker(BookTickerEvent),
 }
 
-pub struct WebSockets<'a> {
+pub struct BinanceWebSockets<'a> {
     pub socket: Option<(WebSocket<MaybeTlsStream<TcpStream>>, Response)>,
-    handler: Box<dyn FnMut(WebsocketEvent) -> Result<()> + 'a>,
+    handler: Box<dyn FnMut(BinanceWebsocketEvent) -> Result<()> + 'a>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -77,12 +77,12 @@ enum Events {
     DepthOrderBookEvent(DepthOrderBookEvent),
 }
 
-impl<'a> WebSockets<'a> {
-    pub fn new<Callback>(handler: Callback) -> WebSockets<'a>
+impl<'a> BinanceWebSockets<'a> {
+    pub fn new<Callback>(handler: Callback) -> BinanceWebSockets<'a>
     where
-        Callback: FnMut(WebsocketEvent) -> Result<()> + 'a,
+        Callback: FnMut(BinanceWebsocketEvent) -> Result<()> + 'a,
     {
-        WebSockets { socket: None, handler: Box::new(handler) }
+        BinanceWebSockets { socket: None, handler: Box::new(handler) }
     }
 
     pub fn connect(&mut self, subscription: &str) -> Result<()> {
@@ -130,18 +130,18 @@ impl<'a> WebSockets<'a> {
 
         if let Ok(events) = serde_json::from_value::<Events>(value) {
             let action = match events {
-                Events::Vec(v) => WebsocketEvent::DayTickerAll(v),
-                Events::BookTickerEvent(v) => WebsocketEvent::BookTicker(v),
-                Events::BalanceUpdateEvent(v) => WebsocketEvent::BalanceUpdate(v),
-                Events::AccountUpdateEvent(v) => WebsocketEvent::AccountUpdate(v),
-                Events::OrderTradeEvent(v) => WebsocketEvent::OrderTrade(v),
-                Events::AggrTradesEvent(v) => WebsocketEvent::AggrTrades(v),
-                Events::TradeEvent(v) => WebsocketEvent::Trade(v),
-                Events::DayTickerEvent(v) => WebsocketEvent::DayTicker(v),
-                Events::KlineEvent(v) => WebsocketEvent::Kline(v),
-                Events::DiffOrderBook(v) => WebsocketEvent::DiffOrderBook(v),
-                Events::OrderBook(v) => WebsocketEvent::OrderBook(v),
-                Events::DepthOrderBookEvent(v) => WebsocketEvent::DepthOrderBook(v),
+                Events::Vec(v) => BinanceWebsocketEvent::DayTickerAll(v),
+                Events::BookTickerEvent(v) => BinanceWebsocketEvent::BookTicker(v),
+                Events::BalanceUpdateEvent(v) => BinanceWebsocketEvent::BalanceUpdate(v),
+                Events::AccountUpdateEvent(v) => BinanceWebsocketEvent::AccountUpdate(v),
+                Events::OrderTradeEvent(v) => BinanceWebsocketEvent::OrderTrade(v),
+                Events::AggrTradesEvent(v) => BinanceWebsocketEvent::AggrTrades(v),
+                Events::TradeEvent(v) => BinanceWebsocketEvent::Trade(v),
+                Events::DayTickerEvent(v) => BinanceWebsocketEvent::DayTicker(v),
+                Events::KlineEvent(v) => BinanceWebsocketEvent::Kline(v),
+                Events::DiffOrderBook(v) => BinanceWebsocketEvent::DiffOrderBook(v),
+                Events::OrderBook(v) => BinanceWebsocketEvent::OrderBook(v),
+                Events::DepthOrderBookEvent(v) => BinanceWebsocketEvent::DepthOrderBook(v),
             };
             (self.handler)(action)?;
         }

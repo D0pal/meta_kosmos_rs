@@ -22,6 +22,9 @@ use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString, EnumVariantNames
 pub enum CexExchange {
     #[strum(ascii_case_insensitive, serialize = "BITFINEX")]
     BITFINEX,
+
+    #[strum(ascii_case_insensitive, serialize = "BINANCE")]
+    BINANCE,
 }
 
 impl Default for CexExchange {

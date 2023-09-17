@@ -128,6 +128,7 @@ impl Client {
         }
     }
 
+
     fn build_headers(&self, content_type: bool) -> Result<HeaderMap> {
         let mut custom_headers = HeaderMap::new();
 

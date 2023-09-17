@@ -19,7 +19,7 @@ use std::{
     rc::Rc,
     sync::{Arc, RwLock},
 };
-use tracing::{error, info};
+use tracing::{error, info, debug};
 use tungstenite::{
     connect, handshake::client::Response, protocol::WebSocket, stream::MaybeTlsStream, Message,
 };
@@ -130,6 +130,7 @@ impl SocketBackhand {
                                 } else if text.contains(CONF) {
                                     info!("got conf msg: {:?}", text);
                                 } else {
+                                    // debug!("receive raw event text: {:?}", text);
                                     let event: DataEvent = from_str(&text)?;
                                     _g.on_data_event(event);
                                 }

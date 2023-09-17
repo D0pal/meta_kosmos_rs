@@ -9,3 +9,5 @@ pub mod market;
 pub mod model;
 pub mod util;
 pub mod websockets;
+pub mod trade;
+pub mod http;

@@ -31,12 +31,14 @@ lazy_static = "1.4.0"
 once_cell = "1.14"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+base64 = "0.13.1"
 ## feature serde-with-arbitrary-precision is required; check https://github.com/gakonst/ethers-rs/issues/2451
 rust_decimal = { version = "1", features = [
     "maths",
     "serde-float",
     "serde-with-arbitrary-precision",
 ] }
+rust_decimal_macros = "1.24.0"
 dashmap = "5.4"
 hashbrown = "0.13.2"
 strum = { version = "0.24", features = ["derive"] }
@@ -62,7 +64,11 @@ futures-util = { version = "0.3.28", default-features = false, features = [
 # network
 reqwest = { version = "0.11", features = ["json", "blocking"] }
 # crypto
+hmac = "0.12.1"
 ring = "0.16"
+rsa = { version = "0.7.1", features = ["pkcs5"] }
+sha2 = { version = "0.10.6", default-features = false, features = ["oid"] }
+signature = "1.6.4"
 # error
 eyre = "0.6.8"
 anyhow = "1.0.32"

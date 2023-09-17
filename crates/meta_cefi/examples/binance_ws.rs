@@ -17,36 +17,39 @@ fn main() {
 
 fn market_websocket() {
     let keep_running = AtomicBool::new(true); // Used to control the event loop
-    let agg_trade = String::from("bnbbtc@depth");
-    let mut web_socket: WebSockets<'_> = WebSockets::new(|event: WebsocketEvent| {
+    let agg_trade = String::from("ethusdt@bookTicker");
+    let mut web_socket: BinanceWebSockets<'_> = BinanceWebSockets::new(|event: BinanceWebsocketEvent| {
         match event {
-            WebsocketEvent::Trade(trade) => {
+            BinanceWebsocketEvent::Trade(trade) => {
                 println!("Symbol: {}, price: {}, qty: {}", trade.symbol, trade.price, trade.qty);
             }
-            WebsocketEvent::DepthOrderBook(depth_order_book) => {
+            BinanceWebsocketEvent::DepthOrderBook(depth_order_book) => {
                 println!(
                     "depth order book, Symbol: {}, Bids: {:?}, Ask: {:?}",
                     depth_order_book.symbol, depth_order_book.bids, depth_order_book.asks
                 );
             }
-            WebsocketEvent::OrderBook(order_book) => {
+            BinanceWebsocketEvent::OrderBook(order_book) => {
                 println!(
                     "order book, last_update_id: {}, Bids: {:?}, Ask: {:?}",
                     order_book.last_update_id, order_book.bids, order_book.asks
                 );
             }
-            WebsocketEvent::DiffOrderBook(order_book) => {
+            BinanceWebsocketEvent::DiffOrderBook(order_book) => {
                 println!(
                     "diff order book, final_update_id: {}, Bids: {:?}, Ask: {:?}",
                     order_book.final_update_id, order_book.bids, order_book.asks
                 );
             }
-            WebsocketEvent::AggrTrades(agg_trade) => {
+            BinanceWebsocketEvent::AggrTrades(agg_trade) => {
                 println!(
                     "aggregated_trade_id: {}, symbol: {}, price: {:?}, qty: {:?}",
                     agg_trade.aggregated_trade_id, agg_trade.symbol, agg_trade.price, agg_trade.qty
                 );
-            }
+            },
+            BinanceWebsocketEvent::BookTicker(book_ticker) => {
+                println!("book_ticker: {:?}", book_ticker);
+            },
             _ => (),
         };
 
