@@ -14,6 +14,7 @@ use meta_common::{
     enums::CexExchange,
     models::{CurrentSpread, MarcketChange},
 };
+use meta_util::time::get_current_ts;
 use rust_decimal::Decimal;
 use serde::Deserialize;
 use std::{
@@ -22,8 +23,8 @@ use std::{
 };
 extern crate core_affinity;
 use core_affinity::CoreId;
-use tracing::{debug, error, info, warn};
 use lazy_static::lazy_static;
+use tracing::{debug, error, info, warn};
 
 lazy_static! {
     pub static ref CORE_IDS: Vec<CoreId> = core_affinity::get_core_ids().unwrap();
@@ -322,8 +323,13 @@ impl CefiService {
 
                     {
                         std::thread::spawn(move || {
-                            core_affinity::set_for_current(CORE_IDS[1]);
-                            socket_reader_backhand.event_loop().unwrap()
+                            let success = core_affinity::set_for_current(CORE_IDS[1]);
+                            if success {
+                                socket_reader_backhand.event_loop().unwrap()
+                            } else {
+                                error!("bind core failure");
+                                std::process::exit(1);
+                            }
                         });
                     }
 
@@ -337,8 +343,14 @@ impl CefiService {
 
                     {
                         std::thread::spawn(move || {
-                            core_affinity::set_for_current(CORE_IDS[2]);
-                            (socket_writter_backhand).event_loop().unwrap(); // check error
+                            let success = core_affinity::set_for_current(CORE_IDS[2]);
+                            if success {
+                                (socket_writter_backhand).event_loop().unwrap();
+                            // check error
+                            } else {
+                                error!("bind core failure");
+                                std::process::exit(1);
+                            }
                         });
                     }
                     let (socket_reader_ptr, socket_writter_ptr) = (
@@ -363,13 +375,14 @@ impl CefiService {
         amount: Decimal,
     ) {
         let pair = get_pair(base, quote);
-        info!("start submit cex order cex: {:?}, pair: {:?}, amount: {:?}", cex, pair, amount);
+        let time = get_current_ts().as_millis();
+        info!("start submit cex order cex: {:?}, pair: {:?}, amount: {:?}, ts: {:?}", cex, pair, amount, time);
         match cex {
             CexExchange::BITFINEX => {
                 let symbol = get_cex_pair(cex, base, quote);
                 if self.btf_sockets.contains_key(&pair) {
-                    let (_, socket_writter) = self.btf_sockets.get(&pair).unwrap();
-                    let mut _g_ret = socket_writter.write();
+                    let (socket_reader, _) = self.btf_sockets.get(&pair).unwrap();
+                    let mut _g_ret = socket_reader.write();
                     match _g_ret {
                         Ok(mut _g) => {
                             (_g).submit_order(client_order_id, symbol, amount.to_string())

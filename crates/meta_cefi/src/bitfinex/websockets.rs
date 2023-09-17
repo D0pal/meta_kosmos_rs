@@ -9,6 +9,7 @@ use crossbeam_channel::{
     unbounded as CrossChannel, Receiver as CrossReceiver, Sender as CrossSender, TryRecvError,
 };
 use error_chain::bail;
+use meta_util::time::get_current_ts;
 use serde_json::{from_str, json};
 use std::{
     net::TcpStream,
@@ -86,7 +87,8 @@ impl SocketBackhand {
                 match self.rx.try_recv() {
                     Ok(msg) => match msg {
                         WsMessage::Text(text) => {
-                            info!("socket write message {:?}", text);
+                            let time = get_current_ts().as_millis();
+                            info!("socket write message {:?}, time: {:?}", text, time);
                             let ret = self.socket.write_message(Message::Text(text));
                             match ret {
                                 Err(e) => error!("error in socket write {:?}", e),

@@ -1,0 +1,2 @@
+nohup: ignoring input
+opts: Opts { help: false, base_asset: Some(ARB), quote_asset: Some(USD), dex: Some(UniswapV3), network: Some(ARBI), cex: Some(BITFINEX), private_key_path: None }

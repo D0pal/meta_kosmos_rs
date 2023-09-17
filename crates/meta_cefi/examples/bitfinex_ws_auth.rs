@@ -24,6 +24,7 @@ lazy_static::lazy_static! {
 }
 
 fn main() {
+    // core_affinity::set_for_current(CORE_IDS[4]);
     let config = TraceConfig {
         file_name_prefix: "bitfinex_ob".to_string(),
         dir: "logs".to_string(),
@@ -47,15 +48,16 @@ fn main() {
     let cefi_service = RefCell::new(cefi_service);
 
     thread::spawn(move || {
-        for id in 0..CORE_IDS.len() {
-            let rets = core_affinity::set_for_current(CORE_IDS[id]);
-            println!("pin core success: {:?}", rets);
+        // for id in 0..CORE_IDS.len() {
+        //     let rets = core_affinity::set_for_current(CORE_IDS[id]);
+        //     println!("pin core success: {:?}", rets);
 
-            if rets {
-                break;
-            }
-        }
-        std::process::exit(1);
+        //     if rets {
+        //         break;
+        //     }
+        // }
+        // std::process::exit(1);
+        core_affinity::set_for_current(CORE_IDS[3]);
 
         loop {
             let ou_event = rx_order.recv();
@@ -78,12 +80,11 @@ fn main() {
             CexExchange::BITFINEX,
             Asset::ARB,
             Asset::USD,
-            Decimal::from_f64(16f64).unwrap(),
+            Decimal::from_f64(19f64).unwrap(),
         );
     }
 
     loop {
 
     }
-    std::process::exit(1);
 }

@@ -7,5 +7,5 @@ lazy_static! {
 }
 
 fn main() {
-    println!("core id: {:?}", CORE_IDS[1]);
+    println!("core id: {:?}", CORE_IDS.len());
 }
