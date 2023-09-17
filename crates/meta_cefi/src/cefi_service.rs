@@ -251,7 +251,7 @@ pub struct CefiService {
     sender_market_change_event: Option<SyncSender<MarcketChange>>,
     sender_order_event: Option<SyncSender<TradeExecutionUpdate>>, // send order update event
     sender_wu_event: Option<SyncSender<WalletSnapshot>>,
-    btf_sockets: BTreeMap<String, (Arc<RwLock<WebSockets>>, Arc<RwLock<WebSockets>>)>, // (pair, (reader, writter))
+    btf_sockets: BTreeMap<String, Arc<RwLock<WebSockets>>>, // (pair, (reader))
 }
 
 unsafe impl Send for CefiService {}
@@ -288,23 +288,8 @@ impl CefiService {
                         sender_order_event_reader,
                     );
 
-                    let sender_market_change_event_writter =
-                        self.sender_market_change_event.clone();
-                    let sender_wu_event_writter = self.sender_wu_event.clone();
-                    let sender_order_event_writter = self.sender_order_event.clone();
-                    let handler_writter = BitfinexEventHandler::new(
-                        sender_market_change_event_writter,
-                        sender_wu_event_writter,
-                        sender_order_event_writter,
-                    );
-
-                    let (
-                        (mut socket_reader, mut socket_reader_backhand),
-                        (mut socket_writter, mut socket_writter_backhand),
-                    ) = (
-                        WebSockets::new(Box::new(handler_reader)),
-                        WebSockets::new(Box::new(handler_writter)),
-                    );
+                    let ((mut socket_reader, mut socket_reader_backhand)) =
+                        (WebSockets::new(Box::new(handler_reader)));
 
                     (socket_reader).auth(
                         ak.api_key.to_string(),
@@ -324,42 +309,16 @@ impl CefiService {
                     {
                         std::thread::spawn(move || {
                             let success = core_affinity::set_for_current(CORE_IDS[1]);
-                            if success {
-                                socket_reader_backhand.event_loop().unwrap()
-                            } else {
-                                error!("bind core failure");
-                                std::process::exit(1);
+                            if !success {
+                                warn!("bind core failure");
                             }
+                            socket_reader_backhand.event_loop().unwrap();
                         });
                     }
 
-                    (socket_writter).auth(
-                        ak.api_key.to_string(),
-                        ak.api_secret.to_string(),
-                        false,
-                        &[],
-                    ); // check error
-                    (socket_writter).conf();
+                    let socket_reader_ptr = Arc::new(RwLock::new(socket_reader));
 
-                    {
-                        std::thread::spawn(move || {
-                            let success = core_affinity::set_for_current(CORE_IDS[2]);
-                            if success {
-                                (socket_writter_backhand).event_loop().unwrap();
-                            // check error
-                            } else {
-                                error!("bind core failure");
-                                std::process::exit(1);
-                            }
-                        });
-                    }
-                    let (socket_reader_ptr, socket_writter_ptr) = (
-                        Arc::new(RwLock::new(socket_reader)),
-                        Arc::new(RwLock::new(socket_writter)),
-                    );
-
-                    self.btf_sockets
-                        .insert(pair.to_owned(), (socket_reader_ptr, socket_writter_ptr));
+                    self.btf_sockets.insert(pair.to_owned(), socket_reader_ptr);
                     // self.btf_sockets.entry(pair).and_modify(|(socket_reader, socket_writter)| {});
                 }
             }
@@ -376,12 +335,15 @@ impl CefiService {
     ) {
         let pair = get_pair(base, quote);
         let time = get_current_ts().as_millis();
-        info!("start submit cex order cex: {:?}, pair: {:?}, amount: {:?}, ts: {:?}", cex, pair, amount, time);
+        info!(
+            "start submit cex order cex: {:?}, pair: {:?}, amount: {:?}, ts: {:?}",
+            cex, pair, amount, time
+        );
         match cex {
             CexExchange::BITFINEX => {
                 let symbol = get_cex_pair(cex, base, quote);
                 if self.btf_sockets.contains_key(&pair) {
-                    let (socket_reader, _) = self.btf_sockets.get(&pair).unwrap();
+                    let socket_reader = self.btf_sockets.get(&pair).unwrap();
                     let mut _g_ret = socket_reader.write();
                     match _g_ret {
                         Ok(mut _g) => {
@@ -405,7 +367,7 @@ impl CefiService {
             CexExchange::BITFINEX => {
                 if self.btf_sockets.contains_key(&pair) {
                     let web_socket = self.btf_sockets.get(&pair);
-                    if let Some((socket_reader, _)) = web_socket {
+                    if let Some(socket_reader) = web_socket {
                         let socket_reader_ret = socket_reader.read();
                         match socket_reader_ret {
                             Ok(_g) => {

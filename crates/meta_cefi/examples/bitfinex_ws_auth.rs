@@ -48,15 +48,6 @@ fn main() {
     let cefi_service = RefCell::new(cefi_service);
 
     thread::spawn(move || {
-        // for id in 0..CORE_IDS.len() {
-        //     let rets = core_affinity::set_for_current(CORE_IDS[id]);
-        //     println!("pin core success: {:?}", rets);
-
-        //     if rets {
-        //         break;
-        //     }
-        // }
-        // std::process::exit(1);
         core_affinity::set_for_current(CORE_IDS[3]);
 
         loop {
@@ -80,11 +71,9 @@ fn main() {
             CexExchange::BITFINEX,
             Asset::ARB,
             Asset::USD,
-            Decimal::from_f64(19f64).unwrap(),
+            Decimal::from_f64(-10f64).unwrap(),
         );
     }
 
-    loop {
-
-    }
+    loop {}
 }

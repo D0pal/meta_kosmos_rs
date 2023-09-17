@@ -253,8 +253,8 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                         Some(tx_wu.clone()),
                     );
 
-                    let cefi_service = &mut cefi_service as *mut CefiService;
-                    let cefi_service = Arc::new(AtomicPtr::new(cefi_service));
+                    // let cefi_service = &mut cefi_service as *mut CefiService;
+                    let cefi_service = Arc::new(RwLock::new(cefi_service));
 
                     // receive cex trade execution info and update to arbitrages
                     {
@@ -283,20 +283,16 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                             }
                         });
                     }
-
                     {
-                        let cefi_service = Arc::clone(&cefi_service);
-                        thread::spawn(move || {
-                            let cefi_service_ptr = cefi_service.load(Ordering::Relaxed);
-                            unsafe {
-                                (*cefi_service_ptr).connect_pair(
-                                    CexExchange::BITFINEX,
-                                    config.base_asset,
-                                    config.quote_asset,
-                                );
-                            }
-                        });
+                        let mut _g = cefi_service.write().await;
+                        (_g).connect_pair(
+                            CexExchange::BITFINEX,
+                            config.base_asset,
+                            config.quote_asset,
+                        );
                     }
+
+                
 
                     let (last_dex_sell_price, last_dex_buy_price) = (
                         Arc::new(RwLock::new(Decimal::ZERO)),
@@ -481,15 +477,19 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                 );
                             }
                             if let Some(dex_spread) = change.dex {
-                                let cefi_service_ptr =
-                                    Arc::clone(&cefi_service).load(Ordering::Relaxed);
-                                let ret = unsafe {
-                                    (*cefi_service_ptr).get_spread(
+                                // let cefi_service_ptr =
+                                //     Arc::clone(&cefi_service);
+
+                                let ret = {
+                                    let _g = cefi_service.read().await;
+                                    (_g).get_spread(
                                         CexExchange::BITFINEX,
                                         config.base_asset,
                                         config.quote_asset,
                                     )
+                                
                                 };
+                                    
                                 match ret {
                                     Some(cex_spread) => {
                                         (cex_bid, cex_ask, dex_bid, dex_ask) = (
@@ -534,7 +534,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
 
                                     try_arbitrage(
                                         instraction,
-                                        Arc::clone(&cefi_service).load(Ordering::Relaxed),
+                                        Arc::clone(&cefi_service),
                                         &dex_service,
                                     )
                                     .await;
@@ -572,7 +572,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
 
                                     try_arbitrage(
                                         instraction,
-                                        Arc::clone(&cefi_service).load(Ordering::Relaxed),
+                                        Arc::clone(&cefi_service),
                                         &dex_service,
                                     )
                                     .await;
@@ -591,7 +591,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
 
 async fn try_arbitrage<'a, M: Middleware + 'static>(
     instruction: ArbitrageInstruction,
-    cefi_service_ptr: *mut CefiService,
+    cefi_service_ptr: Arc<RwLock<CefiService>>,
     dex_service_ref: &DexService<M>,
 ) {
     let total = TOTAL_PENDING_TRADES.load(Ordering::Relaxed);
@@ -635,19 +635,23 @@ async fn try_arbitrage<'a, M: Middleware + 'static>(
         );
     }
 
-    match instruction.cex.venue {
-        CexExchange::BITFINEX => unsafe {
-            (*cefi_service_ptr).submit_order(
-                client_order_id,
-                CexExchange::BITFINEX,
-                instruction.cex.base_asset,
-                instruction.cex.quote_asset,
-                instruction.cex.amount,
-            );
-        },
-        _ => unimplemented!(),
+    {
+        let mut _cex = cefi_service_ptr.write().await;
+        match instruction.cex.venue {
+            CexExchange::BITFINEX =>  {
+                (_cex).submit_order(
+                    client_order_id,
+                    CexExchange::BITFINEX,
+                    instruction.cex.base_asset,
+                    instruction.cex.quote_asset,
+                    instruction.cex.amount,
+                );
+            },
+            _ => unimplemented!(),
+        }
+        info!("end send cex trade");
     }
-    info!("end send cex trade");
+
 
     match instruction.dex.venue {
         DexExchange::UniswapV3 => {
