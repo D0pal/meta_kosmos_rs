@@ -105,7 +105,7 @@ impl Account {
     }
 
     pub fn get_summary(&self) {
-        let payload: String = format!("{}", "{}");
+        let payload: String = "{}".to_string();
         let data = self.client.post_signed("summary".into(), payload);
         // let wallets: Vec<Wallet> = from_str(data.as_str())?;
         println!("summary {:?}", data);
@@ -113,7 +113,7 @@ impl Account {
     }
 
     pub fn get_wallets(&self) -> Result<Vec<Wallet>> {
-        let payload: String = format!("{}", "{}");
+        let payload: String = "{}".to_string();
         let data = self.client.post_signed("wallets".into(), payload)?;
         let wallets: Vec<Wallet> = from_str(data.as_str())?;
 
@@ -121,7 +121,7 @@ impl Account {
     }
 
     pub fn margin_base(&self) -> Result<MarginBase> {
-        let payload: String = format!("{}", "{}");
+        let payload: String = "{}".to_string();
 
         let data = self.client.post_signed("info/margin/base".into(), payload)?;
 
@@ -134,7 +134,7 @@ impl Account {
     where
         S: Into<String>,
     {
-        let payload: String = format!("{}", "{}");
+        let payload: String = "{}".to_string();
         let request: String = format!("info/margin/t{}", key.into());
 
         let data = self.client.post_signed(request, payload)?;
@@ -148,7 +148,7 @@ impl Account {
     where
         S: Into<String>,
     {
-        let payload: String = format!("{}", "{}");
+        let payload: String = "{}".to_string();
         let request: String = format!("info/funding/f{}", key.into());
 
         let data = self.client.post_signed(request, payload)?;

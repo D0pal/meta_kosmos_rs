@@ -1,6 +1,5 @@
 use crate::{
     binance::{
-        config::Config,
         errors::Result,
         http::{request::Request, Credentials},
         model::{
@@ -10,7 +9,7 @@ use crate::{
         },
         trade::{
             self,
-            order::{Side, TimeInForce},
+            order::{Side},
         },
         util::sign,
     },
@@ -21,18 +20,17 @@ use error_chain::bail;
 use meta_util::time::get_current_ts;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use serde_json::{from_str, json};
+use serde_json::{json};
 use std::{
     net::TcpStream,
     sync::{
-        atomic::{AtomicBool, Ordering},
-        mpsc::{channel, Receiver, Sender, TryRecvError},
+        mpsc::{channel, Receiver, TryRecvError},
         Arc, RwLock,
     },
 };
-use tracing::{debug, error, info};
+use tracing::{error, info};
 use tungstenite::{
-    connect, handshake::client::Response, protocol::WebSocket, stream::MaybeTlsStream, Message,
+    connect, protocol::WebSocket, stream::MaybeTlsStream, Message,
 };
 use url::Url;
 use uuid::Uuid;
@@ -158,7 +156,7 @@ impl BinanceWebSockets {
                 .quantity(qty.abs())
                 .new_client_order_id(&client_order_id.to_string());
 
-            let ts = request_order.timestamp;
+            let _ts = request_order.timestamp;
 
             let request: Request = request_order.clone().into();
             let params = request.params();

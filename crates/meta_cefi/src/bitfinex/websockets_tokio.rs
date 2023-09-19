@@ -10,10 +10,8 @@ use crate::{
         auth,
         common::{CONF_FLAG_SEQ_ALL, CONF_OB_CHECKSUM},
         errors::*,
-        events::*,
         orders::OrderType,
-    },
-    WsBackendSender, WsBackendSenderAsync, WsMessage,
+    }, WsBackendSenderAsync, WsMessage,
 };
 use futures_util::{SinkExt, StreamExt, TryStreamExt};
 use meta_util::time::get_current_ts;
@@ -23,13 +21,13 @@ use std::sync::Arc;
 use tokio::{
     net::TcpStream,
     sync::{
-        mpsc::{channel, error::TryRecvError, Receiver, Sender},
+        mpsc::{channel, error::TryRecvError, Receiver},
         RwLock,
     },
 };
 use tokio_tungstenite::{
     connect_async,
-    tungstenite::{handshake::client::Response, protocol::Message, Error},
+    tungstenite::{protocol::Message, Error},
     MaybeTlsStream, WebSocketStream,
 };
 use tracing::{debug, error, info, warn};
@@ -60,7 +58,7 @@ impl BitfinexWebSocketsAsync {
     pub async fn connect_async(
         url: &str,
     ) -> std::result::Result<WebSocketStream<MaybeTlsStream<TcpStream>>, Error> {
-        let (socket, response) = connect_async(Url::parse(&url).unwrap()).await?;
+        let (socket, response) = connect_async(Url::parse(url).unwrap()).await?;
 
         info!("Connected to {}", url);
         debug!("Response HTTP code: {}", response.status());

@@ -9132,7 +9132,7 @@ pub mod flash_bots_router {
         > {
             let factory = ::ethers::contract::ContractFactory::new(
                 FLASHBOTSROUTER_ABI.clone(),
-                FLASHBOTSROUTER_BYTECODE.clone().into(),
+                FLASHBOTSROUTER_BYTECODE.clone(),
                 client,
             );
             let deployer = factory.deploy(constructor_args)?;

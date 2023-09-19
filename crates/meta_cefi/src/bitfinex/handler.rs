@@ -1,27 +1,19 @@
 use crate::{
-    binance::{
-        handler::BinanceEventHandlerImpl, util::get_binance_symbol, websockets::BinanceWebSockets,
-        websockets_tokio::BinanceWebSocketClient,
-    },
     bitfinex::{
-        book::TradingOrderBookLevel,
-        common::*,
         errors::*,
         events::{DataEvent, NotificationEvent, SEQUENCE},
         wallet::{TradeExecutionUpdate, WalletSnapshot},
-        websockets::{BitfinexEventHandler, EventType, WebSockets},
+        websockets::{BitfinexEventHandler},
     },
     cefi_service::{construct_order_book, update_order_book, OrderBook},
-    get_cex_pair,
 };
-use meta_address::enums::Asset;
+
 use meta_common::{
-    enums::CexExchange,
     models::{CurrentSpread, MarcketChange},
 };
-use meta_util::time::get_current_ts;
+
 use rust_decimal::Decimal;
-use serde::Deserialize;
+
 use std::sync::mpsc::SyncSender;
 extern crate core_affinity;
 use tracing::{debug, error, info, warn};

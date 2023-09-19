@@ -220,9 +220,9 @@ impl From<NewOrder> for Request {
 
 #[cfg(test)]
 mod tests {
-    use super::{NewOrder, NewOrderResponseType, Side, TimeInForce};
-    use crate::binance::http::{request::Request, Credentials, Method};
-    use rust_decimal_macros::dec;
+    
+    
+    
 
     static API_KEY: &str = "api-key";
     static API_SECRET: &str = "api-secret";

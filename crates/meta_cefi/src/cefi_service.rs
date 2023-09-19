@@ -1,13 +1,11 @@
 use crate::{
     binance::{
-        handler::BinanceEventHandlerImpl, util::get_binance_symbol, websockets::BinanceWebSockets,
+        handler::BinanceEventHandlerImpl, util::get_binance_symbol,
         websockets_tokio::BinanceWebSocketClient,
     },
     bitfinex::{
         book::TradingOrderBookLevel,
         common::*,
-        errors::*,
-        events::{DataEvent, NotificationEvent, SEQUENCE},
         handler::BitfinexEventHandlerImpl,
         wallet::{TradeExecutionUpdate, WalletSnapshot},
         websockets::{BitfinexEventHandler, EventType, WebSockets},
@@ -24,13 +22,13 @@ use rust_decimal::Decimal;
 use serde::Deserialize;
 use std::{
     collections::BTreeMap,
-    sync::{atomic::AtomicPtr, mpsc::SyncSender, Arc, RwLock},
+    sync::{mpsc::SyncSender, Arc, RwLock},
 };
 use tokio::sync::RwLock as TokioRwLock;
 extern crate core_affinity;
 use core_affinity::CoreId;
 use lazy_static::lazy_static;
-use tracing::{debug, error, info, warn};
+use tracing::{error, info, warn};
 
 lazy_static! {
     pub static ref CORE_IDS: Vec<CoreId> = core_affinity::get_core_ids().unwrap();
@@ -105,8 +103,8 @@ impl CefiService {
                         sender_order_event_reader,
                     );
 
-                    let ((mut socket_reader, mut socket_reader_backhand)) =
-                        (WebSockets::new(Box::new(handler_reader)));
+                    let (mut socket_reader, mut socket_reader_backhand) =
+                        WebSockets::new(Box::new(handler_reader));
 
                     (socket_reader).auth(
                         ak.api_key.to_string(),
@@ -139,9 +137,9 @@ impl CefiService {
             }
             CexExchange::BINANCE => {
                 if !self.binance_sockets.contains_key(&pair) {
-                    let sender_market_change_event_reader = self.sender_market_change_event.clone();
-                    let sender_wu_event_reader = self.sender_wu_event.clone();
-                    let sender_order_event_reader = self.sender_order_event.clone();
+                    let _sender_market_change_event_reader = self.sender_market_change_event.clone();
+                    let _sender_wu_event_reader = self.sender_wu_event.clone();
+                    let _sender_order_event_reader = self.sender_order_event.clone();
                     let handler_reader = BinanceEventHandlerImpl::new(
                         // sender_market_change_event_reader,
                         // sender_wu_event_reader,
@@ -155,8 +153,7 @@ impl CefiService {
                         .keys
                         .as_ref()
                         .unwrap()
-                        .get(&cex)
-                        .map(|x| x.clone());
+                        .get(&cex).cloned();
 
                     let (mut socket_client, mut socket_reader_backhand) =
                         BinanceWebSocketClient::new(credential, Box::new(handler_reader)).await;
@@ -197,7 +194,7 @@ impl CefiService {
                     let mut _g_ret = socket_reader.write();
                     match _g_ret {
                         Ok(mut _g) => (_g).submit_order(client_order_id, symbol, amount),
-                        Err(e) => {
+                        Err(_e) => {
                             error!("error in acquire write lock");
                             std::process::exit(1);
                         }
@@ -256,7 +253,7 @@ impl CefiService {
                                     }
                                 }
                             }
-                            Err(e) => {
+                            Err(_e) => {
                                 error!("unable to acquire read lock");
                                 std::process::exit(1);
                             }

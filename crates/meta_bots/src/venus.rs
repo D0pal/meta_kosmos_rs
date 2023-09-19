@@ -10,7 +10,7 @@ use meta_util::ether::get_network_scan_url;
 use rust_decimal::Decimal;
 use std::{collections::BTreeMap, sync::Arc};
 use tokio::sync::RwLock;
-use tracing::{error, info, warn};
+use tracing::{error, info};
 
 #[derive(Debug, Clone, Default)]
 pub struct CexTradeInfo {
@@ -80,9 +80,9 @@ pub async fn update_dex_swap_finalised_info(
     swap_info: SwapFinalisedInfo,
 ) {
     let mut _g = map.write().await;
-    let mut iter = _g.iter_mut();
+    let iter = _g.iter_mut();
 
-    for (key, val) in iter {
+    for (_key, val) in iter {
         if val.dex.tx_hash.eq(&Some(hash)) {
             info!("update {:?} with finalised info {:?}", hash, swap_info);
             (val).dex.finalised_info = Some(swap_info);
@@ -123,7 +123,7 @@ pub async fn check_arbitrage_status(map: ARBITRAGE_INFO) -> (bool, Option<(CID, 
             return (false, Some((*key, val.clone())));
         }
     }
-    return (false, None);
+    (false, None)
 }
 
 pub async fn notify_arbitrage_result(

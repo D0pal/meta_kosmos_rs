@@ -109,8 +109,8 @@ where
         let uri: Uri = url_parts.join("").parse()?;
         // log::debug!("{}", uri);
         let hyper_request = hyper_request.uri(uri);
-        let request = hyper_request.body(Body::empty()).map_err(|err| Error::Parse(err))?;
-        let response = self.client.request(request).await.map_err(|err| Error::Send(err))?;
+        let request = hyper_request.body(Body::empty()).map_err(Error::Parse)?;
+        let response = self.client.request(request).await.map_err(Error::Send)?;
         // log::debug!("{}", response.status());
 
         Ok(Response::from(response))
@@ -464,7 +464,7 @@ mod tests {
         ) -> Poll<Result<usize, IoError>> {
             let msg = str::from_utf8(buf).unwrap();
             let first_line_end = msg.find("\r\n").unwrap_or(msg.len());
-            let mut first_line = msg[..first_line_end].split(" ");
+            let mut first_line = msg[..first_line_end].split(' ');
             let method = first_line.next().unwrap();
             let path_and_query = first_line.next().unwrap();
 
@@ -492,7 +492,7 @@ mod tests {
 
             let Self { ready, waker, .. } = self.get_mut();
             *ready = true;
-            waker.take().map(|w| w.wake());
+            if let Some(w) = waker.take() { w.wake() }
             Poll::Ready(Ok(buf.len()))
         }
 

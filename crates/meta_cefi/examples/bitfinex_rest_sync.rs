@@ -1,6 +1,6 @@
 use meta_address::enums::Asset;
 use meta_cefi::bitfinex::{account::WalletType, api::*};
-use std::time::{Duration, Instant};
+
 fn main() {
     let AK = std::env::var("BTF_AK").expect("must provide BTF_AK");
     let SK: String = std::env::var("BTF_SK").expect("must provide BTF_SK");

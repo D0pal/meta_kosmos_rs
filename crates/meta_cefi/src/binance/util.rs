@@ -58,7 +58,7 @@ fn get_timestamp(start: SystemTime) -> Result<u64> {
 }
 
 pub fn get_binance_symbol(base: Asset, quote: Asset) -> String {
-    format!("{}{}", base.to_string(), quote.to_string())
+    format!("{}{}", base, quote)
 }
 
 pub fn sign(payload: &str, signature: &Signature) -> std::result::Result<String, InvalidLength> {

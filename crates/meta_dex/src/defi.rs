@@ -98,7 +98,7 @@ impl<M: Middleware> DexWrapper<M> {
                 let _g = v3_contract.pools.read().await;
                 _g.get(&token_0).and_then(|inner| {
                     inner.get_key_value(&token_1).map(|x| {
-                        return x.1.clone();
+                        x.1.clone()
                     })
                 })
             };
@@ -130,8 +130,8 @@ impl<M: Middleware> DexWrapper<M> {
             {
                 let _g = v3_contract.quoter_v2.read().await;
                 let a = _g.clone();
-                return Ok(a);
-            };
+                Ok(a)
+            }
         } else {
             todo!()
         }
@@ -142,8 +142,8 @@ impl<M: Middleware> DexWrapper<M> {
             {
                 let _g = v3_contract.swap_router.read().await;
                 let a = _g.clone();
-                return Ok(a);
-            };
+                Ok(a)
+            }
         } else {
             todo!()
         }

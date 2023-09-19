@@ -15,15 +15,14 @@ use rust_decimal::Decimal;
 use serde_json::{from_str, json};
 use std::{
     net::TcpStream,
-    rc::Rc,
     sync::{
-        mpsc::{self, channel, sync_channel, Receiver, Sender, TryRecvError},
+        mpsc::{channel, Receiver, TryRecvError},
         Arc, RwLock,
     },
 };
-use tracing::{debug, error, info};
+use tracing::{error, info};
 use tungstenite::{
-    connect, handshake::client::Response, protocol::WebSocket, stream::MaybeTlsStream, Message,
+    connect, protocol::WebSocket, stream::MaybeTlsStream, Message,
 };
 use url::Url;
 
@@ -350,7 +349,7 @@ impl SocketBackhand {
                                     _g.on_data_event(event);
                                 }
                             }
-                            Err(e) => {
+                            Err(_e) => {
                                 error!("error in acquire wirte lock");
                                 std::process::exit(1);
                             }

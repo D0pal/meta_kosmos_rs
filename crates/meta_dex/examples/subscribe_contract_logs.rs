@@ -1,10 +1,10 @@
-use ethers::{abi::AbiDecode, prelude::*, utils::keccak256};
-use meta_address::{get_dex_address, get_rpc_info, get_token_info, Token};
+use ethers::{prelude::*};
+use meta_address::{get_rpc_info, get_token_info, Token};
 use meta_common::enums::{ContractType, DexExchange, Network, RpcProvider};
 use meta_contracts::bindings::uniswap_v3_pool::SwapFilter;
 use meta_dex::DexService;
-use meta_util::ether::{address_from_str, tx_hash_from_str};
-use rust_decimal::{prelude::FromPrimitive, Decimal};
+use meta_util::ether::{address_from_str};
+
 use std::{sync::Arc, time::Duration};
 
 #[tokio::main]
@@ -19,7 +19,7 @@ async fn main() -> anyhow::Result<()> {
     let arb_token_info = get_token_info(arb, network).unwrap();
     let _weth_token_info = get_token_info(weth, network).unwrap();
 
-    let swap_router_v2 = ContractType::UniV3SwapRouterV2;
+    let _swap_router_v2 = ContractType::UniV3SwapRouterV2;
 
     let rpc_info = get_rpc_info(network).unwrap();
 

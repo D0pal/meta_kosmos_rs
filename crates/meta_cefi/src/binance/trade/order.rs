@@ -1,6 +1,6 @@
 //! TODO: use a macro to auto serialize to UPPERCASE
 use serde::Serialize;
-use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString, EnumVariantNames};
+use strum::{Display};
 
 #[derive(Copy, Clone, Debug, Display, Serialize)]
 #[strum(serialize_all = "UPPERCASE")]

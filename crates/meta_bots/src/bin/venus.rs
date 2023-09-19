@@ -35,14 +35,12 @@ use meta_util::{
 };
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 use std::{
-    collections::{BTreeMap, VecDeque},
+    collections::{BTreeMap},
     path::PathBuf,
-    process,
     sync::{
-        atomic::{AtomicBool, AtomicPtr, AtomicU32, Ordering},
+        atomic::{AtomicU32, Ordering},
         mpsc, Arc,
     },
-    thread,
     time::Duration,
 };
 use tokio::sync::RwLock;
@@ -183,7 +181,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                     loop {
                         let provider_clone_local = Arc::clone(&provider_clone);
                         let maybe_hash = rx.recv().await;
-                        if let Some((hash, number)) = maybe_hash {
+                        if let Some((hash, _number)) = maybe_hash {
                             info!("receive onchain swap event with hash {:?}", hash);
                             handle_trade_update(Arc::clone(&lark_clone), provider_clone_local)
                                 .await;
@@ -246,7 +244,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                         },
                     );
                     let cex_config = CexConfig { keys: Some(map) };
-                    let mut cefi_service = CefiService::new(
+                    let cefi_service = CefiService::new(
                         Some(cex_config),
                         Some(tx.clone()),
                         Some(tx_order.clone()),
@@ -299,8 +297,8 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
 
                     // handle cex wallet update event
                     {
-                        let arbitrages_map_cefi_trade = Arc::clone(&ARBITRAGES);
-                        let provider_ws_cefi_trade = Arc::clone(&provider_ws);
+                        let _arbitrages_map_cefi_trade = Arc::clone(&ARBITRAGES);
+                        let _provider_ws_cefi_trade = Arc::clone(&provider_ws);
                         let dex_price = Arc::clone(&last_dex_buy_price);
                         TOKIO_RUNTIME.spawn(async move {
                             loop {
@@ -597,7 +595,7 @@ async fn try_arbitrage<'a, M: Middleware + 'static>(
         warn!("total pending number of trades are {:?}, skip trade for now", total);
         return;
     }
-    let total = TOTAL_PENDING_TRADES.fetch_add(1, Ordering::SeqCst);
+    let _total = TOTAL_PENDING_TRADES.fetch_add(1, Ordering::SeqCst);
     let client_order_id = get_current_ts().as_millis();
 
     info!("start arbitrage with instruction {:?}", instruction);
@@ -727,7 +725,7 @@ async fn main() {
 
 #[cfg(test)]
 mod test {
-    use super::*;
+    
 
     // #[test]
     // fn test_check_arbitrage_status() {

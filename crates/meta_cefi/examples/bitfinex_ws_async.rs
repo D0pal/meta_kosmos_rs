@@ -1,4 +1,4 @@
-use futures_util::{sink::SinkExt, StreamExt};
+
 
 use meta_address::enums::Asset;
 use meta_cefi::{
@@ -6,32 +6,28 @@ use meta_cefi::{
         common::P0,
         handler::BitfinexEventHandlerImpl,
         wallet::{TradeExecutionUpdate, WalletSnapshot},
-        websockets_tokio::{BitfinexSocketBackhandAsync, BitfinexWebSocketsAsync},
+        websockets_tokio::{BitfinexWebSocketsAsync},
     },
-    cefi_service::{get_bitfinex_trade_symbol, AccessKey},
+    cefi_service::{get_bitfinex_trade_symbol},
 };
 use meta_common::models::MarcketChange;
 use meta_tracing::{init_tracing, TraceConfig};
 use meta_util::time::get_current_ts;
-use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION};
-use ring::{hmac, rand};
-use rust_decimal::{prelude::FromPrimitive, Decimal};
-use rust_decimal_macros::dec;
-use serde_json::json;
+
+
+
+
+
 use std::{
     sync::{
-        mpsc::{sync_channel, SyncSender},
-        Arc,
+        mpsc::{sync_channel},
     },
-    time::{SystemTime, UNIX_EPOCH},
 };
-use tokio::{sync::RwLock, time::Duration};
-use tracing::{debug, Level};
-use tungstenite::{
-    connect, handshake::client::Response, protocol::WebSocket, stream::MaybeTlsStream, Message,
-};
-use url::Url;
-use uuid::Uuid;
+
+use tracing::{Level};
+
+
+
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -64,7 +60,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         backhend.event_loop().await;
     });
 
-    let request_id = get_current_ts().as_millis();
+    let _request_id = get_current_ts().as_millis();
     (ws).auth(api_key.to_string(), secret_key.to_string(), false, &[]).await; // check error
     (ws).conf().await;
     ws.subscribe_books(

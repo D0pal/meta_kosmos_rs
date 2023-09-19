@@ -1,6 +1,6 @@
 use std::collections::BTreeMap;
 
-use serde_json::Value;
+
 
 use crate::binance::http::{Credentials, Method};
 
@@ -38,8 +38,8 @@ impl Request {
         for (key, val) in iter {
             serializer.append_pair(key, val);
         }
-        let mut query_string = serializer.finish();
-        query_string
+        
+        serializer.finish()
     }
 }
 

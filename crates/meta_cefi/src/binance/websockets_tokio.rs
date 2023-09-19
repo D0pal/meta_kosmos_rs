@@ -4,24 +4,24 @@ use crate::{
         stream::Stream,
         trade::{
             self,
-            order::{Side, TimeInForce},
+            order::{Side},
         },
         util::sign,
     },
     cefi_service::AccessKey,
     MessageChannel, WsBackendSenderAsync, WsMessage,
 };
-use error_chain::bail;
+
 use futures_util::{SinkExt, StreamExt, TryStreamExt};
 use meta_util::time::get_current_ts;
 use rust_decimal::Decimal;
-use serde_json::{from_str, json};
+use serde_json::{json};
 use std::sync::Arc;
 use tokio::{
     io::{AsyncRead, AsyncWrite},
     net::TcpStream,
     sync::{
-        mpsc::{channel, error::TryRecvError, Receiver, Sender},
+        mpsc::{channel, error::TryRecvError, Receiver},
         RwLock,
     },
 };
@@ -57,12 +57,12 @@ impl BinanceWebSocketClient {
         credentials: Option<AccessKey>,
         hander: Box<dyn BinanceEventHandler + Send + Sync>,
     ) -> (BinanceWebSocketClient, BinanceSocketBackhandAsync) {
-        let (mut socket_stream, _) =
+        let (socket_stream, _) =
             BinanceWebSocketClient::connect_async(BINANCE_STREAM_WSS_BASE_URL)
                 .await
                 .expect("Failed to connect");
 
-        let (mut socket_trade, _) = BinanceWebSocketClient::connect_async(BINANCE_TRADE_WSS_URL)
+        let (socket_trade, _) = BinanceWebSocketClient::connect_async(BINANCE_TRADE_WSS_URL)
             .await
             .expect("Failed to connect");
 
@@ -99,7 +99,7 @@ impl BinanceWebSocketClient {
     pub async fn connect_async(
         url: &str,
     ) -> Result<(WebSocketState<MaybeTlsStream<TcpStream>>, Response), Error> {
-        let (socket, response) = connect_async(Url::parse(&url).unwrap()).await?;
+        let (socket, response) = connect_async(Url::parse(url).unwrap()).await?;
 
         info!("Connected to {}", url);
         debug!("Response HTTP code: {}", response.status());
@@ -134,7 +134,7 @@ impl BinanceWebSocketClient {
             params_str = format!("\"params\": [{params}],", params = params_str)
         };
 
-        let id = self.id.clone();
+        let id = self.id;
         self.id += 1;
 
         let s = format!(
@@ -233,7 +233,7 @@ impl BinanceWebSocketClient {
                 .quantity(qty.abs())
                 .new_client_order_id(&client_order_id.to_string());
 
-            let ts = request_order.timestamp;
+            let _ts = request_order.timestamp;
 
             let request: Request = request_order.clone().into();
             let params = request.params();

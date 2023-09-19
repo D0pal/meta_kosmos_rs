@@ -55,10 +55,8 @@ impl WsBackendSenderAsync {
     }
 }
 
-pub fn cex_currency_to_asset(cex: CexExchange, currency: &str) -> Asset {
-    match cex {
-        _ => currency.parse::<Asset>().unwrap(),
-    }
+pub fn cex_currency_to_asset(_cex: CexExchange, currency: &str) -> Asset {
+    currency.parse::<Asset>().unwrap()
 }
 
 pub fn get_cex_pair(cex: CexExchange, base: Asset, quote: Asset) -> String {
