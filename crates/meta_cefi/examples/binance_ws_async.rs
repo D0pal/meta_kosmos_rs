@@ -62,29 +62,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     ws.subscribe_books("ETHUSDT").await;
 
     loop {}
-    // // Establish connection
-    // let (mut conn, _) = BinanceWebSocketClient::connect_async(BINANCE_STREAM_WSS_BASE_URL)
-    //     .await
-    //     .expect("Failed to connect");
-    // // Subscribe to streams
-    // conn.subscribe(vec![
-    //     &BookTickerStream::from_symbol("ETHUSDT").into(),
-    //     &UserDataStream::new("At5uWm5iWqx24UvandpogaHltkPfYGODN6GkFEPPEK6cPWuapctK20Xv1Tus").into(),
-    // ])
-    // .await;
-    // // Read messages
-    // while let Some(message) = conn.as_mut().next().await {
-    //     match message {
-    //         Ok(message) => {
-    //             let data = message.into_data();
-    //             let string_data = String::from_utf8(data).expect("Found invalid UTF-8 chars");
-    //             debug!("{}", &string_data);
-    //         }
-    //         Err(_) => break,
-    //     }
-    // }
-    // // Disconnect
-    // conn.close().await.expect("Failed to disconnect");
 
     Ok(())
 }

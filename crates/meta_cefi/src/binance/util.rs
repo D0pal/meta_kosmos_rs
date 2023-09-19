@@ -1,18 +1,18 @@
 use crate::binance::errors::Result;
+use crate::binance::http::Signature;
+use base64::encode;
 use error_chain::bail;
+use hmac::{Hmac, Mac};
 use meta_address::enums::Asset;
+use rsa::pkcs1v15::SigningKey;
+use rsa::{pkcs8::DecodePrivateKey, RsaPrivateKey};
 use serde_json::Value;
+use sha2::{digest::InvalidLength, Sha256};
+use signature::RandomizedSigner;
 use std::{
     collections::BTreeMap,
     time::{SystemTime, UNIX_EPOCH},
 };
-use crate::binance::http::Signature;
-use base64::encode;
-use hmac::{Hmac, Mac};
-use rsa::pkcs1v15::SigningKey;
-use rsa::{pkcs8::DecodePrivateKey, RsaPrivateKey};
-use sha2::{digest::InvalidLength, Sha256};
-use signature::RandomizedSigner;
 
 pub fn build_request(parameters: BTreeMap<String, String>) -> String {
     let mut request = String::new();
@@ -59,8 +59,8 @@ fn get_timestamp(start: SystemTime) -> Result<u64> {
     Ok(since_epoch.as_secs() * 1000 + u64::from(since_epoch.subsec_nanos()) / 1_000_000)
 }
 
-pub fn get_subscription(base: Asset, quote: Asset) -> String {
-    format!("{}{}@bookTicker", base.to_string().to_lowercase(), quote.to_string().to_lowercase())
+pub fn get_binance_symbol(base: Asset, quote: Asset) -> String {
+    format!("{}{}", base.to_string(), quote.to_string())
 }
 
 pub fn sign(payload: &str, signature: &Signature) -> std::result::Result<String, InvalidLength> {
@@ -104,7 +104,7 @@ mod tests {
 
     #[test]
     fn test_get_subscription() {
-        assert_eq!(get_subscription(Asset::ARB, Asset::USDT), "arbusdt@bookTicker".to_string());
+        assert_eq!(get_binance_symbol(Asset::ARB, Asset::USDT), "ARBUSDT".to_string());
     }
     #[test]
     fn sign_payload_with_hmac_test() {

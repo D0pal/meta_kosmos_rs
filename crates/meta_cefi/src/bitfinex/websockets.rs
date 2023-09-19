@@ -27,16 +27,16 @@ use tungstenite::{
 };
 use url::Url;
 
-static INFO: &str = "info";
-static SUBSCRIBED: &str = "subscribed";
-static AUTH: &str = "auth";
-static CONF: &str = "conf";
-static CHECKSUM: &str = "cs";
-static FUNDING_CREDIT_SNAPSHOT: &str = "fcs";
-static WEBSOCKET_URL: &str = "wss://api.bitfinex.com/ws/2";
-static DEAD_MAN_SWITCH_FLAG: u8 = 4;
+pub static INFO: &str = "info";
+pub static SUBSCRIBED: &str = "subscribed";
+pub static AUTH: &str = "auth";
+pub static CONF: &str = "conf";
+pub static CHECKSUM: &str = "cs";
+pub static FUNDING_CREDIT_SNAPSHOT: &str = "fcs";
+pub static WEBSOCKET_URL: &str = "wss://api.bitfinex.com/ws/2";
+pub static DEAD_MAN_SWITCH_FLAG: u8 = 4;
 
-pub trait EventHandler {
+pub trait BitfinexEventHandler {
     fn on_connect(&mut self, event: NotificationEvent);
     fn on_auth(&mut self, event: NotificationEvent);
     fn on_subscribed(&mut self, event: NotificationEvent);
@@ -56,104 +56,12 @@ pub struct WebSockets {
     // socket: Option<(WebSocket<MaybeTlsStream<TcpStream>>, Response)>,
     sender: WsBackendSender, // send request to backend
     // rx: mpsc::Receiver<WsMessage>,
-    pub event_handler: Option<Arc<RwLock<Box<dyn EventHandler>>>>,
+    pub event_handler: Option<Arc<RwLock<Box<dyn BitfinexEventHandler>>>>,
 }
 
-unsafe impl Send for SocketBackhand {}
-unsafe impl Sync for SocketBackhand {}
-
-pub struct SocketBackhand {
-    rx: Receiver<WsMessage>,
-    pub socket: WebSocket<MaybeTlsStream<TcpStream>>,
-    event_handler: Option<Arc<RwLock<Box<dyn EventHandler>>>>,
-}
-
-impl SocketBackhand {
-    pub fn new(
-        socket: WebSocket<MaybeTlsStream<TcpStream>>,
-        rx: Receiver<WsMessage>,
-        event_handler: Option<Arc<RwLock<Box<dyn EventHandler>>>>,
-    ) -> Self {
-        Self { rx, socket, event_handler }
-    }
-
-    pub fn event_loop(&mut self) -> Result<()> {
-        loop {
-            loop {
-                match self.rx.try_recv() {
-                    Ok(msg) => match msg {
-                        WsMessage::Text(_, text) => {
-                            let time = get_current_ts().as_millis();
-                            info!("socket write message {:?}, time: {:?}", text, time);
-                            let ret = self.socket.write_message(Message::Text(text));
-                            match ret {
-                                Err(e) => {
-                                    error!("error in socket write {:?}", e);
-                                    std::process::exit(1);
-                                }
-                                Ok(()) => {}
-                            }
-                        }
-                        WsMessage::Close => {
-                            info!("socket close");
-                            return self.socket.close(None).map_err(|e| e.into());
-                        }
-                    },
-                    Err(TryRecvError::Disconnected) => {
-                        bail!("Disconnected")
-                    }
-                    Err(TryRecvError::Empty) => {
-                        break;
-                    }
-                }
-            }
-
-            let message = self.socket.read_message()?;
-
-            match message {
-                Message::Text(text) => {
-                    // println!("got msg: {:?}", text);
-                    if let Some(ref mut h) = self.event_handler {
-                        let mut _g_ret = h.write();
-                        match _g_ret {
-                            Ok(mut _g) => {
-                                if text.contains(INFO) {
-                                    let event: NotificationEvent = from_str(&text)?;
-                                    _g.on_connect(event);
-                                } else if text.contains(SUBSCRIBED) {
-                                    let event: NotificationEvent = from_str(&text)?;
-                                    _g.on_subscribed(event);
-                                } else if text.contains(AUTH) {
-                                    let event: NotificationEvent = from_str(&text)?;
-                                    _g.on_auth(event);
-                                } else if text.contains(CONF) {
-                                    info!("got conf msg: {:?}", text);
-                                } else {
-                                    // debug!("receive raw event text: {:?}", text);
-                                    let event: DataEvent = from_str(&text)?;
-                                    _g.on_data_event(event);
-                                }
-                            }
-                            Err(e) => {
-                                error!("error in acquire wirte lock");
-                                std::process::exit(1);
-                            }
-                        }
-                    }
-                }
-                Message::Binary(_) => {}
-                Message::Ping(_) | Message::Pong(_) => {}
-                Message::Close(e) => {
-                    bail!(format!("Disconnected {:?}", e));
-                }
-                _ => {}
-            }
-        }
-    }
-}
 
 impl WebSockets {
-    pub fn new(hander: Box<dyn EventHandler>) -> (WebSockets, SocketBackhand) {
+    pub fn new(hander: Box<dyn BitfinexEventHandler>) -> (WebSockets, SocketBackhand) {
         let wss: String = WEBSOCKET_URL.to_string();
         let url = Url::parse(&wss).unwrap();
 
@@ -364,6 +272,100 @@ impl WebSockets {
         match et {
             EventType::Funding => format!("f{}", symbol),
             EventType::Trading => format!("t{}", symbol),
+        }
+    }
+}
+
+
+unsafe impl Send for SocketBackhand {}
+unsafe impl Sync for SocketBackhand {}
+
+pub struct SocketBackhand {
+    rx: Receiver<WsMessage>,
+    pub socket: WebSocket<MaybeTlsStream<TcpStream>>,
+    event_handler: Option<Arc<RwLock<Box<dyn BitfinexEventHandler>>>>,
+}
+
+impl SocketBackhand {
+    pub fn new(
+        socket: WebSocket<MaybeTlsStream<TcpStream>>,
+        rx: Receiver<WsMessage>,
+        event_handler: Option<Arc<RwLock<Box<dyn BitfinexEventHandler>>>>,
+    ) -> Self {
+        Self { rx, socket, event_handler }
+    }
+
+    pub fn event_loop(&mut self) -> Result<()> {
+        loop {
+            loop {
+                match self.rx.try_recv() {
+                    Ok(msg) => match msg {
+                        WsMessage::Text(_, text) => {
+                            let time = get_current_ts().as_millis();
+                            info!("socket write message {:?}, time: {:?}", text, time);
+                            let ret = self.socket.write_message(Message::Text(text));
+                            match ret {
+                                Err(e) => {
+                                    error!("error in socket write {:?}", e);
+                                    std::process::exit(1);
+                                }
+                                Ok(()) => {}
+                            }
+                        }
+                        WsMessage::Close => {
+                            info!("socket close");
+                            return self.socket.close(None).map_err(|e| e.into());
+                        }
+                    },
+                    Err(TryRecvError::Disconnected) => {
+                        bail!("Disconnected")
+                    }
+                    Err(TryRecvError::Empty) => {
+                        break;
+                    }
+                }
+            }
+
+            let message = self.socket.read_message()?;
+
+            match message {
+                Message::Text(text) => {
+                    // println!("got msg: {:?}", text);
+                    if let Some(ref mut h) = self.event_handler {
+                        let mut _g_ret = h.write();
+                        match _g_ret {
+                            Ok(mut _g) => {
+                                if text.contains(INFO) {
+                                    let event: NotificationEvent = from_str(&text)?;
+                                    _g.on_connect(event);
+                                } else if text.contains(SUBSCRIBED) {
+                                    let event: NotificationEvent = from_str(&text)?;
+                                    _g.on_subscribed(event);
+                                } else if text.contains(AUTH) {
+                                    let event: NotificationEvent = from_str(&text)?;
+                                    _g.on_auth(event);
+                                } else if text.contains(CONF) {
+                                    info!("got conf msg: {:?}", text);
+                                } else {
+                                    // debug!("receive raw event text: {:?}", text);
+                                    let event: DataEvent = from_str(&text)?;
+                                    _g.on_data_event(event);
+                                }
+                            }
+                            Err(e) => {
+                                error!("error in acquire wirte lock");
+                                std::process::exit(1);
+                            }
+                        }
+                    }
+                }
+                Message::Binary(_) => {}
+                Message::Ping(_) | Message::Pong(_) => {}
+                Message::Close(e) => {
+                    bail!(format!("Disconnected {:?}", e));
+                }
+                _ => {}
+            }
         }
     }
 }

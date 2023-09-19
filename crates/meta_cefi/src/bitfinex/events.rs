@@ -36,21 +36,12 @@ pub enum DataEvent {
     OrderUpdateEvent(i32, String, OrderUpdateEvent, SEQUENCE, i32),
     TuEvent(i32, String, TuEvent, SEQUENCE, i32),
     NewOrderOnReq(i32, String, NewOrderOnReq, SEQUENCE),
-
-    // TickerTradingEvent (i32, TradingPair),
-    // TickerFundingEvent (i32, FundingCurrency),
-    // TradesTradingSnapshotEvent (i32, Vec<TradesTradingPair>),
-    // TradesTradingUpdateEvent (i32, String, TradesTradingPair),
-    // TradesFundingSnapshotEvent (i32, Vec<TradesFundingCurrency>),
-    // TradesFundingUpdateEvent (i32, String, TradesFundingCurrency),
     BookTradingSnapshotEvent(i32, Vec<TradingOrderBookLevel>, SEQUENCE),
     BookTradingUpdateEvent(i32, TradingOrderBookLevel, SEQUENCE),
     BookFundingSnapshotEvent(i32, Vec<BookFundingCurrency>),
     BookFundingUpdateEvent(i32, BookFundingCurrency),
     RawBookEvent(i32, RawBook),
     RawBookUpdateEvent(i32, Vec<RawBook>),
-    // CandlesSnapshotEvent (i32, Vec<Candle>),
-    // CandlesUpdateEvent (i32, Candle),
 }
 
 #[serde(rename_all = "camelCase")]
