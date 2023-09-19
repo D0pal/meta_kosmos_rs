@@ -87,7 +87,10 @@ impl SocketBackhand {
                             info!("socket write message {:?}, time: {:?}", text, time);
                             let ret = self.socket.write_message(Message::Text(text));
                             match ret {
-                                Err(e) => error!("error in socket write {:?}", e),
+                                Err(e) => {
+                                    error!("error in socket write {:?}", e);
+                                    std::process::exit(1);
+                                },
                                 Ok(()) => {}
                             }
                         }
