@@ -1,15 +1,19 @@
-use crate::bitfinex::{
-    auth,
-    common::{CONF_FLAG_SEQ_ALL, CONF_OB_CHECKSUM},
-    errors::*,
-    events::*,
-    orders::OrderType,
+use crate::{
+    bitfinex::{
+        auth,
+        common::{CONF_FLAG_SEQ_ALL, CONF_OB_CHECKSUM},
+        errors::*,
+        events::*,
+        orders::OrderType,
+    },
+    WsBackendSender, WsMessage,
 };
 use crossbeam_channel::{
     unbounded as CrossChannel, Receiver as CrossReceiver, Sender as CrossSender, TryRecvError,
 };
 use error_chain::bail;
 use meta_util::time::get_current_ts;
+use rust_decimal::Decimal;
 use serde_json::{from_str, json};
 use std::{
     net::TcpStream,
@@ -19,7 +23,7 @@ use std::{
     rc::Rc,
     sync::{Arc, RwLock},
 };
-use tracing::{error, info, debug};
+use tracing::{debug, error, info};
 use tungstenite::{
     connect, handshake::client::Response, protocol::WebSocket, stream::MaybeTlsStream, Message,
 };
@@ -50,15 +54,9 @@ pub enum EventType {
     Trading,
 }
 
-#[derive(Debug, Clone)]
-pub enum WsMessage {
-    Close,
-    Text(String),
-}
-
 pub struct WebSockets {
     // socket: Option<(WebSocket<MaybeTlsStream<TcpStream>>, Response)>,
-    sender: Sender,
+    sender: WsBackendSender, // send request to backend
     // rx: mpsc::Receiver<WsMessage>,
     pub event_handler: Option<Arc<RwLock<Box<dyn EventHandler>>>>,
 }
@@ -154,17 +152,14 @@ impl SocketBackhand {
 }
 
 impl WebSockets {
-    pub fn new(hander: Box<dyn EventHandler>) -> (WebSockets, SocketBackhand)
-// where
-    //     H: EventHandler + 'static,
-    {
+    pub fn new(hander: Box<dyn EventHandler>) -> (WebSockets, SocketBackhand) {
         let wss: String = WEBSOCKET_URL.to_string();
         let url = Url::parse(&wss).unwrap();
 
         match connect(url) {
             Ok(answer) => {
                 let (tx, rx) = CrossChannel::<WsMessage>();
-                let sender = Sender { tx };
+                let sender = WsBackendSender { tx };
 
                 let handler_box = Arc::new(RwLock::new(hander));
                 // let handler: &'static Arc<RwLock<Box<dyn EventHandler>>> = &handler_box;
@@ -309,13 +304,12 @@ impl WebSockets {
         }
     }
 
-    pub fn submit_order<S, F>(&mut self, client_order_id: u128, symbol: S, qty: F)
+    pub fn submit_order<S>(&mut self, client_order_id: u128, symbol: S, qty: Decimal)
     where
         S: Into<String>,
-        F: Into<String>,
     {
         let symbol_str: String = symbol.into();
-        let qty_str: String = qty.into();
+        let qty_str: String = qty.to_string();
         info!("websockets submit order symbol: {:?}, qty {:?}", symbol_str, qty_str);
         let msg = json!(
         [
@@ -334,7 +328,11 @@ impl WebSockets {
 
         if let Err(error_msg) = self.sender.send(&msg.to_string()) {
             // self.error_hander(error_msg);
-            error!("submit_order error: {:?}", error_msg);
+            error!(
+                "submit_order error, order is: {:?}, error is: {:?}",
+                msg.to_string(),
+                error_msg
+            );
         }
     }
 
@@ -366,23 +364,5 @@ impl WebSockets {
             EventType::Funding => format!("f{}", symbol),
             EventType::Trading => format!("t{}", symbol),
         }
-    }
-}
-
-#[derive(Clone)]
-pub struct Sender {
-    tx: CrossSender<WsMessage>,
-}
-
-impl Sender {
-    pub fn send(&self, raw: &str) -> Result<()> {
-        self.tx
-            .send(WsMessage::Text(raw.to_string()))
-            .map_err(|e| Error::with_chain(e, "Not able to send a message"))?;
-        Ok(())
-    }
-
-    pub fn shutdown(&self) -> Result<()> {
-        self.tx.send(WsMessage::Close).map_err(|e| Error::with_chain(e, "Error during shutdown"))
     }
 }

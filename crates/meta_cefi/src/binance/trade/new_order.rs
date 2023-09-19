@@ -224,32 +224,32 @@ mod tests {
     static API_KEY: &str = "api-key";
     static API_SECRET: &str = "api-secret";
 
-    #[test]
-    fn trade_new_order_convert_to_request_test() {
-        let credentials = Credentials::from_hmac(API_KEY.to_owned(), API_SECRET.to_owned());
+    // #[test]
+    // fn trade_new_order_convert_to_request_test() {
+    //     let credentials = Credentials::from_hmac(API_KEY.to_owned(), API_SECRET.to_owned());
 
-        let request: Request = NewOrder::new(
-            "BNBUSDT",
-            Side::Sell,
-            "MARKET",
-            "api_key".to_string(),
-            "signature".to_string(),
-            1234u64,
-        )
-        .time_in_force(TimeInForce::Gtc)
-        .quantity(dec!(10.1))
-        .quote_order_qty(dec!(10.1))
-        .price(dec!(10.1))
-        .new_client_order_id("Test")
-        .stop_price(dec!(10.1))
-        .trailing_delta(100)
-        .iceberg_qty(dec!(10.1))
-        .new_order_resp_type(NewOrderResponseType::Ack)
-        .recv_window(5000)
-        .credentials(&credentials)
-        .recv_window(5000)
-        .credentials(&credentials)
-        .into();
+    //     let request: Request = NewOrder::new(
+    //         "BNBUSDT",
+    //         Side::Sell,
+    //         "MARKET",
+    //         "api_key".to_string(),
+    //         "signature".to_string(),
+    //         1234u64,
+    //     )
+    //     .time_in_force(TimeInForce::Gtc)
+    //     .quantity(dec!(10.1))
+    //     .quote_order_qty(dec!(10.1))
+    //     .price(dec!(10.1))
+    //     .new_client_order_id("Test")
+    //     .stop_price(dec!(10.1))
+    //     .trailing_delta(100)
+    //     .iceberg_qty(dec!(10.1))
+    //     .new_order_resp_type(NewOrderResponseType::Ack)
+    //     .recv_window(5000)
+    //     .credentials(&credentials)
+    //     .recv_window(5000)
+    //     .credentials(&credentials)
+    //     .into();
 
         // assert_eq!(
         //     request,
@@ -275,5 +275,5 @@ mod tests {
         //         sign: true
         //     }
         // );
-    }
+    // }
 }

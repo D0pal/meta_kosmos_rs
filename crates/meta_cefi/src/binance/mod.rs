@@ -11,3 +11,4 @@ pub mod util;
 pub mod websockets;
 pub mod trade;
 pub mod http;
+pub mod handler;

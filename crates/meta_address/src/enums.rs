@@ -46,6 +46,9 @@ pub enum Asset {
     #[strum(ascii_case_insensitive, serialize = "UST")]
     UST,
 
+    #[strum(ascii_case_insensitive, serialize = "USDT")]
+    USDT,
+
     #[strum(ascii_case_insensitive, serialize = "UDC")]
     UDC,
 
