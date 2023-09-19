@@ -580,8 +580,10 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                             }
                         }
                     }
-                }
+                },
+                CexExchange::BINANCE => unimplemented!()
             }
+            
         }
         _ => {
             todo!()

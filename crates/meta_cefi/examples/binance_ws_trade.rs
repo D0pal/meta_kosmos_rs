@@ -72,7 +72,7 @@ fn main() {
             CexExchange::BINANCE,
             Asset::ETH,
             Asset::USDT,
-            Decimal::from_f64(0.005f64).unwrap(),
+            Decimal::from_f64(-0.005f64).unwrap(),
         );
     }
 

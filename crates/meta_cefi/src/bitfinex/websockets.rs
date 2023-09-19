@@ -8,16 +8,14 @@ use crate::{
     },
     WsBackendSender, WsMessage,
 };
-use crossbeam_channel::{
-    unbounded as CrossChannel, Receiver as CrossReceiver, Sender as CrossSender, TryRecvError,
-};
+
 use error_chain::bail;
 use meta_util::time::get_current_ts;
 use rust_decimal::Decimal;
 use serde_json::{from_str, json};
 use std::{
     net::TcpStream,
-    sync::mpsc::{self, channel, sync_channel, Receiver},
+    sync::mpsc::{self, channel,Sender, sync_channel, Receiver, TryRecvError},
 };
 use std::{
     rc::Rc,
@@ -65,7 +63,7 @@ unsafe impl Send for SocketBackhand {}
 unsafe impl Sync for SocketBackhand {}
 
 pub struct SocketBackhand {
-    rx: CrossReceiver<WsMessage>,
+    rx: Receiver<WsMessage>,
     pub socket: WebSocket<MaybeTlsStream<TcpStream>>,
     event_handler: Option<Arc<RwLock<Box<dyn EventHandler>>>>,
 }
@@ -73,7 +71,7 @@ pub struct SocketBackhand {
 impl SocketBackhand {
     pub fn new(
         socket: WebSocket<MaybeTlsStream<TcpStream>>,
-        rx: CrossReceiver<WsMessage>,
+        rx: Receiver<WsMessage>,
         event_handler: Option<Arc<RwLock<Box<dyn EventHandler>>>>,
     ) -> Self {
         Self { rx, socket, event_handler }
@@ -158,7 +156,7 @@ impl WebSockets {
 
         match connect(url) {
             Ok(answer) => {
-                let (tx, rx) = CrossChannel::<WsMessage>();
+                let (tx, rx) = channel::<WsMessage>();
                 let sender = WsBackendSender { tx };
 
                 let handler_box = Arc::new(RwLock::new(hander));

@@ -17,8 +17,8 @@ use crate::{
     cefi_service::AccessKey,
     WsBackendSender, WsMessage,
 };
-use crossbeam_channel::{
-    unbounded as CrossChannel, Receiver as CrossReceiver, Sender as CrossSender, TryRecvError,
+use std::sync::mpsc::{
+    channel, Receiver, Sender, TryRecvError,
 };
 use error_chain::bail;
 use meta_util::time::get_current_ts;
@@ -121,7 +121,7 @@ impl BinanceWebSockets {
 
         match connect(url) {
             Ok(answer) => {
-                let (tx, rx) = CrossChannel::<WsMessage>();
+                let (tx, rx) = channel::<WsMessage>();
                 let sender = WsBackendSender { tx };
 
                 let handler_box = Arc::new(RwLock::new(hander));
@@ -157,7 +157,7 @@ impl BinanceWebSockets {
 
             let side = if qty.is_sign_positive() { Side::Buy } else { Side::Sell };
             let mut request_order = trade::new_order(&symbol_str, side, "MARKET", &ak.api_key)
-                .quantity(qty)
+                .quantity(qty.abs())
                 .new_client_order_id(&client_order_id.to_string());
 
             let ts = request_order.timestamp;
@@ -223,7 +223,7 @@ impl BinanceWebSockets {
 }
 
 pub struct BinanceSocketBackhand {
-    rx: CrossReceiver<WsMessage>, // any message received will send to trade socket
+    rx: Receiver<WsMessage>, // any message received will send to trade socket
     pub socket_stream: Option<WebSocket<MaybeTlsStream<TcpStream>>>,
     pub socket_trade: WebSocket<MaybeTlsStream<TcpStream>>,
     event_handler: Option<Arc<RwLock<Box<dyn BinanceEventHandler>>>>,
@@ -233,7 +233,7 @@ impl BinanceSocketBackhand {
     pub fn new(
         socket_stream: Option<WebSocket<MaybeTlsStream<TcpStream>>>,
         socket_trade: WebSocket<MaybeTlsStream<TcpStream>>,
-        rx: CrossReceiver<WsMessage>,
+        rx: Receiver<WsMessage>,
         event_handler: Option<Arc<RwLock<Box<dyn BinanceEventHandler>>>>,
     ) -> Self {
         Self { rx, socket_stream, socket_trade, event_handler }
@@ -264,7 +264,7 @@ impl BinanceSocketBackhand {
                         bail!("Disconnected")
                     }
                     Err(TryRecvError::Empty) => {
-                        println!("empty message to send");
+                        // println!("empty message to send");
                         break;
                     }
                 }
@@ -355,15 +355,31 @@ impl BinanceSocketBackhand {
             //     }
             // }
 
-            println!("start read trade stream message: can read {:?}, config: {:?}", self.socket_trade.can_read(), self.socket_trade.get_config());
-            let trade_socket_message = self.socket_trade.read_message();
-            println!("end read stream message");
-            match trade_socket_message {
-                Ok(msg) => println!("got trade msg: {:?}", msg),
-                Err(e) => {
-                    eprintln!("error in read trade socket {:?}", e);
-                },
-            }
+            // println!(
+            //     "start read trade stream message: can read {:?}, config: {:?}",
+            //     self.socket_trade.can_read(),
+            //     self.socket_trade.get_config()
+            // );
+            // let trade_socket_message = self.socket_trade.read_message();
+            // println!("end read stream message");
+            // match trade_socket_message {
+            //     Ok(message) => match message {
+            //         Message::Text(msg) => {
+            //             println!("receive msg: {:?}", msg);
+            //             // if let Err(e) = self.handle_msg(&msg) {
+            //             //     bail!(format!("Error on handling stream message: {}", e));
+            //             // }
+            //         }
+            //         Message::Ping(_) => {
+            //             self.socket_trade.write_message(Message::Pong(vec![])).unwrap();
+            //         }
+            //         Message::Pong(_) | Message::Binary(_) | Message::Frame(_) => (),
+            //         Message::Close(e) => bail!(format!("Disconnected {:?}", e)),
+            //     },
+            //     Err(e) => {
+            //         eprintln!("error in read trade socket {:?}", e);
+            //     }
+            // }
         }
     }
 }

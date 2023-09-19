@@ -7,13 +7,9 @@ pub mod cefi_service;
 pub mod util;
 
 use bitfinex::errors::*;
-use crossbeam_channel::{
-    unbounded as CrossChannel, Receiver as CrossReceiver, Sender as CrossSender, TryRecvError,
-};
 use error_chain::bail;
-use tungstenite::{
-    connect, handshake::client::Response, protocol::WebSocket, stream::MaybeTlsStream, Message,
-};
+use std::sync::mpsc::Sender;
+
 
 #[derive(Debug, Clone)]
 pub enum WsMessage {
@@ -23,7 +19,7 @@ pub enum WsMessage {
 
 #[derive(Clone)]
 pub(crate) struct WsBackendSender {
-    tx: CrossSender<WsMessage>,
+    tx: Sender<WsMessage>,
 }
 
 impl WsBackendSender {
@@ -52,8 +48,6 @@ pub fn get_cex_pair(cex: CexExchange, base: Asset, quote: Asset) -> String {
     }
 }
 
-
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -66,6 +60,9 @@ mod test {
 
     #[test]
     fn test_get_cex_pair() {
-        assert_eq!(get_cex_pair(CexExchange::BINANCE, Asset::ARB, Asset::USDT), "ARBUSDT".to_string());
+        assert_eq!(
+            get_cex_pair(CexExchange::BINANCE, Asset::ARB, Asset::USDT),
+            "ARBUSDT".to_string()
+        );
     }
 }

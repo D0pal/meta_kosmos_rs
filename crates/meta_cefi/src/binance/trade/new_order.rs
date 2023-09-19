@@ -36,6 +36,7 @@ use serde::Serialize;
 ///     .quantity(dec!(0.1));
 /// ```
 #[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct NewOrder {
     symbol: String,
     side: Side,
@@ -169,7 +170,7 @@ impl From<NewOrder> for Request {
         }
 
         if let Some(quantity) = request.quantity {
-            params.insert("quantity".to_owned(), quantity.to_string());
+            params.insert("quantity".to_owned(), quantity.abs().to_string());
         }
 
         if let Some(quote_order_qty) = request.quote_order_qty {
