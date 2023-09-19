@@ -1,19 +1,16 @@
+#![allow(dead_code)]
+
 use crate::{
     bitfinex::{
         errors::*,
         events::{DataEvent, NotificationEvent, SEQUENCE},
         wallet::{TradeExecutionUpdate, WalletSnapshot},
-        websockets::{BitfinexEventHandler},
+        websockets::BitfinexEventHandler,
     },
     cefi_service::{construct_order_book, update_order_book, OrderBook},
 };
-
-use meta_common::{
-    models::{CurrentSpread, MarcketChange},
-};
-
+use meta_common::models::{CurrentSpread, MarcketChange};
 use rust_decimal::Decimal;
-
 use std::sync::mpsc::SyncSender;
 extern crate core_affinity;
 use tracing::{debug, error, info, warn};

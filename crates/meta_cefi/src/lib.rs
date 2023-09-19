@@ -35,9 +35,9 @@ impl WsBackendSender {
         Ok(())
     }
 
-    pub fn shutdown(&self) -> Result<()> {
-        self.tx.send(WsMessage::Close).map_err(|e| Error::with_chain(e, "Error during shutdown"))
-    }
+    // pub fn shutdown(&self) -> Result<()> {
+    //     self.tx.send(WsMessage::Close).map_err(|e| Error::with_chain(e, "Error during shutdown"))
+    // }
 }
 
 #[derive(Clone)]

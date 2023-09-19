@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::{
     binance::{
         errors::Result,
@@ -7,10 +9,7 @@ use crate::{
             DayTickerEvent, DepthOrderBookEvent, DiffOrderBookEvent, KlineEvent, OrderBook,
             OrderTradeEvent, TradeEvent,
         },
-        trade::{
-            self,
-            order::{Side},
-        },
+        trade::{self, order::Side},
         util::sign,
     },
     cefi_service::AccessKey,
@@ -20,7 +19,7 @@ use error_chain::bail;
 use meta_util::time::get_current_ts;
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
-use serde_json::{json};
+use serde_json::json;
 use std::{
     net::TcpStream,
     sync::{
@@ -29,9 +28,7 @@ use std::{
     },
 };
 use tracing::{error, info};
-use tungstenite::{
-    connect, protocol::WebSocket, stream::MaybeTlsStream, Message,
-};
+use tungstenite::{connect, protocol::WebSocket, stream::MaybeTlsStream, Message};
 use url::Url;
 use uuid::Uuid;
 
@@ -84,7 +81,7 @@ pub enum BinanceWebsocketEvent {
 pub struct BinanceWebSockets {
     credentials: Option<AccessKey>,
     sender: WsBackendSender, // send request to backend,
-    handler: Option<Arc<RwLock<Box<dyn BinanceEventHandler>>>>,
+    pub handler: Option<Arc<RwLock<Box<dyn BinanceEventHandler>>>>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -138,7 +135,7 @@ impl BinanceWebSockets {
             }
             Err(e) => {
                 error!("error in connect socket {:?}", e);
-                std::process::exit(1);
+                unreachable!()
             }
         }
     }
@@ -223,7 +220,7 @@ pub struct BinanceSocketBackhand {
     rx: Receiver<WsMessage>, // any message received will send to trade socket
     pub socket_stream: Option<WebSocket<MaybeTlsStream<TcpStream>>>,
     pub socket_trade: WebSocket<MaybeTlsStream<TcpStream>>,
-    event_handler: Option<Arc<RwLock<Box<dyn BinanceEventHandler>>>>,
+    pub event_handler: Option<Arc<RwLock<Box<dyn BinanceEventHandler>>>>,
 }
 
 impl BinanceSocketBackhand {

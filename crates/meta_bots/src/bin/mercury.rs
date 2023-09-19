@@ -1,8 +1,6 @@
 //! dex dex arbitrage bot
 use ethers::prelude::*;
-
 use gumdrop::Options;
-
 use std::{
     cell::RefCell,
     path::PathBuf,
@@ -11,12 +9,11 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use tracing::{debug, info};
-
 use meta_address::{get_bot_contract_info, get_dex_address, get_rpc_info, get_token_info, Token};
 use meta_bots::AppConfig;
 use meta_common::enums::{BotType, ContractType, DexExchange, Network, RpcProvider};
 use meta_contracts::{
-    bindings::{flash_bots_router::FlashBotsRouter, uniswap_v2_pair::SwapFilter},
+    bindings::{flashbotsrouter::FlashBotsRouter, uniswapv2pair::SwapFilter},
     wrappers::{
         calculate_price_diff, get_atomic_arb_call_params, Erc20Wrapper, UniswapV2,
         UniswapV2PairWrapper,
@@ -228,7 +225,7 @@ async fn main_impl() -> anyhow::Result<()> {
 
     let _guard = init_tracing(app_config.log.into());
 
-    run(opts).await;
+    run(opts).await?;
     Ok(())
 }
 

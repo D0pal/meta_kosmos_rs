@@ -26,7 +26,7 @@ fn get_wallet_balance(bitfinex: &Bitfinex, assets: Vec<Asset>) {
     let wallets = bitfinex.account.get_wallets().unwrap();
     for wallet in wallets {
         let asset = wallet.currency.parse::<Asset>().unwrap();
-        if wallet.wallet_type == WalletType::exchange && assets.contains(&asset) {
+        if wallet.wallet_type == WalletType::Exchange && assets.contains(&asset) {
             println!("asset: {:?}, balance: {:?}", asset, wallet.balance);
         }
     }

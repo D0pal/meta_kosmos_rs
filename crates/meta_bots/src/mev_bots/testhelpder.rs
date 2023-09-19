@@ -5,7 +5,7 @@ use ethers::{
     utils::{Anvil, AnvilInstance},
 };
 
-use meta_contracts::bindings::{erc20::ERC20, uniswap_v2_pair::UniswapV2Pair};
+use meta_contracts::bindings::{erc20::ERC20, uniswapv2pair::UniswapV2Pair};
 use meta_dex::prelude::{BlockInfo, Pool};
 use meta_util::ether::hash::u256_to_h256_be;
 

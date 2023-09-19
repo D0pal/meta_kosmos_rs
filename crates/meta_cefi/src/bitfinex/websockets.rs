@@ -21,9 +21,7 @@ use std::{
     },
 };
 use tracing::{error, info};
-use tungstenite::{
-    connect, protocol::WebSocket, stream::MaybeTlsStream, Message,
-};
+use tungstenite::{connect, protocol::WebSocket, stream::MaybeTlsStream, Message};
 use url::Url;
 
 pub static INFO: &str = "info";
@@ -78,7 +76,7 @@ impl WebSockets {
             }
             Err(e) => {
                 error!("error in connect socket {:?}", e);
-                std::process::exit(1);
+                unreachable!()
             }
         }
     }
@@ -304,7 +302,6 @@ impl SocketBackhand {
                             match ret {
                                 Err(e) => {
                                     error!("error in socket write {:?}", e);
-                                    std::process::exit(1);
                                 }
                                 Ok(()) => {}
                             }
@@ -351,7 +348,6 @@ impl SocketBackhand {
                             }
                             Err(_e) => {
                                 error!("error in acquire wirte lock");
-                                std::process::exit(1);
                             }
                         }
                     }

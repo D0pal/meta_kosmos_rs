@@ -19,10 +19,9 @@ use hashbrown::HashMap;
 use meta_address::{get_dex_address, Token};
 use meta_common::enums::{ContractType, DexExchange, Network, PoolVariant};
 use meta_contracts::bindings::{
-    swap_router::SwapRouter,
-    uniswap_v2_factory::UniswapV2Factory,
-    uniswap_v3_pool::{SwapFilter, UniswapV3Pool},
-    ExactInputSingleParams, ExactOutputSingleParams, UniswapV3Factory,
+    swaprouter::{SwapRouter, ExactInputSingleParams, ExactOutputSingleParams},
+    uniswapv2factory::UniswapV2Factory,
+    uniswapv3pool::{SwapFilter, UniswapV3Pool},
 };
 use meta_util::{
     defi::{get_swap_price_limit, get_token0_and_token1},

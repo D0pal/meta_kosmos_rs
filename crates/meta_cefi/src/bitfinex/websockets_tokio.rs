@@ -13,7 +13,7 @@ use crate::{
         orders::OrderType,
     }, WsBackendSenderAsync, WsMessage,
 };
-use futures_util::{SinkExt, StreamExt, TryStreamExt};
+use futures_util::{SinkExt, TryStreamExt};
 use meta_util::time::get_current_ts;
 use rust_decimal::Decimal;
 use serde_json::{from_str, json};
@@ -368,7 +368,7 @@ impl BitfinexSocketBackhandAsync {
                     }
                     Message::Binary(_) | Message::Pong(_) => {}
                     Message::Ping(_) => {
-                        self.socket.send(Message::Pong(vec![])).await;
+                        self.socket.send(Message::Pong(vec![])).await?;
                     }
                     Message::Close(e) => {
                         error!("Disconnected {:?}", e);

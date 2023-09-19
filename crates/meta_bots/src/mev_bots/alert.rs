@@ -4,7 +4,7 @@ use revm::interpreter::OpCode;
 use std::collections::HashMap;
 use tracing::error;
 
-use super::{OptimalRecipe, LARK_WEBHOOK};
+use super::{types::OptimalRecipe, LARK_WEBHOOK};
 
 // use crate::prelude::is_sando_safu::OpCode;
 // use crate::prelude::{sandwich_types::OptimalRecipe, PoolVariant};

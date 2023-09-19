@@ -12,7 +12,7 @@ use crate::{
     MessageChannel, WsBackendSenderAsync, WsMessage,
 };
 
-use futures_util::{SinkExt, StreamExt, TryStreamExt};
+use futures_util::{SinkExt, TryStreamExt};
 use meta_util::time::get_current_ts;
 use rust_decimal::Decimal;
 use serde_json::{json};
@@ -263,7 +263,6 @@ impl BinanceWebSocketClient {
                 self.sender.send(crate::MessageChannel::Trade, &msg.to_string()).await
             {
                 error!("submit_order error: {:?}", error_msg);
-                std::process::exit(1)
             }
         }
     }
@@ -271,7 +270,7 @@ impl BinanceWebSocketClient {
 
 pub struct WebSocketState<T> {
     socket: WebSocketStream<T>,
-    id: u64,
+    pub id: u64,
 }
 
 impl<T: AsyncRead + AsyncWrite + Unpin> WebSocketState<T> {
@@ -432,11 +431,10 @@ impl BinanceSocketBackhandAsync {
                         }
                         Message::Binary(_) | Message::Pong(_) => {}
                         Message::Ping(_) => {
-                            self.socket_stream.write_message(Message::Pong(vec![])).await;
+                            self.socket_stream.write_message(Message::Pong(vec![])).await?;
                         }
                         Message::Close(e) => {
                             error!("closed {:?}", e);
-                            std::process::exit(1);
                         }
                         _ => {}
                     }

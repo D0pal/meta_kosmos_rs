@@ -10,8 +10,8 @@ use tokio::sync::RwLock;
 use meta_address::get_dex_address;
 use meta_common::enums::{ContractType, DexExchange, Network, PoolVariant};
 use meta_contracts::bindings::{
-    quoter_v2::QuoterV2, swap_router::SwapRouter, uniswap_v3_factory::UniswapV3Factory,
-    uniswap_v3_pool::UniswapV3Pool,
+    quoterv2::QuoterV2, swaprouter::SwapRouter, uniswapv3factory::UniswapV3Factory,
+    uniswapv3pool::UniswapV3Pool,
 };
 
 #[derive(Debug, Clone)]

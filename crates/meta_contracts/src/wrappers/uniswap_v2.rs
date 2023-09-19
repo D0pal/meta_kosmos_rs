@@ -1,17 +1,15 @@
 use super::Erc20Wrapper;
 use crate::bindings::{
-    flash_bots_router::UniswapWethParams, mute_switch_factory::MuteSwitchFactory,
-    uniswap_v2_factory::UniswapV2Factory, uniswap_v2_pair::UniswapV2Pair,
-    uniswap_v2_router_02::UniswapV2Router02, ERC20,
+    flashbotsrouter::UniswapWethParams, muteswitchfactory::MuteSwitchFactory,
+    uniswapv2factory::UniswapV2Factory, uniswapv2pair::UniswapV2Pair,
+    uniswapv2router02::UniswapV2Router02, erc20::ERC20,
 };
-// use core::num;
 use ethers::prelude::*;
 use futures::future::join_all;
 use meta_common::enums::{DexExchange, Network};
 use meta_util::ether::address_to_str;
 
 use std::{
-    borrow::BorrowMut,
     cell::RefCell,
     ops::{Div, Mul},
     rc::Rc,
@@ -20,8 +18,8 @@ use std::{
 use tracing::{debug, error, info};
 
 pub enum UniswapV2FactoryEnum<M> {
-    UNISWAP_V2(UniswapV2Factory<M>),
-    MUTE_SWITCH(MuteSwitchFactory<M>),
+    UniswapV2(UniswapV2Factory<M>),
+    MuteSwitch(MuteSwitchFactory<M>),
 }
 
 pub struct UniswapV2<M> {
@@ -47,11 +45,11 @@ impl<M: Middleware> UniswapV2<M> {
             network, dex, factory_address
         );
         let factory_contract = match dex {
-            DexExchange::MuteSwitch => UniswapV2FactoryEnum::MUTE_SWITCH(MuteSwitchFactory::new(
+            DexExchange::MuteSwitch => UniswapV2FactoryEnum::MuteSwitch(MuteSwitchFactory::new(
                 factory_address,
                 client.clone(),
             )),
-            _ => UniswapV2FactoryEnum::UNISWAP_V2(UniswapV2Factory::new(
+            _ => UniswapV2FactoryEnum::UniswapV2(UniswapV2Factory::new(
                 factory_address,
                 client.clone(),
             )),
@@ -68,18 +66,18 @@ impl<M: Middleware> UniswapV2<M> {
 
     pub fn get_factory_address(&self) -> Address {
         match &self.factory_contract {
-            UniswapV2FactoryEnum::MUTE_SWITCH(factory) => factory.address(),
-            UniswapV2FactoryEnum::UNISWAP_V2(factory) => factory.address(),
+            UniswapV2FactoryEnum::MuteSwitch(factory) => factory.address(),
+            UniswapV2FactoryEnum::UniswapV2(factory) => factory.address(),
         }
     }
 
     /// get uniswap v2 pair contract address given by token0, token1. token0 < token1
     pub async fn get_pair_addr(&self, token0: Address, token1: Address) -> Address {
         match &self.factory_contract {
-            UniswapV2FactoryEnum::MUTE_SWITCH(factory) => {
+            UniswapV2FactoryEnum::MuteSwitch(factory) => {
                 (factory).get_pair(token0, token1, false).call().await.unwrap()
             }
-            UniswapV2FactoryEnum::UNISWAP_V2(factory) => {
+            UniswapV2FactoryEnum::UniswapV2(factory) => {
                 (factory).get_pair(token0, token1).call().await.unwrap()
             }
         }

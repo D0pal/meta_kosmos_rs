@@ -8,7 +8,7 @@ use crate::{
         common::*,
         handler::BitfinexEventHandlerImpl,
         wallet::{TradeExecutionUpdate, WalletSnapshot},
-        websockets::{BitfinexEventHandler, EventType, WebSockets},
+        websockets::{ EventType},
         websockets_tokio::BitfinexWebSocketsAsync,
     },
     get_cex_pair,
@@ -29,7 +29,7 @@ use tokio::sync::RwLock as TokioRwLock;
 extern crate core_affinity;
 use core_affinity::CoreId;
 use lazy_static::lazy_static;
-use tracing::{error, info, warn};
+use tracing::{info };
 
 lazy_static! {
     pub static ref CORE_IDS: Vec<CoreId> = core_affinity::get_core_ids().unwrap();
@@ -50,8 +50,8 @@ pub struct CexConfig {
 
 #[derive(Debug, Clone)]
 pub struct PriceLevel {
-    bids: Vec<Decimal>,
-    asks: Vec<Decimal>,
+    pub bids: Vec<Decimal>,
+    pub asks: Vec<Decimal>,
 }
 
 #[derive(Debug, Clone)]
@@ -107,7 +107,7 @@ impl CefiService {
                     let (mut socket_reader, mut socket_reader_backhand) =
                         BitfinexWebSocketsAsync::new(Box::new(handler_reader)).await;
 
-                    (socket_reader)
+                    let _ =(socket_reader)
                         .auth(ak.api_key.to_string(), ak.api_secret.to_string(), false, &[])
                         .await; // check error
                     (socket_reader).conf().await;
@@ -123,7 +123,7 @@ impl CefiService {
 
                     {
                         tokio::spawn(async move {
-                            socket_reader_backhand.event_loop().await;
+                            let _ = socket_reader_backhand.event_loop().await;
                         });
                     }
 
@@ -151,7 +151,7 @@ impl CefiService {
 
                     {
                         tokio::spawn(async move {
-                            socket_reader_backhand.event_loop().await;
+                           let _ = socket_reader_backhand.event_loop().await;
                         });
                     }
 

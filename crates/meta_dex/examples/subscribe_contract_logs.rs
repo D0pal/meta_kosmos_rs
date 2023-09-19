@@ -1,7 +1,7 @@
 use ethers::{prelude::*};
 use meta_address::{get_rpc_info, get_token_info, Token};
 use meta_common::enums::{ContractType, DexExchange, Network, RpcProvider};
-use meta_contracts::bindings::uniswap_v3_pool::SwapFilter;
+use meta_contracts::bindings::uniswapv3pool::SwapFilter;
 use meta_dex::DexService;
 use meta_util::ether::{address_from_str};
 

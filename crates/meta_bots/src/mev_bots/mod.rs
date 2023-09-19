@@ -7,7 +7,6 @@ pub mod relay;
 pub mod sandwidth;
 pub mod simulation;
 pub mod types;
-pub use types::*;
 pub mod helpers;
 pub mod testhelpder;
 

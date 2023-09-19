@@ -22,8 +22,7 @@ use meta_common::{
     models::{CurrentSpread, MarcketChange},
 };
 use meta_contracts::bindings::{
-    quoter_v2::QuoterV2, uniswap_v3_pool::SwapFilter, QuoteExactInputSingleParams,
-    QuoteExactOutputSingleParams,
+    quoterv2::{QuoterV2, QuoteExactOutputSingleParams, QuoteExactInputSingleParams}, uniswapv3pool::SwapFilter, 
 };
 use meta_dex::DexService;
 use meta_integration::Lark;
@@ -287,7 +286,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                             CexExchange::BITFINEX,
                             config.base_asset,
                             config.quote_asset,
-                        );
+                        ).await;
                     }
 
                     let (last_dex_sell_price, last_dex_buy_price) = (
@@ -641,7 +640,7 @@ async fn try_arbitrage<'a, M: Middleware + 'static>(
                     instruction.cex.base_asset,
                     instruction.cex.quote_asset,
                     instruction.cex.amount,
-                );
+                ).await;
             }
             _ => unimplemented!(),
         }
@@ -706,7 +705,7 @@ async fn main_impl() -> anyhow::Result<()> {
     let _guard = init_tracing(app_config.log.clone().into());
 
     debug!("venus config: {:?}", app_config);
-    run(app_config).await;
+    run(app_config).await?;
     Ok(())
 }
 

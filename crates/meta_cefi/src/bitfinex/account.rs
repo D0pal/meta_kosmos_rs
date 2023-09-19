@@ -1,33 +1,15 @@
 use crate::bitfinex::{client::*, errors::*};
 use serde::{Deserialize, Serialize};
 use serde_json::{from_str, Value};
-use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString, EnumVariantNames};
 
-#[derive(
-    Clone,
-    Copy,
-    Debug,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    AsRefStr,         // AsRef<str>, fmt::Display and serde::Serialize
-    EnumVariantNames, // Chain::VARIANTS
-    EnumString,       // FromStr, TryFrom<&str>
-    EnumIter,         // Chain::iter
-    EnumCount,        // Chain::COUNT
-    Deserialize,
-    Serialize,
-    Display,
-)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
 pub enum WalletType {
-    #[strum(serialize = "exchange")]
-    exchange,
-    #[strum(serialize = "margin")]
-    margin,
-    #[strum(serialize = "funding")]
-    funding,
+    #[serde(rename = "exchange")]
+    Exchange,
+    #[serde(rename = "margin")]
+    Margin,
+    #[serde(rename = "funding")]
+    Funding,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

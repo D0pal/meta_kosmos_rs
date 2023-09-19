@@ -46,7 +46,7 @@ pub struct ArbitragePair {
 
 pub type CID = u128; //client order id
 
-pub type ARBITRAGE_INFO = Arc<RwLock<BTreeMap<CID, ArbitragePair>>>;
+pub type ArbitrageInfo = Arc<RwLock<BTreeMap<CID, ArbitragePair>>>;
 
 #[derive(Debug)]
 pub struct CexInstruction {
@@ -75,7 +75,7 @@ pub struct ArbitrageInstruction {
 
 /// update the swap info when onchain transaction is finalised (success/revert)
 pub async fn update_dex_swap_finalised_info(
-    map: ARBITRAGE_INFO,
+    map: ArbitrageInfo,
     hash: TxHash,
     swap_info: SwapFinalisedInfo,
 ) {
@@ -96,7 +96,7 @@ pub async fn update_dex_swap_finalised_info(
 /// # Return
 /// - should_stop: whether should stop the process
 /// - the arbitrage pair info to be notified
-pub async fn check_arbitrage_status(map: ARBITRAGE_INFO) -> (bool, Option<(CID, ArbitragePair)>) {
+pub async fn check_arbitrage_status(map: ArbitrageInfo) -> (bool, Option<(CID, ArbitragePair)>) {
     info!("start check arbitrage status");
     let mut _g = map.read().await;
     let iter = _g.iter();

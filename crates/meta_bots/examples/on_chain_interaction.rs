@@ -3,7 +3,7 @@ use foundry_evm::decode::decode_revert;
 use meta_address::{get_dex_address, get_rpc_info, get_token_info, ContractInfo, Token, TokenInfo};
 use meta_common::enums::{ContractType, DexExchange, Network, RpcProvider};
 use meta_contracts::bindings::{
-    erc20::ERC20, swap_router::SwapRouter, ExactInputSingleParams, ExactOutputSingleParams, WETH9,
+    erc20::ERC20, swaprouter::SwapRouter, weth9::WETH9,
 };
 use meta_util::{defi::get_swap_price_limit, ether::decimal_to_wei, time::get_current_ts};
 use rust_decimal::{prelude::FromPrimitive, Decimal};
