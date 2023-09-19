@@ -231,8 +231,8 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                 CexExchange::BITFINEX => {
                     // for receiving spread update
                     let (tx, rx) = mpsc::sync_channel::<MarcketChange>(1000);
-                    let (tx_order, rx_order) = mpsc::sync_channel::<TradeExecutionUpdate>(100);
-                    let (tx_wu, rx_wu) = mpsc::sync_channel::<WalletSnapshot>(100);
+                    let (tx_order, rx_order) = mpsc::sync_channel::<TradeExecutionUpdate>(1000);
+                    let (tx_wu, rx_wu) = mpsc::sync_channel::<WalletSnapshot>(1000);
 
                     let mut map = BTreeMap::new();
                     let ak = config.bitfinex.unwrap();
@@ -482,7 +482,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                         CexExchange::BITFINEX,
                                         config.base_asset,
                                         config.quote_asset,
-                                    )
+                                    ).await
                                 };
 
                                 match ret {

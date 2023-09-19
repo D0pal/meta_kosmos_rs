@@ -9,6 +9,7 @@ use crate::{
         handler::BitfinexEventHandlerImpl,
         wallet::{TradeExecutionUpdate, WalletSnapshot},
         websockets::{BitfinexEventHandler, EventType, WebSockets},
+        websockets_tokio::BitfinexWebSocketsAsync,
     },
     get_cex_pair,
 };
@@ -22,7 +23,7 @@ use rust_decimal::Decimal;
 use serde::Deserialize;
 use std::{
     collections::BTreeMap,
-    sync::{mpsc::SyncSender, Arc, RwLock},
+    sync::{mpsc::SyncSender, Arc},
 };
 use tokio::sync::RwLock as TokioRwLock;
 extern crate core_affinity;
@@ -64,7 +65,7 @@ pub struct CefiService {
     sender_market_change_event: Option<SyncSender<MarcketChange>>,
     sender_order_event: Option<SyncSender<TradeExecutionUpdate>>, // send order update event
     sender_wu_event: Option<SyncSender<WalletSnapshot>>,
-    bitfinex_sockets: BTreeMap<String, Arc<RwLock<WebSockets>>>, // (pair, (socket))
+    bitfinex_sockets: BTreeMap<String, Arc<TokioRwLock<BitfinexWebSocketsAsync>>>, // (pair, (socket))
     binance_sockets: BTreeMap<String, Arc<TokioRwLock<BinanceWebSocketClient>>>, // (pair, (socket))
 }
 
@@ -104,40 +105,36 @@ impl CefiService {
                     );
 
                     let (mut socket_reader, mut socket_reader_backhand) =
-                        WebSockets::new(Box::new(handler_reader));
+                        BitfinexWebSocketsAsync::new(Box::new(handler_reader)).await;
 
-                    (socket_reader).auth(
-                        ak.api_key.to_string(),
-                        ak.api_secret.to_string(),
-                        false,
-                        &[],
-                    ); // check error
-                    (socket_reader).conf();
-                    (socket_reader).subscribe_books(
-                        get_bitfinex_trade_symbol(base, quote),
-                        EventType::Trading,
-                        P0,
-                        "F0",
-                        100,
-                    );
+                    (socket_reader)
+                        .auth(ak.api_key.to_string(), ak.api_secret.to_string(), false, &[])
+                        .await; // check error
+                    (socket_reader).conf().await;
+                    (socket_reader)
+                        .subscribe_books(
+                            get_bitfinex_trade_symbol(base, quote),
+                            EventType::Trading,
+                            P0,
+                            "F0",
+                            100,
+                        )
+                        .await;
 
                     {
-                        std::thread::spawn(move || {
-                            let success = core_affinity::set_for_current(CORE_IDS[1]);
-                            if !success {
-                                warn!("bind core failure");
-                            }
-                            socket_reader_backhand.event_loop().unwrap();
+                        tokio::spawn(async move {
+                            socket_reader_backhand.event_loop().await;
                         });
                     }
 
                     self.bitfinex_sockets
-                        .insert(pair.to_owned(), Arc::new(RwLock::new(socket_reader)));
+                        .insert(pair.to_owned(), Arc::new(TokioRwLock::new(socket_reader)));
                 }
             }
             CexExchange::BINANCE => {
                 if !self.binance_sockets.contains_key(&pair) {
-                    let _sender_market_change_event_reader = self.sender_market_change_event.clone();
+                    let _sender_market_change_event_reader =
+                        self.sender_market_change_event.clone();
                     let _sender_wu_event_reader = self.sender_wu_event.clone();
                     let _sender_order_event_reader = self.sender_order_event.clone();
                     let handler_reader = BinanceEventHandlerImpl::new(
@@ -146,14 +143,8 @@ impl CefiService {
                         // sender_order_event_reader,
                     );
 
-                    let credential = self
-                        .config
-                        .as_ref()
-                        .unwrap()
-                        .keys
-                        .as_ref()
-                        .unwrap()
-                        .get(&cex).cloned();
+                    let credential =
+                        self.config.as_ref().unwrap().keys.as_ref().unwrap().get(&cex).cloned();
 
                     let (mut socket_client, mut socket_reader_backhand) =
                         BinanceWebSocketClient::new(credential, Box::new(handler_reader)).await;
@@ -191,14 +182,8 @@ impl CefiService {
                 let symbol = get_cex_pair(cex, base, quote);
                 if self.bitfinex_sockets.contains_key(&pair) {
                     let socket_reader = self.bitfinex_sockets.get(&pair).unwrap();
-                    let mut _g_ret = socket_reader.write();
-                    match _g_ret {
-                        Ok(mut _g) => (_g).submit_order(client_order_id, symbol, amount),
-                        Err(_e) => {
-                            error!("error in acquire write lock");
-                            std::process::exit(1);
-                        }
-                    }
+                    let mut _g = socket_reader.write().await;
+                    (_g).submit_order(client_order_id, symbol, amount).await;
                 }
             }
             CexExchange::BINANCE => {
@@ -212,7 +197,12 @@ impl CefiService {
         }
     }
 
-    pub fn get_spread(&self, cex: CexExchange, base: Asset, quote: Asset) -> Option<CurrentSpread> {
+    pub async fn get_spread(
+        &self,
+        cex: CexExchange,
+        base: Asset,
+        quote: Asset,
+    ) -> Option<CurrentSpread> {
         let pair = get_pair(base, quote);
         let mut best_ask = Decimal::default();
         let mut best_bid = Decimal::default();
@@ -221,41 +211,21 @@ impl CefiService {
                 if self.bitfinex_sockets.contains_key(&pair) {
                     let web_socket = self.bitfinex_sockets.get(&pair);
                     if let Some(socket_reader) = web_socket {
-                        let socket_reader_ret = socket_reader.read();
-                        match socket_reader_ret {
-                            Ok(_g) => {
-                                if let Some(ref handler) = (_g).event_handler {
-                                    let _g_ret = handler.read();
-                                    match _g_ret {
-                                        Ok(_g) => {
-                                            let btf_handler = (_g.as_any())
-                                                .downcast_ref::<BitfinexEventHandlerImpl>();
+                        let _g = socket_reader.read().await;
+                        if let Some(ref handler) = (_g).event_handler {
+                            let _g_handler = handler.read().await;
+                            let btf_handler =
+                                (_g_handler.as_any()).downcast_ref::<BitfinexEventHandlerImpl>();
 
-                                            if let Some(btf) = btf_handler {
-                                                if let Some(ref ob) = btf.order_book {
-                                                    if let Some((_, ask_level)) =
-                                                        ob.asks.first_key_value()
-                                                    {
-                                                        best_ask = ask_level.price;
-                                                    }
-                                                    if let Some((_, bid_level)) =
-                                                        ob.bids.last_key_value()
-                                                    {
-                                                        best_bid = bid_level.price;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        Err(e) => {
-                                            error!("acquie lock error {:?}", e);
-                                            std::process::exit(1);
-                                        }
+                            if let Some(btf) = btf_handler {
+                                if let Some(ref ob) = btf.order_book {
+                                    if let Some((_, ask_level)) = ob.asks.first_key_value() {
+                                        best_ask = ask_level.price;
+                                    }
+                                    if let Some((_, bid_level)) = ob.bids.last_key_value() {
+                                        best_bid = bid_level.price;
                                     }
                                 }
-                            }
-                            Err(_e) => {
-                                error!("unable to acquire read lock");
-                                std::process::exit(1);
                             }
                         }
                     }

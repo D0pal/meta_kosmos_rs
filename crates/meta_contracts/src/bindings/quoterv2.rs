@@ -16863,7 +16863,7 @@ pub mod quoter_v2 {
         > {
             let factory = ::ethers::contract::ContractFactory::new(
                 QUOTERV2_ABI.clone(),
-                QUOTERV2_BYTECODE.clone(),
+                QUOTERV2_BYTECODE.clone().into(),
                 client,
             );
             let deployer = factory.deploy(constructor_args)?;

@@ -24503,7 +24503,7 @@ pub mod swap_router {
         > {
             let factory = ::ethers::contract::ContractFactory::new(
                 SWAPROUTER_ABI.clone(),
-                SWAPROUTER_BYTECODE.clone(),
+                SWAPROUTER_BYTECODE.clone().into(),
                 client,
             );
             let deployer = factory.deploy(constructor_args)?;

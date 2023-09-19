@@ -4844,7 +4844,7 @@ pub mod weth9 {
         > {
             let factory = ::ethers::contract::ContractFactory::new(
                 WETH9_ABI.clone(),
-                WETH9_BYTECODE.clone(),
+                WETH9_BYTECODE.clone().into(),
                 client,
             );
             let deployer = factory.deploy(constructor_args)?;
