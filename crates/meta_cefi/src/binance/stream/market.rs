@@ -26,9 +26,7 @@ impl BookTickerStream {
     }
 
     pub fn from_symbol(symbol: &str) -> Self {
-        Self {
-            symbol: Some(symbol.to_lowercase()),
-        }
+        Self { symbol: Some(symbol.to_lowercase()) }
     }
 }
 

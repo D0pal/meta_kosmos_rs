@@ -60,7 +60,7 @@ pub enum Asset {
 
     // bitfinex margin
     #[strum(ascii_case_insensitive, serialize = "USTF0")]
-    USTF0
+    USTF0,
 }
 
 impl Into<String> for Asset {

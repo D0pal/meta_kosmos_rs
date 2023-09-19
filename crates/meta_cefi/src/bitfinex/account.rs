@@ -1,5 +1,4 @@
-use crate::bitfinex::client::*;
-use crate::bitfinex::errors::*;
+use crate::bitfinex::{client::*, errors::*};
 use serde::{Deserialize, Serialize};
 use serde_json::{from_str, Value};
 use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString, EnumVariantNames};
@@ -105,8 +104,7 @@ impl Account {
         Account { client: Client::new(api_key, secret_key) }
     }
 
-
-    pub fn get_summary(&self)  {
+    pub fn get_summary(&self) {
         let payload: String = format!("{}", "{}");
         let data = self.client.post_signed("summary".into(), payload);
         // let wallets: Vec<Wallet> = from_str(data.as_str())?;

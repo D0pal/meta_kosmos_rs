@@ -23,11 +23,7 @@ pub struct HttpError<T> {
 
 impl<T> HttpError<T> {
     pub fn new(status_code: u16, data: T, headers: HashMap<String, String>) -> Self {
-        Self {
-            status_code,
-            data,
-            headers,
-        }
+        Self { status_code, data, headers }
     }
 }
 

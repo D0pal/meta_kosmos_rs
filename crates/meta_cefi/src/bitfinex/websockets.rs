@@ -15,11 +15,11 @@ use rust_decimal::Decimal;
 use serde_json::{from_str, json};
 use std::{
     net::TcpStream,
-    sync::mpsc::{self, channel, sync_channel, Receiver, Sender, TryRecvError},
-};
-use std::{
     rc::Rc,
-    sync::{Arc, RwLock},
+    sync::{
+        mpsc::{self, channel, sync_channel, Receiver, Sender, TryRecvError},
+        Arc, RwLock,
+    },
 };
 use tracing::{debug, error, info};
 use tungstenite::{
@@ -58,7 +58,6 @@ pub struct WebSockets {
     // rx: mpsc::Receiver<WsMessage>,
     pub event_handler: Option<Arc<RwLock<Box<dyn BitfinexEventHandler>>>>,
 }
-
 
 impl WebSockets {
     pub fn new(hander: Box<dyn BitfinexEventHandler>) -> (WebSockets, SocketBackhand) {
@@ -275,7 +274,6 @@ impl WebSockets {
         }
     }
 }
-
 
 unsafe impl Send for SocketBackhand {}
 unsafe impl Sync for SocketBackhand {}

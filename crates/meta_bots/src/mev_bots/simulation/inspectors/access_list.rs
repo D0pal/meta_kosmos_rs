@@ -30,11 +30,8 @@ impl AccessListInspector {
     // `AccessListInspector`: inspector that creates access list when used in a simulation
     pub fn new(from: ethers::types::Address, to: ethers::types::Address) -> Self {
         // add precompiles to addys that we ignore
-        let precompiles: Vec<rAddress> = Precompiles::latest()
-            .addresses()
-            .into_iter()
-            .map(rAddress::from)
-            .collect();
+        let precompiles: Vec<rAddress> =
+            Precompiles::latest().addresses().into_iter().map(rAddress::from).collect();
 
         let from: rAddress = from.0.into();
         let to: rAddress = to.0.into();

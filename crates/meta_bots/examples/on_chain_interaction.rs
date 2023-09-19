@@ -27,7 +27,6 @@ async fn main() {
 
     let _V3_FEE = 500;
 
-
     println!("token_info {:?}", usdc_token_info);
 
     let rpc_url = rpc_info.ws_urls.get(&rpc_provider).unwrap();

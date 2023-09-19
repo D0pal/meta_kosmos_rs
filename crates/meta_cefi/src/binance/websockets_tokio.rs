@@ -1,4 +1,3 @@
-use crate::cefi_service::AccessKey;
 use crate::{
     binance::{
         http::request::Request,
@@ -9,22 +8,22 @@ use crate::{
         },
         util::sign,
     },
-    MessageChannel,
+    cefi_service::AccessKey,
+    MessageChannel, WsBackendSenderAsync, WsMessage,
 };
-use crate::{WsBackendSenderAsync, WsMessage};
 use error_chain::bail;
-use futures_util::StreamExt;
-use futures_util::{SinkExt, TryStreamExt};
+use futures_util::{SinkExt, StreamExt, TryStreamExt};
 use meta_util::time::get_current_ts;
 use rust_decimal::Decimal;
 use serde_json::{from_str, json};
 use std::sync::Arc;
-use tokio::io::{AsyncRead, AsyncWrite};
-use tokio::net::TcpStream;
-use tokio::sync::mpsc::error::TryRecvError;
-use tokio::sync::{
-    mpsc::{channel, Receiver, Sender},
-    RwLock,
+use tokio::{
+    io::{AsyncRead, AsyncWrite},
+    net::TcpStream,
+    sync::{
+        mpsc::{channel, error::TryRecvError, Receiver, Sender},
+        RwLock,
+    },
 };
 use tokio_tungstenite::{
     connect_async,
@@ -35,13 +34,15 @@ use tracing::{debug, error, info};
 use url::Url;
 use uuid::Uuid;
 
-use super::http::Credentials;
-use super::hyper::BinanceHttpClient;
-use super::stream::user_data::{self, ListenKeyResult, UserDataStream};
-use super::websockets::{BinanceEventHandler, BinanceWebsocketEvent, Events};
 use super::{
     constants::{BINANCE_STREAM_WSS_BASE_URL, BINANCE_TRADE_WSS_URL},
-    stream::market::BookTickerStream,
+    http::Credentials,
+    hyper::BinanceHttpClient,
+    stream::{
+        market::BookTickerStream,
+        user_data::{self, ListenKeyResult, UserDataStream},
+    },
+    websockets::{BinanceEventHandler, BinanceWebsocketEvent, Events},
 };
 /// Binance websocket client using Tungstenite.
 pub struct BinanceWebSocketClient {
@@ -345,7 +346,7 @@ impl BinanceSocketBackhandAsync {
                                             println!("write to socket stream success");
                                         }
                                     }
-                                },
+                                }
                                 MessageChannel::Trade => {
                                     let ret =
                                         self.socket_trade.write_message(Message::Text(text)).await;

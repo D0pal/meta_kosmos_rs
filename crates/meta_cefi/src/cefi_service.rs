@@ -8,8 +8,9 @@ use crate::{
         common::*,
         errors::*,
         events::{DataEvent, NotificationEvent, SEQUENCE},
+        handler::BitfinexEventHandlerImpl,
         wallet::{TradeExecutionUpdate, WalletSnapshot},
-        websockets::{BitfinexEventHandler, EventType, WebSockets}, handler::BitfinexEventHandlerImpl,
+        websockets::{BitfinexEventHandler, EventType, WebSockets},
     },
     get_cex_pair,
 };
@@ -34,7 +35,6 @@ use tracing::{debug, error, info, warn};
 lazy_static! {
     pub static ref CORE_IDS: Vec<CoreId> = core_affinity::get_core_ids().unwrap();
 }
-
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct AccessKey {
@@ -133,7 +133,8 @@ impl CefiService {
                         });
                     }
 
-                    self.bitfinex_sockets.insert(pair.to_owned(), Arc::new(RwLock::new(socket_reader)));
+                    self.bitfinex_sockets
+                        .insert(pair.to_owned(), Arc::new(RwLock::new(socket_reader)));
                 }
             }
             CexExchange::BINANCE => {

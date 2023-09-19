@@ -1,11 +1,9 @@
-use crate::binance::errors::Result;
-use crate::binance::http::Signature;
+use crate::binance::{errors::Result, http::Signature};
 use base64::encode;
 use error_chain::bail;
 use hmac::{Hmac, Mac};
 use meta_address::enums::Asset;
-use rsa::pkcs1v15::SigningKey;
-use rsa::{pkcs8::DecodePrivateKey, RsaPrivateKey};
+use rsa::{pkcs1v15::SigningKey, pkcs8::DecodePrivateKey, RsaPrivateKey};
 use serde_json::Value;
 use sha2::{digest::InvalidLength, Sha256};
 use signature::RandomizedSigner;

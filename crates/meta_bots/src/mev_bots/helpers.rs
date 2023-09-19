@@ -200,11 +200,9 @@ pub fn get_amount_out_evm(
         ExecutionResult::Halt { reason, .. } => return Err(SimulationError::EvmHalted(reason)),
     };
 
-    let tokens = abi::decode(
-        &[ParamType::Uint(128), ParamType::Uint(128), ParamType::Uint(32)],
-        &output,
-    )
-    .unwrap();
+    let tokens =
+        abi::decode(&[ParamType::Uint(128), ParamType::Uint(128), ParamType::Uint(32)], &output)
+            .unwrap();
 
     let reserves_0 = tokens[0].clone().into_uint().unwrap();
     let reserves_1 = tokens[1].clone().into_uint().unwrap();

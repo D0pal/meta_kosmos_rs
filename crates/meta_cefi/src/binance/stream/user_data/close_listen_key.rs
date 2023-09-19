@@ -22,10 +22,7 @@ pub struct CloseListenKey {
 
 impl CloseListenKey {
     pub fn new(listen_key: &str) -> Self {
-        Self {
-            listen_key: listen_key.to_owned(),
-            credentials: None,
-        }
+        Self { listen_key: listen_key.to_owned(), credentials: None }
     }
 
     pub fn credentials(mut self, credentials: &Credentials) -> Self {
@@ -61,9 +58,7 @@ mod tests {
     fn stream_close_listen_key_convert_to_request_test() {
         let credentials = Credentials::from_hmac(API_KEY.to_owned(), API_SECRET.to_owned());
 
-        let request: Request = CloseListenKey::new("listen-key")
-            .credentials(&credentials)
-            .into();
+        let request: Request = CloseListenKey::new("listen-key").credentials(&credentials).into();
 
         assert_eq!(
             request,

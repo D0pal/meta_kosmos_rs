@@ -47,7 +47,6 @@ async fn main() {
     let dex_service = DexService::new(wallet.clone(), network, dex);
     // println!("dex_service.factory_creation_block {:?}", dex_service.factory_creation_block);
 
-
     let ret = dex_service
         .submit_order(
             arb_token_info,

@@ -123,7 +123,6 @@ pub fn uni_v3_tick_map_slots(tick: i32, tick_spacing: i32) -> H256 {
     let (word_pos, _bit_pos) = position(compressed);
     // let (word_pos, bit_pos) = position(compressed+1);
 
-    
     H256::from(ethers::utils::keccak256(abi::encode(&[
         abi::Token::Int(U256::from(word_pos)),
         abi::Token::Uint(U256::from(6)), // 6nd storage, mapping(int16 => uint256) public override tickBitmap;

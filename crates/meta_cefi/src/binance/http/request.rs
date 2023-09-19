@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap};
+use std::collections::BTreeMap;
 
 use serde_json::Value;
 
@@ -33,7 +33,7 @@ impl Request {
 
     pub fn get_payload_to_sign(&self) -> String {
         let mut serializer = url::form_urlencoded::Serializer::new(String::new());
-    
+
         let iter = self.params.iter();
         for (key, val) in iter {
             serializer.append_pair(key, val);
@@ -72,11 +72,8 @@ impl RequestBuilder {
     /// share the same key, and will result in a query string with one or
     /// more duplicated query parameter keys.
     pub fn params<'a>(mut self, params: impl IntoIterator<Item = (&'a str, &'a str)>) -> Self {
-        self.params.extend(
-            params
-                .into_iter()
-                .map(|param| (param.0.to_owned(), param.1.to_owned())),
-        );
+        self.params
+            .extend(params.into_iter().map(|param| (param.0.to_owned(), param.1.to_owned())));
 
         self
     }

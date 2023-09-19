@@ -1,15 +1,13 @@
 use error_chain::bail;
 
-use crate::binance::api::Spot;
-use crate::binance::api::API;
-use crate::binance::client::Client;
-use crate::binance::errors::Result;
-use crate::binance::model::{
-    AccountInformation, Balance, Empty, Order, OrderCanceled, TradeHistory, Transaction,
+use crate::binance::{
+    api::{Spot, API},
+    client::Client,
+    errors::Result,
+    model::{AccountInformation, Balance, Empty, Order, OrderCanceled, TradeHistory, Transaction},
+    util::build_signed_request,
 };
-use crate::binance::util::build_signed_request;
-use std::collections::BTreeMap;
-use std::fmt::Display;
+use std::{collections::BTreeMap, fmt::Display};
 
 #[derive(Clone)]
 pub struct Account {

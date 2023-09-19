@@ -2,7 +2,7 @@ use ethers::prelude::*;
 
 use revm::interpreter::OpCode;
 use std::collections::HashMap;
-use tracing::{error};
+use tracing::error;
 
 use super::{OptimalRecipe, LARK_WEBHOOK};
 

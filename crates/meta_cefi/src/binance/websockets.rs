@@ -17,9 +17,6 @@ use crate::{
     cefi_service::AccessKey,
     WsBackendSender, WsMessage,
 };
-use std::sync::mpsc::{
-    channel, Receiver, Sender, TryRecvError,
-};
 use error_chain::bail;
 use meta_util::time::get_current_ts;
 use rust_decimal::Decimal;
@@ -29,6 +26,7 @@ use std::{
     net::TcpStream,
     sync::{
         atomic::{AtomicBool, Ordering},
+        mpsc::{channel, Receiver, Sender, TryRecvError},
         Arc, RwLock,
     },
 };
@@ -186,7 +184,8 @@ impl BinanceWebSockets {
 
             println!("order to send {:?}", msg.to_string());
 
-            if let Err(error_msg) = self.sender.send(crate::MessageChannel::Trade, &msg.to_string()) {
+            if let Err(error_msg) = self.sender.send(crate::MessageChannel::Trade, &msg.to_string())
+            {
                 error!("submit_order error: {:?}", error_msg);
             }
         }

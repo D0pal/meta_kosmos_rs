@@ -1,5 +1,7 @@
-use crate::binance::http::error::{BinanceApiError, ClientError, HttpError};
-use crate::binance::hyper::Error;
+use crate::binance::{
+    http::error::{BinanceApiError, ClientError, HttpError},
+    hyper::Error,
+};
 use hyper::Body;
 use std::collections::HashMap;
 
@@ -14,18 +16,15 @@ impl Response {
         let status = self.inner_response.status().as_u16();
         if 400 <= status {
             let headers: HashMap<String, String> =
-                self.inner_response
-                    .headers()
-                    .iter()
-                    .fold(HashMap::new(), |mut headers, (k, v)| {
-                        headers.entry(k.as_str().to_owned()).or_insert_with(|| {
-                            // Assume all Binance response headers can convert to String.
-                            v.to_str()
-                                .expect("Failed to convert response header value to string")
-                                .to_owned()
-                        });
-                        headers
+                self.inner_response.headers().iter().fold(HashMap::new(), |mut headers, (k, v)| {
+                    headers.entry(k.as_str().to_owned()).or_insert_with(|| {
+                        // Assume all Binance response headers can convert to String.
+                        v.to_str()
+                            .expect("Failed to convert response header value to string")
+                            .to_owned()
                     });
+                    headers
+                });
 
             let content = hyper_body_to_string(self.inner_response.into_body()).await?;
             if 500 <= status {
@@ -46,9 +45,7 @@ impl Response {
 
 impl From<hyper::Response<Body>> for Response {
     fn from(response: hyper::Response<Body>) -> Response {
-        Response {
-            inner_response: response,
-        }
+        Response { inner_response: response }
     }
 }
 
@@ -60,9 +57,7 @@ impl From<Response> for hyper::Response<Body> {
 
 async fn hyper_body_to_string(body: Body) -> Result<String, Error> {
     // Assume all Binance responses are of a reasonable size.
-    let body = hyper::body::to_bytes(body)
-        .await
-        .expect("Failed to collect response body.");
+    let body = hyper::body::to_bytes(body).await.expect("Failed to collect response body.");
 
     // Assume all Binance responses are in UTF-8.
     let content = String::from_utf8(body.to_vec()).expect("Response failed UTF-8 encoding.");

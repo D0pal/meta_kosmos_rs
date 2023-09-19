@@ -1,7 +1,12 @@
-use crate::binance::http::{request::Request, Credentials, Method};
-use crate::binance::hyper::{Error, Response};
-use crate::binance::VERSION;
-use hyper::{client::connect::Connect, client::HttpConnector, Body, Client, Uri};
+use crate::binance::{
+    http::{request::Request, Credentials, Method},
+    hyper::{Error, Response},
+    VERSION,
+};
+use hyper::{
+    client::{connect::Connect, HttpConnector},
+    Body, Client, Uri,
+};
 use hyper_tls::HttpsConnector;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -21,12 +26,7 @@ where
     T: Connect + Clone + Send + Sync + 'static,
 {
     pub fn new(client: Client<T, Body>, base_url: &str) -> Self {
-        Self {
-            client,
-            base_url: base_url.to_owned(),
-            timestamp_delta: 0,
-            credentials: None,
-        }
+        Self { client, base_url: base_url.to_owned(), timestamp_delta: 0, credentials: None }
     }
 
     pub fn credentials(mut self, credentials: Credentials) -> Self {
@@ -109,14 +109,8 @@ where
         let uri: Uri = url_parts.join("").parse()?;
         // log::debug!("{}", uri);
         let hyper_request = hyper_request.uri(uri);
-        let request = hyper_request
-            .body(Body::empty())
-            .map_err(|err| Error::Parse(err))?;
-        let response = self
-            .client
-            .request(request)
-            .await
-            .map_err(|err| Error::Send(err))?;
+        let request = hyper_request.body(Body::empty()).map_err(|err| Error::Parse(err))?;
+        let response = self.client.request(request).await.map_err(|err| Error::Send(err))?;
         // log::debug!("{}", response.status());
 
         Ok(Response::from(response))
@@ -146,17 +140,19 @@ impl From<Method> for hyper::Method {
 #[cfg(test)]
 mod tests {
     use super::BinanceHttpClient;
-    use crate::binance::http::{error::ClientError, request::Request, Credentials, Method};
-    use crate::binance::hyper::Error;
-    use hyper::client::connect::Connected;
-    use hyper::{Client, Uri};
-    use std::collections::{HashMap, BTreeMap};
-    use std::future::Future;
-    use std::pin::Pin;
-    use std::str;
-    use std::task::{Context, Poll, Waker};
-    use tokio::io::Error as IoError;
-    use tokio::io::ReadBuf;
+    use crate::binance::{
+        http::{error::ClientError, request::Request, Credentials, Method},
+        hyper::Error,
+    };
+    use hyper::{client::connect::Connected, Client, Uri};
+    use std::{
+        collections::{BTreeMap, HashMap},
+        future::Future,
+        pin::Pin,
+        str,
+        task::{Context, Poll, Waker},
+    };
+    use tokio::io::{Error as IoError, ReadBuf};
 
     #[tokio::test]
     async fn client_respects_request_basic_configuration_test() {
@@ -170,7 +166,6 @@ mod tests {
         );
         let client = BinanceHttpClient::new(client, "https://base-url.com");
 
-        
         let request = Request {
             method: Method::Get,
             path: "/path".to_owned(),
@@ -179,13 +174,7 @@ mod tests {
             sign: false,
         };
 
-        let data = client
-            .send(request)
-            .await
-            .unwrap()
-            .into_body_str()
-            .await
-            .unwrap();
+        let data = client.send(request).await.unwrap().into_body_str().await.unwrap();
 
         assert_eq!(data, "Test Response".to_owned());
     }
@@ -210,13 +199,7 @@ mod tests {
             sign: false,
         };
 
-        let data = client
-            .send(request)
-            .await
-            .unwrap()
-            .into_body_str()
-            .await
-            .unwrap();
+        let data = client.send(request).await.unwrap().into_body_str().await.unwrap();
 
         assert_eq!(data, "Test Response".to_owned());
     }
@@ -243,13 +226,7 @@ mod tests {
             sign: true,
         };
 
-        let data = client
-            .send(request)
-            .await
-            .unwrap()
-            .into_body_str()
-            .await
-            .unwrap();
+        let data = client.send(request).await.unwrap().into_body_str().await.unwrap();
 
         assert_eq!(data, "Test Response".to_owned());
     }
@@ -267,13 +244,7 @@ mod tests {
             sign: false,
         };
 
-        let err = client
-            .send(request)
-            .await
-            .unwrap()
-            .into_body_str()
-            .await
-            .unwrap_err();
+        let err = client.send(request).await.unwrap().into_body_str().await.unwrap_err();
 
         match err {
             Error::Client(ClientError::Raw(err)) => assert_eq!(err.status_code, 404),
@@ -297,13 +268,7 @@ mod tests {
             sign: false,
         };
 
-        let err = client
-            .send(request)
-            .await
-            .unwrap()
-            .into_body_str()
-            .await
-            .unwrap_err();
+        let err = client.send(request).await.unwrap().into_body_str().await.unwrap_err();
 
         match err {
             Error::Client(ClientError::Structured(err)) => assert_eq!(err.status_code, 400),
@@ -324,13 +289,7 @@ mod tests {
             sign: false,
         };
 
-        let err = client
-            .send(request)
-            .await
-            .unwrap()
-            .into_body_str()
-            .await
-            .unwrap_err();
+        let err = client.send(request).await.unwrap().into_body_str().await.unwrap_err();
 
         match err {
             Error::Client(ClientError::Raw(err)) => assert_eq!(err.status_code, 400),
@@ -351,13 +310,7 @@ mod tests {
             sign: false,
         };
 
-        let err = client
-            .send(request)
-            .await
-            .unwrap()
-            .into_body_str()
-            .await
-            .unwrap_err();
+        let err = client.send(request).await.unwrap().into_body_str().await.unwrap_err();
 
         match err {
             Error::Server(err) => assert_eq!(err.status_code, 500),
@@ -395,8 +348,7 @@ mod tests {
         }
 
         pub fn param(mut self, name: &str, value: Option<&str>) -> Self {
-            self.params
-                .push((name.to_string(), value.map(|v| v.to_owned())));
+            self.params.push((name.to_string(), value.map(|v| v.to_owned())));
             self
         }
 
@@ -411,8 +363,7 @@ mod tests {
         }
 
         pub fn header(mut self, name: &str, value: Option<&str>) -> Self {
-            self.headers
-                .insert(name.to_string(), value.map(|v| v.to_owned()));
+            self.headers.insert(name.to_string(), value.map(|v| v.to_owned()));
             self
         }
 
@@ -462,11 +413,8 @@ mod tests {
         fn has_header(msg: &str, name: &str, value: &Option<String>) -> bool {
             let n = msg.find("\r\n\r\n").unwrap_or(msg.len());
 
-            let expected_header = format!(
-                "{}: {}",
-                name.to_lowercase(),
-                value.clone().unwrap_or_default()
-            );
+            let expected_header =
+                format!("{}: {}", name.to_lowercase(), value.clone().unwrap_or_default());
             msg[..n].contains(&expected_header)
         }
     }

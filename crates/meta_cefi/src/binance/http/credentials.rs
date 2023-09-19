@@ -7,7 +7,6 @@
 /// interchangeable.
 ///
 /// [API Documentation](https://binance-docs.github.io/apidocs/spot/en/#api-key-restrictions)
-
 use serde::Serialize;
 #[derive(PartialEq, Eq, Clone, Serialize)]
 pub struct Credentials {
@@ -37,10 +36,7 @@ impl Credentials {
     pub fn from_rsa(api_key: impl Into<String>, key: impl Into<String>) -> Self {
         Credentials {
             api_key: api_key.into(),
-            signature: Signature::Rsa(RsaSignature {
-                key: key.into(),
-                password: None,
-            }),
+            signature: Signature::Rsa(RsaSignature { key: key.into(), password: None }),
         }
     }
     pub fn from_rsa_protected(
@@ -59,17 +55,13 @@ impl Credentials {
     pub fn from_hmac(api_key: impl Into<String>, api_secret: impl Into<String>) -> Self {
         Credentials {
             api_key: api_key.into(),
-            signature: Signature::Hmac(HmacSignature {
-                api_secret: api_secret.into(),
-            }),
+            signature: Signature::Hmac(HmacSignature { api_secret: api_secret.into() }),
         }
     }
 }
 
 impl std::fmt::Debug for Credentials {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Credentials")
-            .field("api_key", &"[redacted]")
-            .finish()
+        f.debug_struct("Credentials").field("api_key", &"[redacted]").finish()
     }
 }

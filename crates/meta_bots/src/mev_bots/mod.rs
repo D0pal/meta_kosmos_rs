@@ -15,9 +15,7 @@ use meta_common::constants::address_from_str;
 
 use ethers::{prelude::*, types::U256, utils::parse_ether};
 use lazy_static::lazy_static;
-use revm::{
-    primitives::{Address as rAddress},
-};
+use revm::primitives::Address as rAddress;
 use std::str::FromStr;
 lazy_static! {
     pub static ref LARK_WEBHOOK: String = "".to_string();

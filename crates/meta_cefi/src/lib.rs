@@ -13,7 +13,7 @@ use tokio::sync::mpsc::Sender as TokioSender;
 #[derive(Debug, Clone)]
 pub enum MessageChannel {
     Stream, // subscribe order book
-    Trade,     // submit order
+    Trade,  // submit order
 }
 
 #[derive(Debug, Clone)]

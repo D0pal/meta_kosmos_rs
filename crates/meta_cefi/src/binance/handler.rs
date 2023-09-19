@@ -1,7 +1,7 @@
 use super::websockets::{BinanceEventHandler, BinanceWebsocketEvent};
 
-unsafe impl Send for BinanceEventHandlerImpl{}
-unsafe impl Sync for BinanceEventHandlerImpl{}
+unsafe impl Send for BinanceEventHandlerImpl {}
+unsafe impl Sync for BinanceEventHandlerImpl {}
 
 #[derive(Clone, Debug)]
 pub struct BinanceEventHandlerImpl {

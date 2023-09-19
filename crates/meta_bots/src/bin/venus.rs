@@ -21,9 +21,9 @@ use meta_common::{
     enums::{CexExchange, ContractType, DexExchange, Network},
     models::{CurrentSpread, MarcketChange},
 };
-use meta_contracts::bindings::uniswap_v3_pool::SwapFilter;
 use meta_contracts::bindings::{
-    quoter_v2::QuoterV2, QuoteExactInputSingleParams, QuoteExactOutputSingleParams,
+    quoter_v2::QuoterV2, uniswap_v3_pool::SwapFilter, QuoteExactInputSingleParams,
+    QuoteExactOutputSingleParams,
 };
 use meta_dex::DexService;
 use meta_integration::Lark;
@@ -292,8 +292,6 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                         );
                     }
 
-                
-
                     let (last_dex_sell_price, last_dex_buy_price) = (
                         Arc::new(RwLock::new(Decimal::ZERO)),
                         Arc::new(RwLock::new(Decimal::ZERO)),
@@ -487,9 +485,8 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                         config.base_asset,
                                         config.quote_asset,
                                     )
-                                
                                 };
-                                    
+
                                 match ret {
                                     Some(cex_spread) => {
                                         (cex_bid, cex_ask, dex_bid, dex_ask) = (
@@ -580,10 +577,9 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                             }
                         }
                     }
-                },
-                CexExchange::BINANCE => unimplemented!()
+                }
+                CexExchange::BINANCE => unimplemented!(),
             }
-            
         }
         _ => {
             todo!()
@@ -640,7 +636,7 @@ async fn try_arbitrage<'a, M: Middleware + 'static>(
     {
         let mut _cex = cefi_service_ptr.write().await;
         match instruction.cex.venue {
-            CexExchange::BITFINEX =>  {
+            CexExchange::BITFINEX => {
                 (_cex).submit_order(
                     client_order_id,
                     CexExchange::BITFINEX,
@@ -648,12 +644,11 @@ async fn try_arbitrage<'a, M: Middleware + 'static>(
                     instruction.cex.quote_asset,
                     instruction.cex.amount,
                 );
-            },
+            }
             _ => unimplemented!(),
         }
         info!("end send cex trade");
     }
-
 
     match instruction.dex.venue {
         DexExchange::UniswapV3 => {

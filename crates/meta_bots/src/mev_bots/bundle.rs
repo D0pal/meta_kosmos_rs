@@ -1,19 +1,12 @@
-
 use ethers::prelude::{rand::Rng, *};
 use hashbrown::HashMap;
-use meta_common::enums::{PoolVariant};
-use std::{sync::Arc};
+use meta_common::enums::PoolVariant;
+use std::sync::Arc;
 use tokio::sync::RwLock;
-
 
 use meta_dex::{oracle::BlockInfo, pool::Pool, sandwidth::SandwichMaker};
 
-use crate::{
-    mev_bots::{
-        sandwidth::BotState,
-        types::{OptimalRecipe},
-    },
-};
+use crate::mev_bots::{sandwidth::BotState, types::OptimalRecipe};
 
 use super::{crypto::sign_eip1559, SendBundleError};
 

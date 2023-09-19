@@ -2,7 +2,6 @@ use meta_address::enums::Asset;
 use meta_common::enums::Network;
 use rust_decimal::Decimal;
 
-
 #[derive(Debug, Default)]
 pub struct ArbitrageOutcome {
     pub base_amount: Decimal,

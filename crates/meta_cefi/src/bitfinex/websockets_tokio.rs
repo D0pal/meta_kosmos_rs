@@ -1,9 +1,10 @@
-use super::events::{DataEvent, NotificationEvent};
-use super::websockets::{
-    BitfinexEventHandler, EventType, AUTH, CONF, DEAD_MAN_SWITCH_FLAG, INFO, SUBSCRIBED,
-    WEBSOCKET_URL,
+use super::{
+    events::{DataEvent, NotificationEvent},
+    websockets::{
+        BitfinexEventHandler, EventType, AUTH, CONF, DEAD_MAN_SWITCH_FLAG, INFO, SUBSCRIBED,
+        WEBSOCKET_URL,
+    },
 };
-use crate::WsBackendSenderAsync;
 use crate::{
     bitfinex::{
         auth,
@@ -12,10 +13,9 @@ use crate::{
         events::*,
         orders::OrderType,
     },
-    WsBackendSender, WsMessage,
+    WsBackendSender, WsBackendSenderAsync, WsMessage,
 };
-use futures_util::StreamExt;
-use futures_util::{SinkExt, TryStreamExt};
+use futures_util::{SinkExt, StreamExt, TryStreamExt};
 use meta_util::time::get_current_ts;
 use rust_decimal::Decimal;
 use serde_json::{from_str, json};
@@ -363,7 +363,7 @@ impl BitfinexSocketBackhandAsync {
                                     }
                                     Err(e) => {
                                         warn!("err {:?}", e);
-                                    },
+                                    }
                                 }
                             }
                         }

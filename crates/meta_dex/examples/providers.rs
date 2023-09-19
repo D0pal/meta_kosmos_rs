@@ -33,6 +33,12 @@ async fn main() {
     let provider_ws = provider_ws.interval(Duration::from_millis(200));
     let provider_ws = Arc::new(provider_ws);
 
-    let receipt = provider_ws.get_transaction_receipt(tx_hash_from_str("0x0d23c9ba5ff75f9200995bf795a9fe424d8a498e43af5e6794359aeceab91af2")).await.unwrap().unwrap();
+    let receipt = provider_ws
+        .get_transaction_receipt(tx_hash_from_str(
+            "0x0d23c9ba5ff75f9200995bf795a9fe424d8a498e43af5e6794359aeceab91af2",
+        ))
+        .await
+        .unwrap()
+        .unwrap();
     println!("receipt: {:?}", receipt.status);
 }

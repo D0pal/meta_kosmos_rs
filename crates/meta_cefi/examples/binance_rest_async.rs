@@ -1,18 +1,22 @@
 #![allow(dead_code)]
 
 use anyhow;
-use hyper::{client::connect::Connect, client::HttpConnector, Body, Client, Uri};
-use meta_cefi::binance::http::Credentials;
-use meta_cefi::binance::hyper::BinanceHttpClient;
-use meta_cefi::binance::{account::Account, api::Binance, websockets::*};
+use hyper::{
+    client::{connect::Connect, HttpConnector},
+    Body, Client, Uri,
+};
 use meta_cefi::binance::{
-    http::request::Request,
+    account::Account,
+    api::Binance,
+    http::{request::Request, Credentials},
+    hyper::BinanceHttpClient,
     stream::user_data,
     trade::{
         self,
         order::{Side, TimeInForce},
     },
     util::sign,
+    websockets::*,
 };
 use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize)]
@@ -44,7 +48,6 @@ where
     let request =
         trade::get_order::GetOrder::new("ETHUSDT").orig_client_order_id(orig_client_order_id);
     let data = client.send(request).await.unwrap().into_body_str().await.unwrap();
-
 }
 
 async fn new_listen_key<T>(client: &BinanceHttpClient<T>)

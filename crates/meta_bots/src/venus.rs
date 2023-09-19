@@ -162,7 +162,8 @@ pub async fn notify_arbitrage_result(
                     .exec_price
                     .saturating_mul(cex_outcome.base_amount)
                     .saturating_mul(Decimal::NEGATIVE_ONE);
-                cex_outcome.fee_token = cex_currency_to_asset(cex_trade_info.venue, &info.fee_currency.unwrap()) ;
+                cex_outcome.fee_token =
+                    cex_currency_to_asset(cex_trade_info.venue, &info.fee_currency.unwrap());
                 cex_outcome.fee_amount = info.fee.unwrap();
                 cex_outcome.id = cid.to_string();
             }

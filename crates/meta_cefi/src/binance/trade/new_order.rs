@@ -1,7 +1,9 @@
 use std::collections::BTreeMap;
 
-use crate::binance::http::{request::Request, Credentials, Method};
-use crate::binance::trade::order::{NewOrderResponseType, Side, TimeInForce};
+use crate::binance::{
+    http::{request::Request, Credentials, Method},
+    trade::order::{NewOrderResponseType, Side, TimeInForce},
+};
 use meta_util::time::get_current_ts;
 use rust_decimal::Decimal;
 use serde::Serialize;
@@ -252,29 +254,29 @@ mod tests {
     //     .credentials(&credentials)
     //     .into();
 
-        // assert_eq!(
-        //     request,
-        //     Request {
-        //         path: "/api/v3/order".to_owned(),
-        //         credentials: Some(credentials),
-        //         method: Method::Post,
-        //         params: vec![
-        //             ("symbol".to_owned(), "BNBUSDT".to_string()),
-        //             ("side".to_owned(), "SELL".to_string()),
-        //             ("type".to_owned(), "MARKET".to_string()),
-        //             ("timeInForce".to_owned(), "GTC".to_string()),
-        //             ("quantity".to_owned(), "10.1".to_string()),
-        //             ("quoteOrderQty".to_owned(), "10.1".to_string()),
-        //             ("price".to_owned(), "10.1".to_string()),
-        //             ("newClientOrderId".to_owned(), "Test".to_string()),
-        //             ("stopPrice".to_owned(), "10.1".to_string()),
-        //             ("trailingDelta".to_owned(), "100".to_string()),
-        //             ("icebergQty".to_owned(), "10.1".to_string()),
-        //             ("newOrderRespType".to_owned(), "ACK".to_string()),
-        //             ("recvWindow".to_owned(), "5000".to_string()),
-        //         ],
-        //         sign: true
-        //     }
-        // );
+    // assert_eq!(
+    //     request,
+    //     Request {
+    //         path: "/api/v3/order".to_owned(),
+    //         credentials: Some(credentials),
+    //         method: Method::Post,
+    //         params: vec![
+    //             ("symbol".to_owned(), "BNBUSDT".to_string()),
+    //             ("side".to_owned(), "SELL".to_string()),
+    //             ("type".to_owned(), "MARKET".to_string()),
+    //             ("timeInForce".to_owned(), "GTC".to_string()),
+    //             ("quantity".to_owned(), "10.1".to_string()),
+    //             ("quoteOrderQty".to_owned(), "10.1".to_string()),
+    //             ("price".to_owned(), "10.1".to_string()),
+    //             ("newClientOrderId".to_owned(), "Test".to_string()),
+    //             ("stopPrice".to_owned(), "10.1".to_string()),
+    //             ("trailingDelta".to_owned(), "100".to_string()),
+    //             ("icebergQty".to_owned(), "10.1".to_string()),
+    //             ("newOrderRespType".to_owned(), "ACK".to_string()),
+    //             ("recvWindow".to_owned(), "5000".to_string()),
+    //         ],
+    //         sign: true
+    //     }
+    // );
     // }
 }

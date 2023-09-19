@@ -16,17 +16,13 @@ use meta_address::{get_bot_contract_info, get_dex_address, get_rpc_info, get_tok
 use meta_bots::AppConfig;
 use meta_common::enums::{BotType, ContractType, DexExchange, Network, RpcProvider};
 use meta_contracts::{
-    bindings::{
-        flash_bots_router::{FlashBotsRouter},
-        uniswap_v2_pair::{SwapFilter},
-    },
+    bindings::{flash_bots_router::FlashBotsRouter, uniswap_v2_pair::SwapFilter},
     wrappers::{
         calculate_price_diff, get_atomic_arb_call_params, Erc20Wrapper, UniswapV2,
         UniswapV2PairWrapper,
     },
 };
 use meta_tracing::init_tracing;
-
 
 #[derive(Debug, Clone, Options)]
 struct Opts {
@@ -103,13 +99,9 @@ async fn run(opts: Opts) -> anyhow::Result<()> {
     let flashbots_router = FlashBotsRouter::new(bot_address, client.clone());
 
     let market_a_factory_addr =
-        get_dex_address(opts.dex_a, opts.network, ContractType::UniV2Factory)
-            .unwrap()
-            .address;
+        get_dex_address(opts.dex_a, opts.network, ContractType::UniV2Factory).unwrap().address;
     let market_a_swap_router_addr =
-        get_dex_address(opts.dex_a, opts.network, ContractType::UniV2RouterV2)
-            .unwrap()
-            .address;
+        get_dex_address(opts.dex_a, opts.network, ContractType::UniV2RouterV2).unwrap().address;
 
     let market_a = UniswapV2::new(
         opts.network,
@@ -120,13 +112,9 @@ async fn run(opts: Opts) -> anyhow::Result<()> {
     );
 
     let market_b_factory_addr =
-        get_dex_address(opts.dex_b, opts.network, ContractType::UniV2Factory)
-            .unwrap()
-            .address;
+        get_dex_address(opts.dex_b, opts.network, ContractType::UniV2Factory).unwrap().address;
     let market_b_swap_router_addr =
-        get_dex_address(opts.dex_b, opts.network, ContractType::UniV2RouterV2)
-            .unwrap()
-            .address;
+        get_dex_address(opts.dex_b, opts.network, ContractType::UniV2RouterV2).unwrap().address;
     let biswap = UniswapV2::new(
         opts.network,
         opts.dex_b,

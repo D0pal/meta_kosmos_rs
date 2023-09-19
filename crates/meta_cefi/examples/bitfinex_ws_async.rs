@@ -1,26 +1,31 @@
-use futures_util::sink::SinkExt;
-use futures_util::StreamExt;
+use futures_util::{sink::SinkExt, StreamExt};
 
 use meta_address::enums::Asset;
-use meta_cefi::bitfinex::common::P0;
-use meta_cefi::bitfinex::handler::BitfinexEventHandlerImpl;
-use meta_cefi::bitfinex::wallet::{TradeExecutionUpdate, WalletSnapshot};
-use meta_cefi::bitfinex::websockets_tokio::{BitfinexSocketBackhandAsync, BitfinexWebSocketsAsync};
-use meta_cefi::cefi_service::{get_bitfinex_trade_symbol, AccessKey};
+use meta_cefi::{
+    bitfinex::{
+        common::P0,
+        handler::BitfinexEventHandlerImpl,
+        wallet::{TradeExecutionUpdate, WalletSnapshot},
+        websockets_tokio::{BitfinexSocketBackhandAsync, BitfinexWebSocketsAsync},
+    },
+    cefi_service::{get_bitfinex_trade_symbol, AccessKey},
+};
 use meta_common::models::MarcketChange;
 use meta_tracing::{init_tracing, TraceConfig};
 use meta_util::time::get_current_ts;
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION};
 use ring::{hmac, rand};
-use rust_decimal::prelude::FromPrimitive;
-use rust_decimal::Decimal;
+use rust_decimal::{prelude::FromPrimitive, Decimal};
 use rust_decimal_macros::dec;
 use serde_json::json;
-use std::sync::mpsc::{sync_channel, SyncSender};
-use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
-use tokio::sync::RwLock;
-use tokio::time::Duration;
+use std::{
+    sync::{
+        mpsc::{sync_channel, SyncSender},
+        Arc,
+    },
+    time::{SystemTime, UNIX_EPOCH},
+};
+use tokio::{sync::RwLock, time::Duration};
 use tracing::{debug, Level};
 use tungstenite::{
     connect, handshake::client::Response, protocol::WebSocket, stream::MaybeTlsStream, Message,

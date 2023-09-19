@@ -1,31 +1,31 @@
-use futures_util::sink::SinkExt;
-use futures_util::StreamExt;
-use meta_cefi::binance::handler::BinanceEventHandlerImpl;
-use meta_cefi::binance::http::Credentials;
-use meta_cefi::binance::websockets_tokio::BinanceWebSocketClient;
-use meta_cefi::binance::{
-    constants::BINANCE_STREAM_WSS_BASE_URL,
-    http::request::Request,
-    stream::{market::BookTickerStream, user_data::UserDataStream},
-    trade::{
-        self,
-        order::{Side, TimeInForce},
+use futures_util::{sink::SinkExt, StreamExt};
+use meta_cefi::{
+    binance::{
+        constants::BINANCE_STREAM_WSS_BASE_URL,
+        handler::BinanceEventHandlerImpl,
+        http::{request::Request, Credentials},
+        stream::{market::BookTickerStream, user_data::UserDataStream},
+        trade::{
+            self,
+            order::{Side, TimeInForce},
+        },
+        util::sign,
+        websockets_tokio::BinanceWebSocketClient,
     },
-    util::sign,
+    cefi_service::AccessKey,
 };
-use meta_cefi::cefi_service::AccessKey;
 use meta_tracing::{init_tracing, TraceConfig};
 use meta_util::time::get_current_ts;
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION};
 use ring::{hmac, rand};
-use rust_decimal::prelude::FromPrimitive;
-use rust_decimal::Decimal;
+use rust_decimal::{prelude::FromPrimitive, Decimal};
 use rust_decimal_macros::dec;
 use serde_json::json;
-use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
-use tokio::sync::RwLock;
-use tokio::time::Duration;
+use std::{
+    sync::Arc,
+    time::{SystemTime, UNIX_EPOCH},
+};
+use tokio::{sync::RwLock, time::Duration};
 use tracing::{debug, Level};
 use tungstenite::{
     connect, handshake::client::Response, protocol::WebSocket, stream::MaybeTlsStream, Message,

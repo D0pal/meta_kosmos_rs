@@ -1,5 +1,4 @@
-
-use std::time::{Duration};
+use std::time::Duration;
 
 #[tokio::main]
 async fn main() {

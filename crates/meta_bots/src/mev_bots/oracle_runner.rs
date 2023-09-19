@@ -3,16 +3,14 @@ use dashmap::DashMap;
 use ethers::prelude::*;
 
 use meta_dex::{
-    oracle::{BlockOracle},
+    oracle::BlockOracle,
     pool::Pool,
     // sync_dex,
     DexService,
 };
-use std::{sync::Arc};
+use std::sync::Arc;
 use tokio::sync::RwLock;
 use tracing::info;
-
-
 
 // Update latest block variable whenever we recieve a new block
 //

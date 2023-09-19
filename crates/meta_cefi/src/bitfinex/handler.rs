@@ -11,7 +11,8 @@ use crate::{
         wallet::{TradeExecutionUpdate, WalletSnapshot},
         websockets::{BitfinexEventHandler, EventType, WebSockets},
     },
-    get_cex_pair, cefi_service::{OrderBook, construct_order_book, update_order_book},
+    cefi_service::{construct_order_book, update_order_book, OrderBook},
+    get_cex_pair,
 };
 use meta_address::enums::Asset;
 use meta_common::{
@@ -21,9 +22,7 @@ use meta_common::{
 use meta_util::time::get_current_ts;
 use rust_decimal::Decimal;
 use serde::Deserialize;
-use std::{
-    sync::{mpsc::SyncSender},
-};
+use std::sync::mpsc::SyncSender;
 extern crate core_affinity;
 use tracing::{debug, error, info, warn};
 

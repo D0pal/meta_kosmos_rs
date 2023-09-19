@@ -11,8 +11,6 @@ use std::fmt;
 // use new_listen_key::NewListenKey;
 // use renew_listen_key::RenewListenKey;
 
-
-
 // pub fn renew_listen_key(listen_key: &str) -> RenewListenKey {
 //     RenewListenKey::new(listen_key)
 // }
@@ -20,7 +18,6 @@ use std::fmt;
 // pub fn close_listen_key(listen_key: &str) -> CloseListenKey {
 //     CloseListenKey::new(listen_key)
 // }
-
 
 /// Websocket stream.
 ///
@@ -32,9 +29,7 @@ pub struct Stream {
 
 impl Stream {
     pub fn new(stream_name: &str) -> Self {
-        Self {
-            stream_name: stream_name.to_owned(),
-        }
+        Self { stream_name: stream_name.to_owned() }
     }
 
     pub fn as_str(&self) -> &str {
