@@ -206,7 +206,7 @@ impl From<NewOrder> for Request {
         }
 
         Request {
-            body_json: Some(serde_json::to_value(request.clone()).unwrap()),
+            // body_json: Some(serde_json::to_value(request.clone()).unwrap()),
             path: "/api/v3/order".to_owned(),
             method: Method::Post,
             params,

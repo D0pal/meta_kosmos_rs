@@ -6,7 +6,7 @@ use crate::binance::http::{Credentials, Method};
 
 #[derive(PartialEq, Eq, Debug)]
 pub struct Request {
-    pub(crate) body_json: Option<Value>,
+    // pub(crate) body_json: Option<Value>,
     pub(crate) method: Method,
     pub(crate) path: String,
     pub(crate) params: BTreeMap<String, String>,
@@ -50,7 +50,7 @@ impl Request {
 pub struct RequestBuilder {
     method: Method,
     path: String,
-    body_json: Option<serde_json::Value>,
+    // body_json: Option<serde_json::Value>,
     params: BTreeMap<String, String>,
     credentials: Option<Credentials>,
     sign: bool,
@@ -59,7 +59,7 @@ pub struct RequestBuilder {
 impl RequestBuilder {
     pub fn new(method: Method, path: &str) -> Self {
         Self {
-            body_json: None,
+            // body_json: None,
             method,
             path: path.to_owned(),
             params: BTreeMap::new(),
@@ -97,7 +97,7 @@ impl RequestBuilder {
 impl From<RequestBuilder> for Request {
     fn from(builder: RequestBuilder) -> Request {
         Request {
-            body_json: builder.body_json,
+            // body_json: builder.body_json,
             method: builder.method,
             path: builder.path,
             params: builder.params,

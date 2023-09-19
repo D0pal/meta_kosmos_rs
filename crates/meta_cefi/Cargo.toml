@@ -19,6 +19,9 @@ reqwest.workspace=true
 tungstenite.workspace=true
 tokio-tungstenite.workspace=true
 url = "2.2.2"
+http.workspace=true
+hyper.workspace=true
+hyper-tls.workspace=true
 # data
 lazy_static.workspace=true
 hashbrown.workspace=true
@@ -42,9 +45,15 @@ signature.workspace=true
 # tracing
 tracing.workspace=true
 # error
+anyhow.workspace=true
 eyre.workspace=true
 thiserror.workspace=true
 error-chain = { version = "0.12.4", default-features = false }
 # cpu
 core_affinity.workspace=true
 crossbeam-channel.workspace=true
+
+[dev-dependencies]
+# tokio = { version = "1", features = ["full"] }
+# env_logger = "0.10.0"
+tower = "0.4.12"

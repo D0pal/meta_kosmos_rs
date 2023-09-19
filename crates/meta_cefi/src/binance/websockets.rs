@@ -39,6 +39,8 @@ use tungstenite::{
 use url::Url;
 use uuid::Uuid;
 
+use super::constants::BINANCE_TRADE_WSS_URL;
+
 unsafe impl Send for BinanceSocketBackhand {}
 unsafe impl Sync for BinanceSocketBackhand {}
 
@@ -46,8 +48,6 @@ pub trait BinanceEventHandler {
     fn on_data_event(&mut self, event: BinanceWebsocketEvent);
     fn as_any(&self) -> &dyn std::any::Any;
 }
-
-static BINANCE_WEBSOCKET_TRADE_URL: &str = "wss://ws-api.binance.com:443/ws-api/v3";
 
 #[allow(clippy::all)]
 enum WebsocketAPI {
@@ -93,7 +93,7 @@ pub struct BinanceWebSockets {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(untagged)]
-enum Events {
+pub enum Events {
     Vec(Vec<DayTickerEvent>),
     BalanceUpdateEvent(BalanceUpdateEvent),
     DayTickerEvent(DayTickerEvent),
@@ -116,7 +116,7 @@ impl BinanceWebSockets {
     ) -> (BinanceWebSockets, BinanceSocketBackhand) {
         let socket_stream = Self::subscribe(subscription).unwrap();
 
-        let wss: String = BINANCE_WEBSOCKET_TRADE_URL.to_string();
+        let wss: String = BINANCE_TRADE_WSS_URL.to_string();
         let url = Url::parse(&wss).unwrap();
 
         match connect(url) {
@@ -186,7 +186,7 @@ impl BinanceWebSockets {
 
             println!("order to send {:?}", msg.to_string());
 
-            if let Err(error_msg) = self.sender.send(&msg.to_string()) {
+            if let Err(error_msg) = self.sender.send(crate::MessageChannel::Trade, &msg.to_string()) {
                 error!("submit_order error: {:?}", error_msg);
             }
         }
@@ -244,7 +244,7 @@ impl BinanceSocketBackhand {
             loop {
                 match self.rx.try_recv() {
                     Ok(msg) => match msg {
-                        WsMessage::Text(text) => {
+                        WsMessage::Text(_, text) => {
                             println!("msg to send: {:?}", text);
                             let time = get_current_ts().as_millis();
                             info!("socket write message {:?}, time: {:?}", text, time);

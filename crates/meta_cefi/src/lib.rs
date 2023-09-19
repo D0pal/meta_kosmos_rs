@@ -7,14 +7,19 @@ pub mod cefi_service;
 pub mod util;
 
 use bitfinex::errors::*;
-use error_chain::bail;
 use std::sync::mpsc::Sender;
+use tokio::sync::mpsc::Sender as TokioSender;
 
+#[derive(Debug, Clone)]
+pub enum MessageChannel {
+    Stream, // subscribe order book
+    Trade,     // submit order
+}
 
 #[derive(Debug, Clone)]
 pub enum WsMessage {
     Close,
-    Text(String),
+    Text(MessageChannel, String),
 }
 
 #[derive(Clone)]
@@ -23,15 +28,30 @@ pub(crate) struct WsBackendSender {
 }
 
 impl WsBackendSender {
-    pub fn send(&self, raw: &str) -> Result<()> {
+    pub fn send(&self, ty: MessageChannel, raw: &str) -> Result<()> {
         self.tx
-            .send(WsMessage::Text(raw.to_string()))
+            .send(WsMessage::Text(ty, raw.to_string()))
             .map_err(|e| Error::with_chain(e, "Not able to send a message"))?;
         Ok(())
     }
 
     pub fn shutdown(&self) -> Result<()> {
         self.tx.send(WsMessage::Close).map_err(|e| Error::with_chain(e, "Error during shutdown"))
+    }
+}
+
+#[derive(Clone)]
+pub(crate) struct WsBackendSenderAsync {
+    tx: TokioSender<WsMessage>,
+}
+
+impl WsBackendSenderAsync {
+    pub async fn send(&self, ty: MessageChannel, raw: &str) -> Result<()> {
+        self.tx
+            .send(WsMessage::Text(ty, raw.to_string()))
+            .await
+            .map_err(|e| Error::with_chain(e, "Not able to send a message"))?;
+        Ok(())
     }
 }
 

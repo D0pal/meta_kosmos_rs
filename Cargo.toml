@@ -51,6 +51,8 @@ revm = { git = "https://github.com/bluealloy/revm/" }
 foundry-evm = { git = "https://github.com/foundry-rs/foundry.git", default-features = false }
 # web
 http = { version = "0.2.9" }
+hyper = { version = "0.14.16", features = ["full"]}
+hyper-tls = {version = "0.5.0" }
 # async
 tokio = { version = "1", features = ["full"] }
 tokio-util = { version = "0.7", features = ["codec"] }
@@ -84,7 +86,6 @@ gumdrop = "0.8.0"
 # cpu
 core_affinity = "0.8.1"
 crossbeam-channel = "0.5.8"
-
 
 [patch.crates-io]
 revm = { git = "https://github.com/bluealloy/revm/", rev = "6b55b9c0ab264c000e087c2f54f2d8dc24b869aa" }

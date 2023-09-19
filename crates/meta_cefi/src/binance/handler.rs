@@ -1,5 +1,8 @@
 use super::websockets::{BinanceEventHandler, BinanceWebsocketEvent};
 
+unsafe impl Send for BinanceEventHandlerImpl{}
+unsafe impl Sync for BinanceEventHandlerImpl{}
+
 #[derive(Clone, Debug)]
 pub struct BinanceEventHandlerImpl {
     // sender: Option<SyncSender<MarcketChange>>, // send market change
@@ -29,6 +32,6 @@ impl BinanceEventHandler for BinanceEventHandlerImpl {
     }
 
     fn on_data_event(&mut self, event: BinanceWebsocketEvent) {
-        // println!("got binance event: {:?}", event);
+        println!("got binance event: {:?}", event);
     }
 }

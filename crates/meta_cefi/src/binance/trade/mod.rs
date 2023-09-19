@@ -3,6 +3,7 @@ use crate::bitfinex::api;
 use self::{order::Side, new_order::NewOrder};
 
 pub mod new_order;
+pub mod get_order;
 pub mod order;
 
 pub fn new_order(symbol: &str, side: Side, r#type: &str,  api_key: &str) -> NewOrder {

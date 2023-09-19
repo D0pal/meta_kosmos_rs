@@ -15,7 +15,7 @@ use rust_decimal::Decimal;
 use serde_json::{from_str, json};
 use std::{
     net::TcpStream,
-    sync::mpsc::{self, channel,Sender, sync_channel, Receiver, TryRecvError},
+    sync::mpsc::{self, channel, sync_channel, Receiver, Sender, TryRecvError},
 };
 use std::{
     rc::Rc,
@@ -82,7 +82,7 @@ impl SocketBackhand {
             loop {
                 match self.rx.try_recv() {
                     Ok(msg) => match msg {
-                        WsMessage::Text(text) => {
+                        WsMessage::Text(_, text) => {
                             let time = get_current_ts().as_millis();
                             info!("socket write message {:?}, time: {:?}", text, time);
                             let ret = self.socket.write_message(Message::Text(text));
@@ -90,7 +90,7 @@ impl SocketBackhand {
                                 Err(e) => {
                                     error!("error in socket write {:?}", e);
                                     std::process::exit(1);
-                                },
+                                }
                                 Ok(()) => {}
                             }
                         }
@@ -190,7 +190,7 @@ impl WebSockets {
             "flags": CONF_FLAG_SEQ_ALL + CONF_OB_CHECKSUM
         });
 
-        if let Err(error_msg) = self.sender.send(&msg.to_string()) {
+        if let Err(error_msg) = self.sender.send(crate::MessageChannel::Trade, &msg.to_string()) {
             error!("conf error: {:?}", error_msg);
         }
     }
@@ -231,7 +231,7 @@ impl WebSockets {
             "filters": filters,
         });
 
-        if let Err(error_msg) = self.sender.send(&msg.to_string()) {
+        if let Err(error_msg) = self.sender.send(crate::MessageChannel::Trade, &msg.to_string()) {
             error!("auth error: {:?}", error_msg);
         }
 
@@ -245,7 +245,7 @@ impl WebSockets {
         let local_symbol = self.format_symbol(symbol.into(), et);
         let msg = json!({"event": "subscribe", "channel": "ticker", "symbol": local_symbol });
 
-        if let Err(error_msg) = self.sender.send(&msg.to_string()) {
+        if let Err(error_msg) = self.sender.send(crate::MessageChannel::Stream, &msg.to_string()) {
             error!("subscribe_ticker error: {:?}", error_msg);
         }
     }
@@ -257,7 +257,7 @@ impl WebSockets {
         let local_symbol = self.format_symbol(symbol.into(), et);
         let msg = json!({"event": "subscribe", "channel": "trades", "symbol": local_symbol });
 
-        if let Err(error_msg) = self.sender.send(&msg.to_string()) {
+        if let Err(error_msg) = self.sender.send(crate::MessageChannel::Trade, &msg.to_string()) {
             error!("subscribe_trades error: {:?}", error_msg);
         }
     }
@@ -269,7 +269,7 @@ impl WebSockets {
         let key: String = format!("trade:{}:t{}", timeframe.into(), symbol.into());
         let msg = json!({"event": "subscribe", "channel": "candles", "key": key });
 
-        if let Err(error_msg) = self.sender.send(&msg.to_string()) {
+        if let Err(error_msg) = self.sender.send(crate::MessageChannel::Trade, &msg.to_string()) {
             error!("subscribe_candles error: {:?}", error_msg);
         }
     }
@@ -300,7 +300,7 @@ impl WebSockets {
             "len": len
         });
 
-        if let Err(error_msg) = self.sender.send(&msg.to_string()) {
+        if let Err(error_msg) = self.sender.send(crate::MessageChannel::Trade, &msg.to_string()) {
             error!("subscribe_books error: {:?}", error_msg);
         }
     }
@@ -327,7 +327,7 @@ impl WebSockets {
             }
         ]);
 
-        if let Err(error_msg) = self.sender.send(&msg.to_string()) {
+        if let Err(error_msg) = self.sender.send(crate::MessageChannel::Trade, &msg.to_string()) {
             // self.error_hander(error_msg);
             error!(
                 "submit_order error, order is: {:?}, error is: {:?}",
@@ -349,7 +349,7 @@ impl WebSockets {
             "pair": self.format_symbol(symbol.into(), et)
         });
 
-        if let Err(error_msg) = self.sender.send(&msg.to_string()) {
+        if let Err(error_msg) = self.sender.send(crate::MessageChannel::Stream, &msg.to_string()) {
             error!("subscribe_raw_books error: {:?}", error_msg);
         }
     }
