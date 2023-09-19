@@ -2,7 +2,7 @@ use crate::bitfinex::{client::*, errors::*};
 use serde::{Deserialize, Serialize};
 use serde_json::{from_str, Value};
 
-#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum WalletType {
     #[serde(rename = "exchange")]
     Exchange,
