@@ -98,7 +98,7 @@ impl BitfinexEventHandler for BitfinexEventHandlerImpl {
     fn on_heart_beat(&mut self, _channel: i32, _data: String, _seq: SEQUENCE) {}
 
     fn on_data_event(&mut self, event: DataEvent) {
-        println!("handle data event {:?}", event);
+        // println!("handle data event {:?}", event);
         if let DataEvent::HeartbeatEvent(a, b, seq) = event {
             debug!("handle heart beat event");
             self.check_sequence(seq);
@@ -118,7 +118,11 @@ impl BitfinexEventHandler for BitfinexEventHandlerImpl {
             self.check_sequence(seq);
             match self.sender_cex_event {
                 Some(ref tx) => {
-                    let _ = tx.send(CexEvent::Balance(wu));
+                    let ret = tx.send(CexEvent::Balance(wu));
+                    match  ret {
+                        Ok(_) => {},
+                        Err(e) => eprintln!("error in send wallet update event: {:?}", e)
+                    }
                 }
                 None => warn!("no wu sender"),
             };

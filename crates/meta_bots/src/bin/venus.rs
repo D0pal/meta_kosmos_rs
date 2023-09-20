@@ -355,100 +355,97 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
         CexExchange::BINANCE => unimplemented!(),
     }
 
-    let (mut cex_bid, mut cex_ask, mut dex_bid, mut dex_ask) =
-        (Decimal::ZERO, Decimal::ZERO, Decimal::ZERO, Decimal::ZERO);
+    let (mut cex_bid, mut cex_ask, mut dex_bid, mut dex_ask): (Option<Decimal>, Option<Decimal>, Option<Decimal>,Option<Decimal>) =
+        (None, None, None, None);
     loop {
         if let Ok(change) = rx_market_change.recv() {
+            // println!("receive market change: {:?}", change);
             if let Some(spread) = change.cex {
                 {
                     let mut _g = cex_spread.write().await;
                     (*_g) = Some((spread.best_bid, spread.best_ask));
-                    (cex_bid, cex_ask) = (spread.best_bid, spread.best_ask);
+                    (cex_bid, cex_ask) = (Some(spread.best_bid), Some(spread.best_ask));
                 }
             }
             if let Some(spread) = change.dex {
                 {
                     let mut _g = dex_spread.write().await;
                     (*_g) = Some((spread.best_bid, spread.best_ask));
-                    (dex_bid, dex_ask) = (spread.best_bid, spread.best_ask);
+                    (dex_bid, dex_ask) = (Some(spread.best_bid), Some(spread.best_ask));
                 }
             }
 
-            if !cex_bid.is_sign_positive()
-                || !cex_ask.is_sign_positive()
-                || !dex_bid.is_sign_positive()
-                || !dex_ask.is_sign_positive()
-            {
-                continue;
-            }
-
-            info!(
-                "current spread, cex_bid: {:?}, dex_ask: {:?}, dex_bid: {:?}, cex_ask {:?}",
-                cex_bid, dex_ask, dex_bid, cex_ask
-            );
-
-            if cex_bid > dex_ask {
-                let change = get_price_delta_in_bp(cex_bid, dex_ask);
-                if change > Decimal::from_u32(config.spread_diff_threshold).unwrap() {
-                    info!(
-                        "found a cross, cex bid {:?}, dex ask {:?}, price change {:?}",
-                        cex_bid, dex_ask, change
-                    );
-                    let mut amount = config.base_asset_quote_amt;
-                    amount.set_sign_negative(true);
-                    let instraction = ArbitrageInstruction {
-                        cex: CexInstruction {
-                            venue: CexExchange::BITFINEX,
-                            amount,
-                            base_asset: config.base_asset,
-                            quote_asset: config.quote_asset,
-                        },
-                        dex: DexInstruction {
-                            network: config.network,
-                            venue: DexExchange::UniswapV3,
-                            amount: config.base_asset_quote_amt,
-                            base_token: base_token.clone(),
-                            quote_token: quote_token.clone(),
-                            recipient: wallet_address,
-                            fee: V3_FEE,
-                        },
-                    };
-
-                    try_arbitrage(instraction, Arc::clone(&cefi_service), &dex_service).await;
+            if let (Some(cex_bid), Some(cex_ask), Some(dex_bid), Some(dex_ask)) = (cex_bid, cex_ask, dex_bid, dex_ask) {
+                info!(
+                    "current spread, cex_bid: {:?}, dex_ask: {:?}, dex_bid: {:?}, cex_ask {:?}",
+                    cex_bid, dex_ask, dex_bid, cex_ask
+                );
+    
+                if cex_bid > dex_ask {
+                    let change = get_price_delta_in_bp(cex_bid, dex_ask);
+                    if change > Decimal::from_u32(config.spread_diff_threshold).unwrap() {
+                        info!(
+                            "found a cross, cex bid {:?}, dex ask {:?}, price change {:?}",
+                            cex_bid, dex_ask, change
+                        );
+                        let mut amount = config.base_asset_quote_amt;
+                        amount.set_sign_negative(true);
+                        let instraction = ArbitrageInstruction {
+                            cex: CexInstruction {
+                                venue: CexExchange::BITFINEX,
+                                amount,
+                                base_asset: config.base_asset,
+                                quote_asset: config.quote_asset,
+                            },
+                            dex: DexInstruction {
+                                network: config.network,
+                                venue: DexExchange::UniswapV3,
+                                amount: config.base_asset_quote_amt,
+                                base_token: base_token.clone(),
+                                quote_token: quote_token.clone(),
+                                recipient: wallet_address,
+                                fee: V3_FEE,
+                            },
+                        };
+    
+                        try_arbitrage(instraction, Arc::clone(&cefi_service), &dex_service).await;
+                    }
+                }
+    
+                if dex_bid > cex_ask {
+                    let change = get_price_delta_in_bp(dex_bid, cex_ask);
+                    if change > Decimal::from_u32(config.spread_diff_threshold).unwrap() {
+                        // sell dex, buy cex
+                        info!(
+                            "found a cross, dex bid {:?}, cex ask {:?}, price change {:?}",
+                            dex_bid, cex_ask, change
+                        );
+                        let mut amount = config.base_asset_quote_amt;
+                        amount.set_sign_negative(true);
+                        let instraction = ArbitrageInstruction {
+                            cex: CexInstruction {
+                                venue: CexExchange::BITFINEX,
+                                amount: config.base_asset_quote_amt,
+                                base_asset: config.base_asset,
+                                quote_asset: config.quote_asset,
+                            },
+                            dex: DexInstruction {
+                                network: config.network,
+                                venue: DexExchange::UniswapV3,
+                                amount,
+                                base_token: base_token.clone(),
+                                quote_token: quote_token.clone(),
+                                recipient: wallet_address,
+                                fee: V3_FEE,
+                            },
+                        };
+    
+                        try_arbitrage(instraction, Arc::clone(&cefi_service), &dex_service).await;
+                    }
                 }
             }
 
-            if dex_bid > cex_ask {
-                let change = get_price_delta_in_bp(dex_bid, cex_ask);
-                if change > Decimal::from_u32(config.spread_diff_threshold).unwrap() {
-                    // sell dex, buy cex
-                    info!(
-                        "found a cross, dex bid {:?}, cex ask {:?}, price change {:?}",
-                        dex_bid, cex_ask, change
-                    );
-                    let mut amount = config.base_asset_quote_amt;
-                    amount.set_sign_negative(true);
-                    let instraction = ArbitrageInstruction {
-                        cex: CexInstruction {
-                            venue: CexExchange::BITFINEX,
-                            amount: config.base_asset_quote_amt,
-                            base_asset: config.base_asset,
-                            quote_asset: config.quote_asset,
-                        },
-                        dex: DexInstruction {
-                            network: config.network,
-                            venue: DexExchange::UniswapV3,
-                            amount,
-                            base_token: base_token.clone(),
-                            quote_token: quote_token.clone(),
-                            recipient: wallet_address,
-                            fee: V3_FEE,
-                        },
-                    };
-
-                    try_arbitrage(instraction, Arc::clone(&cefi_service), &dex_service).await;
-                }
-            }
+            
         }
     }
 }

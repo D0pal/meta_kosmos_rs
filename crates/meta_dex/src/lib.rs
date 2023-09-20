@@ -483,8 +483,7 @@ impl DexBackend<Provider<Ws>> {
         let mut new_block_stream = self.client.subscribe_blocks().await.unwrap();
         let mut last_block: u64 = 0;
 
-        let (last_dex_sell_price, last_dex_buy_price) =
-            (Arc::new(RwLock::new(Decimal::ZERO)), Arc::new(RwLock::new(Decimal::ZERO)));
+        let (mut last_dex_sell_price, mut last_dex_buy_price) = (Decimal::ZERO, Decimal::ZERO);
 
         loop {
             match new_block_stream.next().await {
@@ -545,11 +544,12 @@ impl DexBackend<Provider<Ws>> {
                                     .checked_div(self.base_token_quote_amt)
                                     .unwrap();
 
-                                    if !sell_price.eq(&(*(last_dex_sell_price.read().await)))
-                                        || !buy_price.eq(&(*(last_dex_buy_price.read().await)))
+                                    // println!("dex price, sell {:?}, buy {:?}", sell_price, buy_price);
+                                    if !sell_price.eq(&last_dex_sell_price)
+                                        || !buy_price.eq(&last_dex_buy_price)
                                     {
-                                        *(last_dex_sell_price.write().await) = sell_price;
-                                        *(last_dex_buy_price.write().await) = buy_price;
+                                        last_dex_sell_price = sell_price;
+                                        last_dex_buy_price = buy_price;
 
                                         debug!("send dex price change, block number {:?}, sell price: {:?}, buy price: {:?} ",block.number, sell_price, buy_price);
                                         let ret =

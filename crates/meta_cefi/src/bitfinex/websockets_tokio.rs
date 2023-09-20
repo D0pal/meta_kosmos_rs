@@ -337,7 +337,7 @@ impl BitfinexSocketBackhandAsync {
                 Ok(None) => continue,
                 Ok(Some(message)) => match message {
                     Message::Text(text) => {
-                        println!("got msg: {:?}", text);
+                        // println!("got msg: {:?}", text);
                         if let Some(ref mut h) = self.event_handler {
                             let mut _g = h.write().await;
                             if text.contains(INFO) {
@@ -356,7 +356,7 @@ impl BitfinexSocketBackhandAsync {
                                 let event_ret = from_str::<DataEvent>(&text);
                                 match event_ret {
                                     Ok(event) => {
-                                        println!("parsed event: {:?}", event);
+                                        // println!("parsed event: {:?}", event);
                                         _g.on_data_event(event);
                                     }
                                     Err(e) => {

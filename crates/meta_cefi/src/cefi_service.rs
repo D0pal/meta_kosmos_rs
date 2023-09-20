@@ -361,7 +361,7 @@ mod test_cefi {
                     count: 2,
                 },
             );
-            println!("{:?}", ob);
+            // println!("{:?}", ob);
         } else {
             panic!("test data deser failed");
         }
@@ -378,6 +378,6 @@ mod test_cefi {
         assert_eq!(iter.next(), Some(&1));
 
         assert_eq!(iter.next(), None);
-        println!("a {:?}", a);
+        // println!("a {:?}", a);
     }
 }
