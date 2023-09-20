@@ -125,6 +125,7 @@ pub struct VenusConfig {
     pub account: ConfigAccount,
     // TODO: do not print for Debug
     pub bitfinex: Option<AccessKey>,
+    pub binance: Option<AccessKey>,
     pub lark: ConfigLark,
 }
 

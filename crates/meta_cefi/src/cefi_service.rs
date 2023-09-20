@@ -6,9 +6,8 @@ use crate::{
     bitfinex::{
         book::TradingOrderBookLevel,
         common::*,
-        handler::BitfinexEventHandlerImpl,
-        wallet::{TradeExecutionUpdate, WalletSnapshot},
-        websockets::{ EventType},
+        handler::{BitfinexEventHandlerImpl, CexEvent},
+        websockets::EventType,
         websockets_tokio::BitfinexWebSocketsAsync,
     },
     get_cex_pair,
@@ -29,7 +28,7 @@ use tokio::sync::RwLock as TokioRwLock;
 extern crate core_affinity;
 use core_affinity::CoreId;
 use lazy_static::lazy_static;
-use tracing::{info };
+use tracing::info;
 
 lazy_static! {
     pub static ref CORE_IDS: Vec<CoreId> = core_affinity::get_core_ids().unwrap();
@@ -62,9 +61,8 @@ pub struct OrderBook {
 
 pub struct CefiService {
     config: Option<CexConfig>,
-    sender_market_change_event: Option<SyncSender<MarcketChange>>,
-    sender_order_event: Option<SyncSender<TradeExecutionUpdate>>, // send order update event
-    sender_wu_event: Option<SyncSender<WalletSnapshot>>,
+    sender_cex_event: Option<SyncSender<CexEvent>>,
+    sender_market_change: Option<SyncSender<MarcketChange>>,
     bitfinex_sockets: BTreeMap<String, Arc<TokioRwLock<BitfinexWebSocketsAsync>>>, // (pair, (socket))
     binance_sockets: BTreeMap<String, Arc<TokioRwLock<BinanceWebSocketClient>>>, // (pair, (socket))
 }
@@ -75,17 +73,15 @@ unsafe impl Sync for CefiService {}
 impl CefiService {
     pub fn new(
         config: Option<CexConfig>,
-        sender_market_change_event: Option<SyncSender<MarcketChange>>,
-        sender_order_event: Option<SyncSender<TradeExecutionUpdate>>,
-        sender_wu_event: Option<SyncSender<WalletSnapshot>>,
+        sender_market_change: Option<SyncSender<MarcketChange>>,
+        sender_cex_event: Option<SyncSender<CexEvent>>,
     ) -> Self {
         Self {
             config,
-            sender_market_change_event,
+            sender_market_change,
+            sender_cex_event,
             bitfinex_sockets: BTreeMap::new(),
             binance_sockets: BTreeMap::new(),
-            sender_order_event,
-            sender_wu_event,
         }
     }
 
@@ -95,23 +91,25 @@ impl CefiService {
             CexExchange::BITFINEX => {
                 let ak = self.config.as_ref().unwrap().keys.as_ref().unwrap().get(&cex).unwrap();
                 if !self.bitfinex_sockets.contains_key(&pair) {
-                    let sender_market_change_event_reader = self.sender_market_change_event.clone();
-                    let sender_wu_event_reader = self.sender_wu_event.clone();
-                    let sender_order_event_reader = self.sender_order_event.clone();
-                    let handler_reader = BitfinexEventHandlerImpl::new(
-                        sender_market_change_event_reader,
-                        sender_wu_event_reader,
-                        sender_order_event_reader,
+                    let event_handler = BitfinexEventHandlerImpl::new(
+                        self.sender_market_change.clone(),
+                        self.sender_cex_event.clone(),
                     );
 
-                    let (mut socket_reader, mut socket_reader_backhand) =
-                        BitfinexWebSocketsAsync::new(Box::new(handler_reader)).await;
+                    let (mut ws_client, mut socket_backend) =
+                        BitfinexWebSocketsAsync::new(Box::new(event_handler)).await;
 
-                    let _ =(socket_reader)
+                    {
+                        tokio::spawn(async move {
+                            let _ = socket_backend.event_loop().await;
+                        });
+                    }
+
+                    let _ = ws_client
                         .auth(ak.api_key.to_string(), ak.api_secret.to_string(), false, &[])
-                        .await; // check error
-                    (socket_reader).conf().await;
-                    (socket_reader)
+                        .await;
+                    ws_client.conf().await;
+                    ws_client
                         .subscribe_books(
                             get_bitfinex_trade_symbol(base, quote),
                             EventType::Trading,
@@ -121,43 +119,29 @@ impl CefiService {
                         )
                         .await;
 
-                    {
-                        tokio::spawn(async move {
-                            let _ = socket_reader_backhand.event_loop().await;
-                        });
-                    }
-
                     self.bitfinex_sockets
-                        .insert(pair.to_owned(), Arc::new(TokioRwLock::new(socket_reader)));
+                        .insert(pair.to_owned(), Arc::new(TokioRwLock::new(ws_client)));
                 }
             }
             CexExchange::BINANCE => {
                 if !self.binance_sockets.contains_key(&pair) {
-                    let _sender_market_change_event_reader =
-                        self.sender_market_change_event.clone();
-                    let _sender_wu_event_reader = self.sender_wu_event.clone();
-                    let _sender_order_event_reader = self.sender_order_event.clone();
-                    let handler_reader = BinanceEventHandlerImpl::new(
-                        // sender_market_change_event_reader,
-                        // sender_wu_event_reader,
-                        // sender_order_event_reader,
-                    );
+                    let handler_reader = BinanceEventHandlerImpl::new(self.sender_cex_event.clone());
 
                     let credential =
                         self.config.as_ref().unwrap().keys.as_ref().unwrap().get(&cex).cloned();
 
-                    let (mut socket_client, mut socket_reader_backhand) =
+                    let (mut ws_client, mut socket_backend) =
                         BinanceWebSocketClient::new(credential, Box::new(handler_reader)).await;
 
                     {
                         tokio::spawn(async move {
-                           let _ = socket_reader_backhand.event_loop().await;
+                            let _ = socket_backend.event_loop().await;
                         });
                     }
 
-                    socket_client.subscribe_books(get_binance_symbol(base, quote)).await;
+                    ws_client.subscribe_books(get_binance_symbol(base, quote)).await;
                     self.binance_sockets
-                        .insert(pair.to_owned(), Arc::new(TokioRwLock::new(socket_client)));
+                        .insert(pair.to_owned(), Arc::new(TokioRwLock::new(ws_client)));
                 }
             }
         }

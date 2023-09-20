@@ -126,10 +126,10 @@ pub async fn check_arbitrage_status(map: ArbitrageInfo) -> (bool, Option<(CID, A
     (false, None)
 }
 
-pub async fn notify_arbitrage_result(
+pub async fn notify_arbitrage_result<M: Middleware>(
+    dex_service: Arc<DexService<M>>,
     arbitrage_map: Arc<RwLock<BTreeMap<CID, ArbitragePair>>>,
     lark: Arc<Lark>,
-    provider: Arc<Provider<Ws>>,
     cid: CID,
     arbitrage_info: &ArbitragePair,
 ) {
@@ -139,8 +139,6 @@ pub async fn notify_arbitrage_result(
         _g.remove(&cid);
     }
 
-    let dex_service =
-        DexService::new(provider.clone(), arbitrage_info.dex.network, arbitrage_info.dex.venue);
     let dex_trade_info = arbitrage_info.dex.clone();
     let cex_trade_info = arbitrage_info.cex.clone();
     let hash = dex_trade_info.tx_hash.unwrap();

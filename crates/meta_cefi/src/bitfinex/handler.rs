@@ -15,28 +15,25 @@ use std::sync::mpsc::SyncSender;
 extern crate core_affinity;
 use tracing::{debug, error, info, warn};
 
+pub enum CexEvent {
+    TradeExecution(TradeExecutionUpdate),
+    Balance(WalletSnapshot),
+}
+
 #[derive(Clone, Debug)]
 pub struct BitfinexEventHandlerImpl {
-    sender: Option<SyncSender<MarcketChange>>, // send market change
-    trade_execution_sender: Option<SyncSender<TradeExecutionUpdate>>, // tu event, contains fee information
-    wu_sender: Option<SyncSender<WalletSnapshot>>,
+    sender_market_change: Option<SyncSender<MarcketChange>>,
+    sender_cex_event: Option<SyncSender<CexEvent>>,
     pub order_book: Option<OrderBook>,
     sequence: u32,
 }
 
 impl BitfinexEventHandlerImpl {
     pub fn new(
-        sender: Option<SyncSender<MarcketChange>>,
-        wu_sender: Option<SyncSender<WalletSnapshot>>,
-        order_sender: Option<SyncSender<TradeExecutionUpdate>>,
+        sender_market_change: Option<SyncSender<MarcketChange>>,
+        sender_cex_event: Option<SyncSender<CexEvent>>,
     ) -> Self {
-        Self {
-            order_book: None,
-            sequence: 0,
-            sender,
-            trade_execution_sender: order_sender,
-            wu_sender,
-        }
+        Self { order_book: None, sequence: 0, sender_market_change, sender_cex_event }
     }
 
     fn check_sequence(&mut self, seq: u32) {
@@ -119,19 +116,19 @@ impl BitfinexEventHandler for BitfinexEventHandlerImpl {
         } else if let DataEvent::WalletUpdateEvent(_, _, wu, seq, _) = event {
             debug!("handle on wu event {:?}", wu);
             self.check_sequence(seq);
-            match self.wu_sender {
+            match self.sender_cex_event {
                 Some(ref tx) => {
-                    let _ = tx.send(wu);
+                    let _ = tx.send(CexEvent::Balance(wu));
                 }
                 None => warn!("no wu sender"),
             };
-        } else if let DataEvent::TradeExecutionEvent(_, ty, e, seq, _) = event {
-            debug!("handle on trade execution update event type {:?}, {:?}", ty, e);
+        } else if let DataEvent::TradeExecutionEvent(_, ty, te, seq, _) = event {
+            debug!("handle on trade execution update event type {:?}, {:?}", ty, te);
             self.check_sequence(seq);
             if ty.eq("tu") {
-                match self.trade_execution_sender {
+                match self.sender_cex_event {
                     Some(ref tx) => {
-                        let _ = tx.send(e);
+                        let _ = tx.send(CexEvent::TradeExecution(te));
                     }
                     None => warn!("no tx sender"),
                 };
@@ -177,11 +174,7 @@ impl BitfinexEventHandler for BitfinexEventHandlerImpl {
             });
 
             if !current_best_ask.eq(&prev_best_ask) || !current_best_bid.eq(&prev_best_bid) {
-                if let Some(ref tx) = self.sender {
-                    // println!(
-                    //     "send cex price change, current_best_ask: {:?}, current_best_bid: {:?} ",
-                    //     current_best_ask, current_best_bid
-                    // );
+                if let Some(ref tx) = self.sender_market_change {
                     let ret = tx.send(MarcketChange {
                         cex: Some(CurrentSpread {
                             best_ask: current_best_ask,

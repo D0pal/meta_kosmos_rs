@@ -1,29 +1,19 @@
+use crate::bitfinex::handler::CexEvent;
+
 use super::websockets::{BinanceEventHandler, BinanceWebsocketEvent};
+use std::sync::mpsc::SyncSender;
 
 unsafe impl Send for BinanceEventHandlerImpl {}
 unsafe impl Sync for BinanceEventHandlerImpl {}
 
 #[derive(Clone, Debug)]
 pub struct BinanceEventHandlerImpl {
-    // sender: Option<SyncSender<MarcketChange>>, // send market change
-    // trade_execution_sender: Option<SyncSender<TradeExecutionUpdate>>, // tu event, contains fee information
-    // wu_sender: Option<SyncSender<WalletSnapshot>>,
-    // order_book: Option<OrderBook>,
-    // sequence: u32,
+    pub sender: Option<SyncSender<CexEvent>>,
 }
 
 impl BinanceEventHandlerImpl {
-    pub fn new(// sender: Option<SyncSender<MarcketChange>>,
-        // wu_sender: Option<SyncSender<WalletSnapshot>>,
-        // order_sender: Option<SyncSender<TradeExecutionUpdate>>,
-    ) -> Self {
-        Self {
-            // order_book: None,
-            // sequence: 0,
-            // sender,
-            // trade_execution_sender: order_sender,
-            // wu_sender,
-        }
+    pub fn new(sender: Option<SyncSender<CexEvent>>) -> Self {
+        Self { sender }
     }
 }
 impl BinanceEventHandler for BinanceEventHandlerImpl {

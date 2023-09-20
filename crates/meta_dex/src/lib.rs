@@ -8,18 +8,24 @@ pub mod sandwidth;
 pub mod prelude {
     pub use super::{error::*, oracle::*, pool::*, sandwidth::*};
 }
-
+use crate::prelude::Pool;
 use defi::DexWrapper;
 use error::OrderError;
 use ethers::prelude::*;
+use ethers::prelude::*;
 use eyre::Result;
-use meta_address::TokenInfo;
-
+use futures::future::try_join_all;
+use futures_util::{SinkExt, TryStreamExt};
 use hashbrown::HashMap;
+use meta_address::TokenInfo;
 use meta_address::{get_dex_address, Token};
-use meta_common::enums::{ContractType, DexExchange, Network, PoolVariant};
+use meta_common::{
+    enums::{ContractType, DexExchange, Network, PoolVariant},
+    models::{CurrentSpread, MarcketChange},
+};
 use meta_contracts::bindings::{
-    swaprouter::{SwapRouter, ExactInputSingleParams, ExactOutputSingleParams},
+    quoterv2::{QuoteExactInputSingleParams, QuoteExactOutputSingleParams, QuoterV2},
+    swaprouter::{ExactInputSingleParams, ExactOutputSingleParams, SwapRouter},
     uniswapv2factory::UniswapV2Factory,
     uniswapv3pool::{SwapFilter, UniswapV3Pool},
 };
@@ -32,10 +38,9 @@ use rust_decimal::{
     prelude::{FromPrimitive, Signed, ToPrimitive},
     Decimal,
 };
-use std::sync::Arc;
-use tracing::{debug, info};
-
-use crate::prelude::Pool;
+use std::sync::{mpsc::SyncSender, Arc};
+use tokio::sync::RwLock;
+use tracing::{debug, error, info, warn};
 
 #[derive(Clone, Debug)]
 pub struct DexService<M> {
@@ -61,20 +66,43 @@ pub struct TradeBalanceDiff {
 impl<M: Middleware> DexService<M> {
     /// # Description
     /// Creates a new dex instance
-    pub fn new(client: Arc<M>, network: Network, dex_exchange: DexExchange) -> Self {
+    pub fn new(
+        client: Arc<M>,
+        provider: Arc<Provider<Ws>>,
+        network: Network,
+        dex_exchange: DexExchange,
+        base_token: TokenInfo,
+        base_token_quote_amt: Decimal,
+        quote_token: TokenInfo,
+        v3_fee: u32,
+        sender_market_change: SyncSender<MarcketChange>,
+    ) -> (Self, DexBackend<Provider<Ws>>) {
         let pool_variant: PoolVariant = match dex_exchange {
             DexExchange::UniswapV3 => PoolVariant::UniswapV3,
             _ => PoolVariant::UniswapV2,
         };
 
         let contracts = DexWrapper::new(client.clone(), network, dex_exchange);
-        DexService {
-            client: client.clone(),
+
+        let backend = DexBackend::<Provider<Ws>>::new(
+            provider,
             network,
-            dex_exchange,
-            pool_variant,
-            dex_contracts: contracts,
-        }
+            sender_market_change,
+            base_token,
+            base_token_quote_amt,
+            quote_token,
+            v3_fee,
+        );
+        (
+            DexService {
+                client: client.clone(),
+                network,
+                dex_exchange,
+                pool_variant,
+                dex_contracts: contracts,
+            },
+            backend,
+        )
     }
 
     pub async fn get_pool_address(&mut self, _token_0: Address, _token_1: Address) -> Address {
@@ -411,4 +439,147 @@ impl<M: Middleware> DexService<M> {
     //     }
     //     Ok(aggregated_pairs)
     // }
+}
+
+pub struct DexBackend<M> {
+    client: Arc<M>,
+    network: Network,
+    sender_market_change: SyncSender<MarcketChange>,
+    base_token: TokenInfo,
+    base_token_quote_amt: Decimal,
+    quote_token: TokenInfo,
+    v3_fee: u32,
+}
+
+impl DexBackend<Provider<Ws>> {
+    pub fn new(
+        client: Arc<Provider<Ws>>,
+        network: Network,
+        sender_market_change: SyncSender<MarcketChange>,
+        base_token: TokenInfo,
+        base_token_quote_amt: Decimal,
+        quote_token: TokenInfo,
+        v3_fee: u32,
+    ) -> Self {
+        Self {
+            client,
+            network,
+            sender_market_change,
+            base_token,
+            base_token_quote_amt,
+            quote_token,
+            v3_fee,
+        }
+    }
+
+    pub async fn event_loop(&mut self) -> anyhow::Result<()> {
+        // TODO: currently it's hardcoded to v3
+        let quoter_address =
+            get_dex_address(DexExchange::UniswapV3, self.network, ContractType::UniV3QuoterV2)
+                .unwrap();
+
+        let quoter = QuoterV2::new(quoter_address.address, Arc::clone(&self.client));
+
+        let mut new_block_stream = self.client.subscribe_blocks().await.unwrap();
+        let mut last_block: u64 = 0;
+
+        let (last_dex_sell_price, last_dex_buy_price) =
+            (Arc::new(RwLock::new(Decimal::ZERO)), Arc::new(RwLock::new(Decimal::ZERO)));
+
+        loop {
+            match new_block_stream.next().await {
+                Some(block) => {
+                    if let Some(block_number) = block.number {
+                        let new_block = block_number.as_u64();
+                        if new_block > last_block {
+                            last_block = new_block;
+
+                            // quote for 500, 3000, all pools
+                            let base_quote_amt_in_wei = decimal_to_wei(
+                                self.base_token_quote_amt,
+                                self.base_token.decimals.into(),
+                            );
+                            debug!("amt_in_wei: {:?}, base_token_address: {:?}, quote_token_address: {:?}", base_quote_amt_in_wei, self.base_token.address, self.quote_token.address);
+                            let rets = try_join_all([
+                                quoter
+                                    .quote_exact_input_single(QuoteExactInputSingleParams {
+                                        token_in: self.base_token.address,
+                                        token_out: self.quote_token.address,
+                                        amount_in: base_quote_amt_in_wei,
+                                        fee: self.v3_fee,
+                                        sqrt_price_limit_x96: 0.into(),
+                                    })
+                                    .call(),
+                                quoter
+                                    .quote_exact_output_single(QuoteExactOutputSingleParams {
+                                        token_in: self.quote_token.address,
+                                        token_out: self.base_token.address,
+                                        amount: base_quote_amt_in_wei,
+                                        fee: self.v3_fee,
+                                        sqrt_price_limit_x96: U256::from_str_radix(
+                                            "1461446703485210103287273052203988822378723970341",
+                                            10,
+                                        )
+                                        .unwrap(),
+                                    })
+                                    .call(),
+                            ])
+                            .await;
+
+                            match rets {
+                                Ok(ret) => {
+                                    let sell = ret[0];
+                                    let buy = ret[1];
+                                    let (amount_out, _, _, _) = sell;
+                                    let sell_price = decimal_from_wei(
+                                        amount_out,
+                                        self.quote_token.decimals.into(),
+                                    )
+                                    .checked_div(self.base_token_quote_amt)
+                                    .unwrap();
+                                    let (amount_in, _, _, _) = buy;
+                                    let buy_price = decimal_from_wei(
+                                        amount_in,
+                                        self.quote_token.decimals.into(),
+                                    )
+                                    .checked_div(self.base_token_quote_amt)
+                                    .unwrap();
+
+                                    if !sell_price.eq(&(*(last_dex_sell_price.read().await)))
+                                        || !buy_price.eq(&(*(last_dex_buy_price.read().await)))
+                                    {
+                                        *(last_dex_sell_price.write().await) = sell_price;
+                                        *(last_dex_buy_price.write().await) = buy_price;
+
+                                        debug!("send dex price change, block number {:?}, sell price: {:?}, buy price: {:?} ",block.number, sell_price, buy_price);
+                                        let ret =
+                                            self.sender_market_change.clone().send(MarcketChange {
+                                                cex: None,
+                                                dex: Some(CurrentSpread {
+                                                    best_bid: sell_price,
+                                                    best_ask: buy_price,
+                                                }),
+                                            });
+                                        match ret {
+                                            Ok(()) => debug!("send price chagne success"),
+                                            Err(e) => {
+                                                error!("error in send dex price change, {:?}", e);
+                                                panic!("error in send dex price change, {:?}", e);
+                                            }
+                                        }
+                                    }
+                                }
+                                Err(e) => {
+                                    error!("error in quote {:?}", e);
+                                }
+                            }
+                        }
+                    }
+                }
+                None => {
+                    debug!("no block info");
+                }
+            }
+        }
+    }
 }
