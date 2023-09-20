@@ -28,5 +28,6 @@ cargo run -p meta_bots --bin venus --release -- -b ETH -q USDT --network ARBI -d
 
 ## TODO
 - binance renw listen key
+- binance wallet balance update
 - bitfinex te event may be partially filled
 - daily balance net check, and purchase eth using profits
