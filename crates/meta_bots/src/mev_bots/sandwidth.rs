@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use dashmap::DashMap;
 use ethers::prelude::*;
 use eyre::Result;

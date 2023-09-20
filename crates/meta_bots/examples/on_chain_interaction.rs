@@ -3,7 +3,7 @@ use foundry_evm::decode::decode_revert;
 use meta_address::{get_dex_address, get_rpc_info, get_token_info, ContractInfo, Token, TokenInfo};
 use meta_common::enums::{ContractType, DexExchange, Network, RpcProvider};
 use meta_contracts::bindings::{
-    erc20::ERC20, swap_router::SwapRouter, ExactInputSingleParams, ExactOutputSingleParams, WETH9,
+    erc20::ERC20, swaprouter::{SwapRouter, ExactInputSingleParams, ExactOutputSingleParams}, weth9::WETH9,
 };
 use meta_util::{defi::get_swap_price_limit, ether::decimal_to_wei, time::get_current_ts};
 use rust_decimal::{prelude::FromPrimitive, Decimal};
@@ -27,7 +27,6 @@ async fn main() {
 
     let _V3_FEE = 500;
 
-
     println!("token_info {:?}", usdc_token_info);
 
     let rpc_url = rpc_info.ws_urls.get(&rpc_provider).unwrap();
@@ -37,7 +36,7 @@ async fn main() {
     let provider_ws = provider_ws.interval(Duration::from_millis(200));
     let provider_ws = Arc::new(provider_ws);
 
-    let private_key = std::fs::read_to_string("/tmp/pk").unwrap().trim().to_string();
+    let private_key = std::fs::read_to_string("/tmp/pk/venus").unwrap().trim().to_string();
     let wallet: LocalWallet =
         private_key.parse::<LocalWallet>().unwrap().with_chain_id(rpc_info.chain_id);
     let wallet_address = wallet.address();
@@ -53,7 +52,7 @@ async fn main() {
     // println!("tx {:?}, total spent {:?} ms", tx, elapsed);
 
     approve_token(
-        _arb_token_info,
+        usdc_token_info,
         wallet.clone(),
         swap_router_contract_info.address,
         Decimal::from_f64(10_000_000_000f64).unwrap(),

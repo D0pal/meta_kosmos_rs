@@ -25,6 +25,9 @@ pub enum Asset {
     #[strum(ascii_case_insensitive, serialize = "ETH")]
     ETH,
 
+    #[strum(ascii_case_insensitive, serialize = "BNB")]
+    BNB,
+
     #[strum(ascii_case_insensitive, serialize = "BTC")]
     BTC,
 
@@ -46,6 +49,9 @@ pub enum Asset {
     #[strum(ascii_case_insensitive, serialize = "UST")]
     UST,
 
+    #[strum(ascii_case_insensitive, serialize = "USDT")]
+    USDT,
+
     #[strum(ascii_case_insensitive, serialize = "UDC")]
     UDC,
 
@@ -57,7 +63,7 @@ pub enum Asset {
 
     // bitfinex margin
     #[strum(ascii_case_insensitive, serialize = "USTF0")]
-    USTF0
+    USTF0,
 }
 
 impl Into<String> for Asset {

@@ -1,6 +1,5 @@
 //! sandwidtch mev bot
 
-use ethers::prelude::*;
 use gumdrop::Options;
 use meta_bots::JupyterConfig;
 use meta_common::enums::Network;

@@ -319,9 +319,7 @@ fn sanity_check(
 
     // get access list
     let mut access_list_inspector = AccessListInspector::new(searcher, sandwich_contract);
-    evm.inspect_ref(&mut access_list_inspector)
-        .map_err(SimulationError::FrontrunEvmError)
-        .unwrap();
+    evm.inspect_ref(&mut access_list_inspector).map_err(SimulationError::FrontrunEvmError).unwrap();
     let frontrun_access_list = access_list_inspector.into_access_list();
     evm.env.tx.access_list = frontrun_access_list.clone();
 
@@ -437,9 +435,7 @@ fn sanity_check(
 
     // create access list
     let mut access_list_inspector = AccessListInspector::new(searcher, sandwich_contract);
-    evm.inspect_ref(&mut access_list_inspector)
-        .map_err(SimulationError::FrontrunEvmError)
-        .unwrap();
+    evm.inspect_ref(&mut access_list_inspector).map_err(SimulationError::FrontrunEvmError).unwrap();
     let backrun_access_list = access_list_inspector.into_access_list();
     evm.env.tx.access_list = backrun_access_list.clone();
 

@@ -1,7 +1,7 @@
 use chrono::prelude::*;
 use ethers::prelude::*;
 use meta_address::{enums::Asset, TokenInfo};
-use meta_cefi::bitfinex::wallet::TradeExecutionUpdate;
+use meta_cefi::{ cex_currency_to_asset, model::TradeExecutionInfo};
 use meta_common::enums::{CexExchange, DexExchange, Network};
 use meta_dex::DexService;
 use meta_integration::Lark;
@@ -10,12 +10,17 @@ use meta_util::ether::get_network_scan_url;
 use rust_decimal::Decimal;
 use std::{collections::BTreeMap, sync::Arc};
 use tokio::sync::RwLock;
-use tracing::{error, info, warn};
+use tracing::{error, info};
 
 #[derive(Debug, Clone, Default)]
 pub struct CexTradeInfo {
     pub venue: CexExchange,
-    pub trade_info: Option<TradeExecutionUpdate>,
+    pub trade_info: Option<TradeExecutionInfo>,
+}
+
+#[derive(Debug, Clone, Default)]
+pub struct SwapFinalisedInfo {
+    pub block_number: u64,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -23,7 +28,7 @@ pub struct DexTradeInfo {
     pub network: Network,
     pub venue: DexExchange,
     pub tx_hash: Option<TxHash>,
-    pub finalised_block_number: Option<u64>,
+    pub finalised_info: Option<SwapFinalisedInfo>,
     pub base_token_info: TokenInfo,
     pub quote_token_info: TokenInfo,
     pub v3_fee: Option<u32>,
@@ -40,6 +45,8 @@ pub struct ArbitragePair {
 }
 
 pub type CID = u128; //client order id
+
+pub type ArbitrageInfo = Arc<RwLock<BTreeMap<CID, ArbitragePair>>>;
 
 #[derive(Debug)]
 pub struct CexInstruction {
@@ -66,26 +73,30 @@ pub struct ArbitrageInstruction {
     pub dex: DexInstruction,
 }
 
-pub async fn update_dex_transaction_finalised_number(
-    map: Arc<RwLock<BTreeMap<CID, ArbitragePair>>>,
+/// update the swap info when onchain transaction is finalised (success/revert)
+pub async fn update_dex_swap_finalised_info(
+    map: ArbitrageInfo,
     hash: TxHash,
-    number: u64,
+    swap_info: SwapFinalisedInfo,
 ) {
     let mut _g = map.write().await;
-    let mut iter = _g.iter_mut();
+    let iter = _g.iter_mut();
 
-    for (key, val) in iter {
+    for (_key, val) in iter {
         if val.dex.tx_hash.eq(&Some(hash)) {
-            info!("update {:?} to finalized nubmer {:?}", hash, number);
-            (val).dex.finalised_block_number = Some(number);
+            info!("update {:?} with finalised info {:?}", hash, swap_info);
+            (val).dex.finalised_info = Some(swap_info);
             return;
         }
     }
 }
 
-pub async fn check_arbitrage_status(
-    map: Arc<RwLock<BTreeMap<CID, ArbitragePair>>>,
-) -> (bool, Option<(CID, ArbitragePair)>) {
+/// check whether certain number of trades' status have been unknown for too long. stop process if that's so
+/// check whether an arbitrage has been successful; return the info if that's so.
+/// # Return
+/// - should_stop: whether should stop the process
+/// - the arbitrage pair info to be notified
+pub async fn check_arbitrage_status(map: ArbitrageInfo) -> (bool, Option<(CID, ArbitragePair)>) {
     info!("start check arbitrage status");
     let mut _g = map.read().await;
     let iter = _g.iter();
@@ -108,17 +119,17 @@ pub async fn check_arbitrage_status(
             return (true, None);
         }
 
-        if val.cex.trade_info.is_some() && val.dex.finalised_block_number.is_some() {
+        if val.cex.trade_info.is_some() && val.dex.finalised_info.is_some() {
             return (false, Some((*key, val.clone())));
         }
     }
-    return (false, None);
+    (false, None)
 }
 
-pub async fn notify_arbitrage_result(
+pub async fn notify_arbitrage_result<M: Middleware>(
+    dex_service: Arc<DexService<M>>,
     arbitrage_map: Arc<RwLock<BTreeMap<CID, ArbitragePair>>>,
-    lark: &Lark,
-    provider: Arc<Provider<Ws>>,
+    lark: Arc<Lark>,
     cid: CID,
     arbitrage_info: &ArbitragePair,
 ) {
@@ -128,8 +139,6 @@ pub async fn notify_arbitrage_result(
         _g.remove(&cid);
     }
 
-    let dex_service =
-        DexService::new(provider.clone(), arbitrage_info.dex.network, arbitrage_info.dex.venue);
     let dex_trade_info = arbitrage_info.dex.clone();
     let cex_trade_info = arbitrage_info.cex.clone();
     let hash = dex_trade_info.tx_hash.unwrap();
@@ -145,13 +154,15 @@ pub async fn notify_arbitrage_result(
         Ok(parsed_tx) => {
             let mut cex_outcome = ArbitrageOutcome::default();
             if let Some(info) = cex_trade_info.trade_info {
+                cex_outcome.venue = cex_trade_info.venue.to_string();
                 cex_outcome.price = info.exec_price;
                 cex_outcome.base_amount = info.exec_amount;
                 cex_outcome.quote_amount = info
                     .exec_price
                     .saturating_mul(cex_outcome.base_amount)
                     .saturating_mul(Decimal::NEGATIVE_ONE);
-                cex_outcome.fee_token = info.fee_currency.unwrap().parse::<Asset>().unwrap();
+                cex_outcome.fee_token =
+                    cex_currency_to_asset(cex_trade_info.venue, &info.fee_currency.unwrap());
                 cex_outcome.fee_amount = info.fee.unwrap();
                 cex_outcome.id = cid.to_string();
             }

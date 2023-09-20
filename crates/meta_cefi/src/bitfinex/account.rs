@@ -1,34 +1,15 @@
-use crate::bitfinex::client::*;
-use crate::bitfinex::errors::*;
+use crate::bitfinex::{client::*, errors::*};
 use serde::{Deserialize, Serialize};
 use serde_json::{from_str, Value};
-use strum::{AsRefStr, Display, EnumCount, EnumIter, EnumString, EnumVariantNames};
 
-#[derive(
-    Clone,
-    Copy,
-    Debug,
-    PartialEq,
-    Eq,
-    PartialOrd,
-    Ord,
-    Hash,
-    AsRefStr,         // AsRef<str>, fmt::Display and serde::Serialize
-    EnumVariantNames, // Chain::VARIANTS
-    EnumString,       // FromStr, TryFrom<&str>
-    EnumIter,         // Chain::iter
-    EnumCount,        // Chain::COUNT
-    Deserialize,
-    Serialize,
-    Display,
-)]
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 pub enum WalletType {
-    #[strum(serialize = "exchange")]
-    exchange,
-    #[strum(serialize = "margin")]
-    margin,
-    #[strum(serialize = "funding")]
-    funding,
+    #[serde(rename = "exchange")]
+    Exchange,
+    #[serde(rename = "margin")]
+    Margin,
+    #[serde(rename = "funding")]
+    Funding,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -105,8 +86,16 @@ impl Account {
         Account { client: Client::new(api_key, secret_key) }
     }
 
+    pub fn get_summary(&self) {
+        let payload: String = "{}".to_string();
+        let data = self.client.post_signed("summary".into(), payload);
+        // let wallets: Vec<Wallet> = from_str(data.as_str())?;
+        println!("summary {:?}", data);
+        // Ok(wallets)
+    }
+
     pub fn get_wallets(&self) -> Result<Vec<Wallet>> {
-        let payload: String = format!("{}", "{}");
+        let payload: String = "{}".to_string();
         let data = self.client.post_signed("wallets".into(), payload)?;
         let wallets: Vec<Wallet> = from_str(data.as_str())?;
 
@@ -114,7 +103,7 @@ impl Account {
     }
 
     pub fn margin_base(&self) -> Result<MarginBase> {
-        let payload: String = format!("{}", "{}");
+        let payload: String = "{}".to_string();
 
         let data = self.client.post_signed("info/margin/base".into(), payload)?;
 
@@ -127,7 +116,7 @@ impl Account {
     where
         S: Into<String>,
     {
-        let payload: String = format!("{}", "{}");
+        let payload: String = "{}".to_string();
         let request: String = format!("info/margin/t{}", key.into());
 
         let data = self.client.post_signed(request, payload)?;
@@ -141,7 +130,7 @@ impl Account {
     where
         S: Into<String>,
     {
-        let payload: String = format!("{}", "{}");
+        let payload: String = "{}".to_string();
         let request: String = format!("info/funding/f{}", key.into());
 
         let data = self.client.post_signed(request, payload)?;

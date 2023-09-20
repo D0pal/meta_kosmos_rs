@@ -1,3 +1,5 @@
+#![allow(non_camel_case_types)]
+
 use serde::Deserialize;
 use strum::{AsRefStr, EnumCount, EnumIter, EnumString, EnumVariantNames};
 

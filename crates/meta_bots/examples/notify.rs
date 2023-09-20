@@ -47,24 +47,23 @@ async fn main() {
         base: Asset::ARB,
         quote: Asset::USD,
         // { id: 1415532545, symbol: "tARBUSD", mts_create: 1694323690714, order_id: 126110503315, exec_amount: 12, exec_price: 0.87011, order_type: "EXCHANGE MARKET", order_price: 0.87011, maker: -1, fee: Some(-0.0048), fee_currency: Some("ARB"), cid: 1694323690468 }
-
         cex: CexTradeInfo {
             venue: CexExchange::BITFINEX,
             trade_info: Some(TradeExecutionUpdate {
                 id: 1415532545u64, // Trade database id
                 symbol: "tARBUSD".to_string(),
                 mts_create: 1694323690714u64, // Client Order ID
-                order_id: 126110503315u64,   // Order id
+                order_id: 126110503315u64,    // Order id
 
                 exec_amount: Decimal::from_f64(12.0).unwrap(), // Positive means buy, negative means sell
-                exec_price: Decimal::from_f64(0.87011).unwrap(),   // Execution price
+                exec_price: Decimal::from_f64(0.87011).unwrap(), // Execution price
                 order_type: "MARKET".to_string(),
                 order_price: Decimal::from_f64(0.87011).unwrap(),
 
-                maker: -1,                                    // 1 if true, -1 if false
+                maker: -1,                                      // 1 if true, -1 if false
                 fee: Some(Decimal::from_f64(-0.0048).unwrap()), // Fee ('tu' only)
-                fee_currency: Some("ARB".to_string()),        // Fee currency ('tu' only)
-                cid,                             // client order id
+                fee_currency: Some("ARB".to_string()),          // Fee currency ('tu' only)
+                cid,                                            // client order id
             }),
         },
         dex: DexTradeInfo {

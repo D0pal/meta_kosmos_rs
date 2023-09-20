@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use crate::binance::errors::{Error, ErrorKind, Result};
 use serde::{Deserialize, Serialize};
 use serde_json::{from_value, Value};

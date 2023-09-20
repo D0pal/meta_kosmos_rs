@@ -5,7 +5,7 @@ pub mod ether;
 pub mod time;
 
 use rust_decimal::{
-    prelude::{FromPrimitive, Signed},
+    prelude::{FromPrimitive},
     Decimal,
 };
 

@@ -181,7 +181,9 @@ impl DefiStorage {
             .collect();
         let tick_map_slots: Vec<H256> = (tick - 20..tick + 20)
             .filter_map(|i| {
-                TICK_MAP_SLOTS.get(&(i, uni_v3_tick_spacking_from_fee(self.swap_fee as i32))).copied()
+                TICK_MAP_SLOTS
+                    .get(&(i, uni_v3_tick_spacking_from_fee(self.swap_fee as i32)))
+                    .copied()
             })
             .collect();
         common_slots.extend(tick_slots);
@@ -227,7 +229,7 @@ pub async fn get_v3_pool_slot_0(
     block: BlockId,
 ) -> Option<H256> {
     let slot = uni_v3_slot_0_storage_slot();
-    
+
     ws_provider.get_storage_at(pool_address, slot, Some(block)).await.ok()
 }
 

@@ -2,7 +2,7 @@ use ethers::prelude::*;
 use meta_address::{get_dex_address, get_rpc_info, get_token_info, Token};
 use meta_common::enums::{ContractType, DexExchange, Network, RpcProvider};
 use meta_dex::DexService;
-use meta_util::ether::tx_hash_from_str;
+
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 use std::{sync::Arc, time::Duration};
 
@@ -46,7 +46,6 @@ async fn main() {
 
     let dex_service = DexService::new(wallet.clone(), network, dex);
     // println!("dex_service.factory_creation_block {:?}", dex_service.factory_creation_block);
-
 
     let ret = dex_service
         .submit_order(

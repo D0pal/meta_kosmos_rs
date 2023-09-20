@@ -1,9 +1,6 @@
-use crate::bindings::mute_switch_factory::MuteSwitchFactory;
-// use core::num;
+use crate::bindings::muteswitchfactory::MuteSwitchFactory;
 use ethers::prelude::*;
-
 use meta_common::enums::{DexExchange, Network};
-
 use std::sync::Arc;
 
 pub struct MuteSwitchFactoryWrapper<M> {
@@ -26,8 +23,7 @@ impl<M: Middleware> MuteSwitchFactoryWrapper<M> {
         MuteSwitchFactoryWrapper { network, dex, factory_contract, client }
     }
 
-    pub async fn get_pair_addr(&self, tokenA: Address, tokenB: Address) -> Address {
-        
-        (self.factory_contract.get_pair(tokenA, tokenB, false).call().await).unwrap()
+    pub async fn get_pair_addr(&self, token_a: Address, token_b: Address) -> Address {
+        (self.factory_contract.get_pair(token_a, token_b, false).call().await).unwrap()
     }
 }

@@ -16,6 +16,7 @@ ethers.workspace=true
 # async
 tokio.workspace=true
 futures.workspace=true
+futures-util.workspace = true
 # data
 lazy_static.workspace=true
 hashbrown.workspace=true

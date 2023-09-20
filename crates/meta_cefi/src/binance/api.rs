@@ -1,5 +1,7 @@
 use crate::binance::{client::Client, config::Config, general::General, market::Market};
 
+use super::account::Account;
+
 #[allow(clippy::all)]
 pub enum API {
     Spot(Spot),
@@ -100,6 +102,23 @@ impl Binance for Market {
         config: &Config,
     ) -> Market {
         Market {
+            client: Client::new(api_key, secret_key, config.rest_api_endpoint.clone()),
+            recv_window: config.recv_window,
+        }
+    }
+}
+
+impl Binance for Account {
+    fn new(api_key: Option<String>, secret_key: Option<String>) -> Account {
+        Self::new_with_config(api_key, secret_key, &Config::default())
+    }
+
+    fn new_with_config(
+        api_key: Option<String>,
+        secret_key: Option<String>,
+        config: &Config,
+    ) -> Account {
+        Account {
             client: Client::new(api_key, secret_key, config.rest_api_endpoint.clone()),
             recv_window: config.recv_window,
         }

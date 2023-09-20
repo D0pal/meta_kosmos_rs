@@ -33,7 +33,7 @@ pub fn decimal_from_wei(input: U256, decimals: u32) -> Decimal {
     let origi = Decimal::from_str_radix(&input.to_string(), 10).unwrap();
     let scale = u128::from(10u8).pow(decimals);
     let scale_decimal = Decimal::from_u128(scale).unwrap();
-    
+
     origi.checked_div(scale_decimal).unwrap()
     // let d = Decimal::from_str_radix(&decimal_str, 10).unwrap();
     // d.checked_div().unwrap()
