@@ -4,10 +4,9 @@ use crate::{
     bitfinex::{
         errors::*,
         events::{DataEvent, NotificationEvent, SEQUENCE},
-        wallet::{TradeExecutionUpdate, WalletSnapshot},
         websockets::BitfinexEventHandler,
     },
-    cefi_service::{construct_order_book, update_order_book, OrderBook},
+    cefi_service::{construct_order_book, update_order_book, OrderBook}, model::{CexEvent, TradeExecutionInfo},
 };
 use meta_common::models::{CurrentSpread, MarcketChange};
 use rust_decimal::Decimal;
@@ -15,10 +14,7 @@ use std::sync::mpsc::SyncSender;
 extern crate core_affinity;
 use tracing::{debug, error, info, warn};
 
-pub enum CexEvent {
-    TradeExecution(TradeExecutionUpdate),
-    Balance(WalletSnapshot),
-}
+
 
 #[derive(Clone, Debug)]
 pub struct BitfinexEventHandlerImpl {
@@ -132,7 +128,16 @@ impl BitfinexEventHandler for BitfinexEventHandlerImpl {
             if ty.eq("tu") {
                 match self.sender_cex_event {
                     Some(ref tx) => {
-                        let _ = tx.send(CexEvent::TradeExecution(te));
+                        let _ = tx.send(CexEvent::TradeExecution(TradeExecutionInfo {
+                            client_order_id: te.cid,
+                            order_id: te.order_id,        
+                            symbol: te.symbol,       
+                            exec_amount: te.exec_amount, 
+                            exec_price: te.exec_price, 
+                            order_type: te.order_type,   
+                            fee: te.fee, 
+                            fee_currency: te.fee_currency,
+                        }));
                     }
                     None => warn!("no tx sender"),
                 };

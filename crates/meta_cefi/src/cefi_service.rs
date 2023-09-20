@@ -1,4 +1,5 @@
 use crate::{
+    model::CexEvent,
     binance::{
         handler::BinanceEventHandlerImpl, util::get_binance_symbol,
         websockets_tokio::BinanceWebSocketClient,
@@ -6,7 +7,7 @@ use crate::{
     bitfinex::{
         book::TradingOrderBookLevel,
         common::*,
-        handler::{BitfinexEventHandlerImpl, CexEvent},
+        handler::{BitfinexEventHandlerImpl},
         websockets::EventType,
         websockets_tokio::BitfinexWebSocketsAsync,
     },
@@ -125,7 +126,7 @@ impl CefiService {
             }
             CexExchange::BINANCE => {
                 if !self.binance_sockets.contains_key(&pair) {
-                    let handler_reader = BinanceEventHandlerImpl::new(self.sender_cex_event.clone());
+                    let handler_reader = BinanceEventHandlerImpl::new(self.sender_cex_event.clone(), self.sender_market_change.clone());
 
                     let credential =
                         self.config.as_ref().unwrap().keys.as_ref().unwrap().get(&cex).cloned();

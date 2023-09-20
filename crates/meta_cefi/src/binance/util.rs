@@ -1,4 +1,7 @@
-use crate::binance::{errors::Result, http::Signature};
+use crate::{
+    binance::{errors::Result, http::Signature},
+    SYMBOL_USDT,
+};
 use base64::encode;
 use error_chain::bail;
 use hmac::{Hmac, Mac};
@@ -57,8 +60,16 @@ fn get_timestamp(start: SystemTime) -> Result<u64> {
     Ok(since_epoch.as_secs() * 1000 + u64::from(since_epoch.subsec_nanos()) / 1_000_000)
 }
 
+pub fn binance_asset_symbol(asset: &Asset) -> &str {
+    if asset.eq(&Asset::USD) {
+        &SYMBOL_USDT
+    } else {
+        asset.as_ref()
+    }
+}
+
 pub fn get_binance_symbol(base: Asset, quote: Asset) -> String {
-    format!("{}{}", base, quote)
+    format!("{}{}", binance_asset_symbol(&base), binance_asset_symbol(&quote))
 }
 
 pub fn sign(payload: &str, signature: &Signature) -> std::result::Result<String, InvalidLength> {

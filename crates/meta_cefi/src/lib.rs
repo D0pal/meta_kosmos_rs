@@ -5,10 +5,15 @@ pub mod binance;
 pub mod bitfinex;
 pub mod cefi_service;
 pub mod util;
+pub mod model;
 
 use bitfinex::errors::*;
 use std::sync::mpsc::Sender;
 use tokio::sync::mpsc::Sender as TokioSender;
+
+use crate::binance::util::binance_asset_symbol;
+
+pub static SYMBOL_USDT: &str = "USDT";
 
 #[derive(Debug, Clone)]
 pub enum MessageChannel {
@@ -61,8 +66,10 @@ pub fn cex_currency_to_asset(_cex: CexExchange, currency: &str) -> Asset {
 
 pub fn get_cex_pair(cex: CexExchange, base: Asset, quote: Asset) -> String {
     match cex {
-        CexExchange::BITFINEX => format!("t{:?}{:?}", base, quote),
-        _ => format!("{:?}{:?}", base, quote),
+        CexExchange::BITFINEX => format!("t{}{}", base, quote),
+        CexExchange::BINANCE => {
+            format!("{}{}", binance_asset_symbol(&base), binance_asset_symbol(&quote))
+        }
     }
 }
 
@@ -74,12 +81,17 @@ mod test {
     fn test_cex_currency_to_asset() {
         assert_eq!(cex_currency_to_asset(CexExchange::BITFINEX, "ARB"), Asset::ARB);
         assert_eq!(cex_currency_to_asset(CexExchange::BITFINEX, "USD"), Asset::USD);
+        assert_eq!(cex_currency_to_asset(CexExchange::BINANCE, "BNB"), Asset::BNB);
     }
 
     #[test]
     fn test_get_cex_pair() {
         assert_eq!(
-            get_cex_pair(CexExchange::BINANCE, Asset::ARB, Asset::USDT),
+            get_cex_pair(CexExchange::BITFINEX, Asset::ARB, Asset::USD),
+            "tARBUSD".to_string()
+        );
+        assert_eq!(
+            get_cex_pair(CexExchange::BINANCE, Asset::ARB, Asset::USD),
             "ARBUSDT".to_string()
         );
     }

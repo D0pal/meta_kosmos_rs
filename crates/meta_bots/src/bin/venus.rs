@@ -12,24 +12,19 @@ use meta_bots::{
     VenusConfig,
 };
 use meta_cefi::{
-    bitfinex::handler::CexEvent,
     cefi_service::{AccessKey, CefiService, CexConfig},
     cex_currency_to_asset,
+    model::CexEvent,
 };
 use meta_common::{
     enums::{CexExchange, DexExchange, Network},
-    models::{ MarcketChange},
+    models::MarcketChange,
 };
-use meta_contracts::bindings::{
-    uniswapv3pool::SwapFilter,
-};
+use meta_contracts::bindings::uniswapv3pool::SwapFilter;
 use meta_dex::{DexBackend, DexService};
 use meta_integration::Lark;
 use meta_tracing::init_tracing;
-use meta_util::{
-    get_price_delta_in_bp,
-    time::get_current_ts,
-};
+use meta_util::{get_price_delta_in_bp, time::get_current_ts};
 use rust_decimal::{prelude::FromPrimitive, Decimal};
 use std::{
     collections::BTreeMap,
@@ -80,24 +75,15 @@ struct Opts {
 pub const V3_FEE: u32 = 500u32;
 
 /// will be invoked when a new cex trade or dex swap occurs
-async fn handle_trade_update<M: Middleware>(
-    dex_service: Arc<DexService<M>>,
-    lark: Arc<Lark>,
-) {
+async fn handle_trade_update<M: Middleware>(dex_service: Arc<DexService<M>>, lark: Arc<Lark>) {
     let (should_stop, ret) = check_arbitrage_status(Arc::clone(&ARBITRAGES)).await;
     if should_stop {
         error!("should stop");
         std::process::exit(exitcode::DATAERR);
     }
     if let Some((cid, arbitrage_info)) = ret {
-        notify_arbitrage_result(
-            dex_service,
-            Arc::clone(&ARBITRAGES),
-            lark,
-            cid,
-            &arbitrage_info,
-        )
-        .await;
+        notify_arbitrage_result(dex_service, Arc::clone(&ARBITRAGES), lark, cid, &arbitrage_info)
+            .await;
     }
 }
 
@@ -115,7 +101,6 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
     let rpc_url = rpc_info.ws_urls.get(&rpc_provider).unwrap();
     info!("rpc_url {:?}", rpc_url);
     let provider_ws = Provider::<Ws>::connect(rpc_url).await.expect("ws connect error");
-    // let provider_ws = Provider::<Http>::connect(&rpc_info.httpUrls[0]).await;
     let provider_ws =
         provider_ws.interval(Duration::from_millis(config.provider.ws_interval_milli.unwrap()));
     let provider_ws = Arc::new(provider_ws);
@@ -161,8 +146,6 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
 
     let (tx_market_change, rx_market_change) = mpsc::sync_channel::<MarcketChange>(1000);
 
-    // let (dex_service:DexService::<NonceManagerMiddleware<SignerMiddleware<Provider<Ws>, LocalWallet>>>, dex_backend: DexBackend::<Provider<Ws>>) =
-
     let (dex_service, mut dex_backend): (
         DexService<NonceManagerMiddleware<SignerMiddleware<Arc<Provider<Ws>>, LocalWallet>>>,
         DexBackend<Provider<Ws>>,
@@ -199,6 +182,11 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
     );
 
     let cefi_service = Arc::new(RwLock::new(cefi_service));
+    {
+        let mut _g = cefi_service.write().await;
+        (_g).connect_pair(config.cex, config.base_asset, config.quote_asset).await;
+    }
+
     let (cex_spread, dex_spread): (Spread, Spread) =
         (Arc::new(RwLock::new(None)), Arc::new(RwLock::new(None)));
 
@@ -221,11 +209,8 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                         let maybe_hash = rx.recv().await;
                         if let Some((hash, _number)) = maybe_hash {
                             info!("receive onchain swap event with hash {:?}", hash);
-                            handle_trade_update(
-                                dex_service_clone.clone(),
-                                Arc::clone(&lark_clone),
-                            )
-                            .await;
+                            handle_trade_update(dex_service_clone.clone(), Arc::clone(&lark_clone))
+                                .await;
                         }
                     }
                 });
@@ -271,7 +256,7 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
             {
                 // listening to dex price change
                 tokio::spawn(async move {
-                    let _= dex_backend.event_loop().await;
+                    let _ = dex_backend.event_loop().await;
                 });
             }
         }
@@ -285,7 +270,8 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
         let _provider_ws_cefi_trade = Arc::clone(&provider_ws);
         let dex_spread = Arc::clone(&dex_spread);
         let dex_service_clone = Arc::clone(&dex_service);
-        tokio::spawn(async move {  // subscribing cex event
+        tokio::spawn(async move {
+            // subscribing cex event
             loop {
                 let cex_event_ret = rx_cex_event.recv();
                 if let Ok(cex_event) = cex_event_ret {
@@ -311,9 +297,9 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                     let _g = dex_spread.read().await;
                                     if let Some(p) = *_g {
                                         unsafe {
-                                            let min_quote_amt = p.0
-                                                .checked_mul(MIN_BASE_ASSET_BALANCE_AMT)
-                                                .unwrap();
+                                            let min_quote_amt =
+                                                p.0.checked_mul(MIN_BASE_ASSET_BALANCE_AMT)
+                                                    .unwrap();
                                             if wu.balance.le(&min_quote_amt) {
                                                 warn!("asset {:?} balance {:?} is below threshold {:?}", asset, wu.balance, min_quote_amt);
                                                 std::process::exit(exitcode::DATAERR);
@@ -330,16 +316,13 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                             {
                                 TOTAL_PENDING_TRADES.fetch_sub(1, Ordering::SeqCst);
                                 let mut _g = _arbitrages_map_cefi_trade.write().await;
-                                _g.entry(trade.cid.into()).and_modify(|e| {
+                                _g.entry(trade.client_order_id.into()).and_modify(|e| {
                                     e.cex.trade_info = Some(trade);
                                 });
                             }; // drop _g
                             {
-                                handle_trade_update(
-                                    dex_service_clone.clone(),
-                                    Arc::clone(&lark)
-                                )
-                                .await;
+                                handle_trade_update(dex_service_clone.clone(), Arc::clone(&lark))
+                                    .await;
                             }
                         }
                     }
@@ -347,16 +330,13 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
             }
         });
     };
-    match config.cex {
-        CexExchange::BITFINEX => {
-            let mut _g = cefi_service.write().await;
-            (_g).connect_pair(CexExchange::BITFINEX, config.base_asset, config.quote_asset).await;
-        }
-        CexExchange::BINANCE => unimplemented!(),
-    }
 
-    let (mut cex_bid, mut cex_ask, mut dex_bid, mut dex_ask): (Option<Decimal>, Option<Decimal>, Option<Decimal>,Option<Decimal>) =
-        (None, None, None, None);
+    let (mut cex_bid, mut cex_ask, mut dex_bid, mut dex_ask): (
+        Option<Decimal>,
+        Option<Decimal>,
+        Option<Decimal>,
+        Option<Decimal>,
+    ) = (None, None, None, None);
     loop {
         if let Ok(change) = rx_market_change.recv() {
             // println!("receive market change: {:?}", change);
@@ -375,12 +355,14 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                 }
             }
 
-            if let (Some(cex_bid), Some(cex_ask), Some(dex_bid), Some(dex_ask)) = (cex_bid, cex_ask, dex_bid, dex_ask) {
+            if let (Some(cex_bid), Some(cex_ask), Some(dex_bid), Some(dex_ask)) =
+                (cex_bid, cex_ask, dex_bid, dex_ask)
+            {
                 info!(
                     "current spread, cex_bid: {:?}, dex_ask: {:?}, dex_bid: {:?}, cex_ask {:?}",
                     cex_bid, dex_ask, dex_bid, cex_ask
                 );
-    
+
                 if cex_bid > dex_ask {
                     let change = get_price_delta_in_bp(cex_bid, dex_ask);
                     if change > Decimal::from_u32(config.spread_diff_threshold).unwrap() {
@@ -407,11 +389,11 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                 fee: V3_FEE,
                             },
                         };
-    
+
                         try_arbitrage(instraction, Arc::clone(&cefi_service), &dex_service).await;
                     }
                 }
-    
+
                 if dex_bid > cex_ask {
                     let change = get_price_delta_in_bp(dex_bid, cex_ask);
                     if change > Decimal::from_u32(config.spread_diff_threshold).unwrap() {
@@ -424,14 +406,14 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                         amount.set_sign_negative(true);
                         let instraction = ArbitrageInstruction {
                             cex: CexInstruction {
-                                venue: CexExchange::BITFINEX,
+                                venue: config.cex,
                                 amount: config.base_asset_quote_amt,
                                 base_asset: config.base_asset,
                                 quote_asset: config.quote_asset,
                             },
                             dex: DexInstruction {
                                 network: config.network,
-                                venue: DexExchange::UniswapV3,
+                                venue: config.dex,
                                 amount,
                                 base_token: base_token.clone(),
                                 quote_token: quote_token.clone(),
@@ -439,13 +421,11 @@ async fn run(config: VenusConfig) -> anyhow::Result<()> {
                                 fee: V3_FEE,
                             },
                         };
-    
+
                         try_arbitrage(instraction, Arc::clone(&cefi_service), &dex_service).await;
                     }
                 }
             }
-
-            
         }
     }
 }
@@ -498,20 +478,15 @@ async fn try_arbitrage<'a, M: Middleware + 'static>(
 
     {
         let mut _cex = cefi_service_ptr.write().await;
-        match instruction.cex.venue {
-            CexExchange::BITFINEX => {
-                (_cex)
-                    .submit_order(
-                        client_order_id,
-                        CexExchange::BITFINEX,
-                        instruction.cex.base_asset,
-                        instruction.cex.quote_asset,
-                        instruction.cex.amount,
-                    )
-                    .await;
-            }
-            _ => unimplemented!(),
-        }
+        (_cex)
+            .submit_order(
+                client_order_id,
+                instruction.cex.venue,
+                instruction.cex.base_asset,
+                instruction.cex.quote_asset,
+                instruction.cex.amount,
+            )
+            .await;
         info!("end send cex trade");
     }
 

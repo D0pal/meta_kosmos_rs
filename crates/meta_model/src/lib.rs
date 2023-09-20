@@ -4,6 +4,7 @@ use rust_decimal::Decimal;
 
 #[derive(Debug, Default)]
 pub struct ArbitrageOutcome {
+    pub venue: String,
     pub base_amount: Decimal,
     pub quote_amount: Decimal,
     pub price: Decimal,

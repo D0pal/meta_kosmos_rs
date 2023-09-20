@@ -21,6 +21,11 @@ rm venus.log
 nohup ./venus -b ARB -q USD --network ARBI -d UniswapV3 -c BITFINEX >venus.log 2>&1 &
 ```
 
+- binance
+```
+cargo run -p meta_bots --bin venus --release -- -b ETH -q USDT --network ARBI -d UniswapV3 -c BINANCE
+```
+
 ## TODO
 - binance renw listen key
 - bitfinex te event may be partially filled

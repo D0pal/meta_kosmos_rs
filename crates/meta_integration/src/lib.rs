@@ -37,14 +37,15 @@ impl Lark {
             r#"
             base: {:?}, quote: {:?}
             time: {:?},
-            bitfinex: {:?}({:?}), {:?}({:?}), price({:?}); fee: {:?}({:?}); ID: {:?}
+            {:?}: {:?}({:?}), {:?}({:?}), price({:?}); fee: {:?}({:?}); ID: {:?}
             uniswap({:?}): {:?}({:?}), {:?}({:?}) price({:?}); gas fee: {:?}({:?}); hash: {:?}
             net: {:?}({:?}), {:?}({:?}), {:?}({:?})
         "#,
             summary.base,
             summary.quote,
             summary.datetime,
-            summary.base, // start of cex
+            summary.cex.venue, // start of cex
+            summary.base, 
             summary.cex.base_amount,
             summary.quote,
             summary.cex.quote_amount,

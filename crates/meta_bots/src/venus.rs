@@ -1,7 +1,7 @@
 use chrono::prelude::*;
 use ethers::prelude::*;
 use meta_address::{enums::Asset, TokenInfo};
-use meta_cefi::{bitfinex::wallet::TradeExecutionUpdate, cex_currency_to_asset};
+use meta_cefi::{ cex_currency_to_asset, model::TradeExecutionInfo};
 use meta_common::enums::{CexExchange, DexExchange, Network};
 use meta_dex::DexService;
 use meta_integration::Lark;
@@ -15,7 +15,7 @@ use tracing::{error, info};
 #[derive(Debug, Clone, Default)]
 pub struct CexTradeInfo {
     pub venue: CexExchange,
-    pub trade_info: Option<TradeExecutionUpdate>,
+    pub trade_info: Option<TradeExecutionInfo>,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -154,6 +154,7 @@ pub async fn notify_arbitrage_result<M: Middleware>(
         Ok(parsed_tx) => {
             let mut cex_outcome = ArbitrageOutcome::default();
             if let Some(info) = cex_trade_info.trade_info {
+                cex_outcome.venue = cex_trade_info.venue.to_string();
                 cex_outcome.price = info.exec_price;
                 cex_outcome.base_amount = info.exec_amount;
                 cex_outcome.quote_amount = info
